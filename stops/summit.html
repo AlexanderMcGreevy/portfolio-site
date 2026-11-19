@@ -344,7 +344,7 @@ function* buildGen(){
     const m=new THREE.Mesh(g,new THREE.MeshPhongMaterial({vertexColors:true,flatShading:true,shininess:0,specular:0}));m.receiveShadow=true;scene.add(m);R3m.terrainMat=m.material}
   yield;
   /* ---- 1 m mask of the real summit layout (paved / trail / building) ---- */
-  const MS=PR*2,mcv=document.createElement('canvas');mcv.width=mcv.height=MS;const mx=mcv.getContext('2d');mx.fillStyle='#000';mx.fillRect(0,0,MS,MS);mx.globalCompositeOperation='lighter';
+  const MS=PR*2,mcv=document.createElement('canvas');mcv.width=mcv.height=MS;const mx=mcv.getContext('2d',{willReadFrequently:true});mx.fillStyle='#000';mx.fillRect(0,0,MS,MS);mx.globalCompositeOperation='lighter';
   const mp=p=>[p[0]+PR,p[1]+PR],poly=(P,st)=>{mx.fillStyle=st;mx.beginPath();P.forEach((p,i)=>{const q=mp(p);i?mx.lineTo(q[0],q[1]):mx.moveTo(q[0],q[1])});mx.closePath();mx.fill()},
     line=(P,w,st)=>{mx.strokeStyle=st;mx.lineWidth=w;mx.lineCap='round';mx.lineJoin='round';mx.beginPath();P.forEach((p,i)=>{const q=mp(p);i?mx.lineTo(q[0],q[1]):mx.moveTo(q[0],q[1])});mx.stroke()};
   if(DET){DET.parking.forEach(P=>poly(P,'rgb(160,0,0)'));DET.service.forEach(P=>line(P,4.5,'rgb(200,0,0)'));DET.steps.forEach(P=>line(P,3,'rgb(120,0,0)'));DET.platform.forEach(P=>line(P,6,'rgb(120,0,0)'));
@@ -590,7 +590,14 @@ function* buildGen(){
   if(DET){const nb=n=>{const b=findB(n);return b?centroid(b.poly):null};[['Observatory',[OBS.x,OBS.z],null,obsTop+9],['Tip-Top House, 1853',nb('Tip Top House'),9],['Sherman Adams Building',nb('Sherman Adams Summit Building'),3],['Summit Stage Office',nb('Summit Stage Office'),7],['Cog platform',DET.platform[0]?centroid(DET.platform[0]):null,7],['Auto Road summit lot',DET.parking[0]?centroid(DET.parking[0]):null,4]]
     .forEach(([t,p,l,y])=>{if(p)addTag(t,p[0],p[1],l||6,'st',y)})}
   yield;
-  try{renderer.compile(scene,camera)}catch(_){}
+  /* compile shaders one material at a time (others hidden from compile), yielding between, instead of one ~1 s
+     renderer.compile(); programs are cached by hash, so the work is the same, just never one long freeze */
+  {const objs=[];scene.traverse(o=>{if(o.material)objs.push(o)});const saved=objs.map(o=>o.material);
+   const mats=[...new Set(saved.flatMap(m=>Array.isArray(m)?m:[m]))];
+   try{for(const m of mats){objs.forEach((o,i)=>{const ms=saved[i];o.material=(ms===m||(Array.isArray(ms)&&ms.includes(m)))?ms:null});
+       try{renderer.compile(scene,camera)}catch(_){}
+       yield}}
+   finally{objs.forEach((o,i)=>{o.material=saved[i]})}}
   yield;
   Object.assign(R3m,{renderer,scene,camera,hemi,sun,clouds,ws,wsP,wsD,wsM,TAGS,G0:SG,winMat,rimeM,placeHikers,cupsGroup,vane,anemPos,steam,v3:new THREE.Vector3(),fw:new THREE.Vector3(),ca:new THREE.Color()});
   R3=R3m;R3m.buildMs=Math.round(performance.now()-tBuild);

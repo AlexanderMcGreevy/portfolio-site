@@ -235,7 +235,7 @@ const LEVEL = { 3: 'every day', 2: 'comfortable', 1: 'have used' };   /* the sca
 
 /* ---------------- procedural fabric (canvas tiles, grey ~50% for overlay blending) ---------------- */
 function prng(seed) { let s = (seed | 0) || 1; return () => { s = (Math.imul(s, 1664525) + 1013904223) | 0; return ((s >>> 8) & 0xffffff) / 0x1000000; }; }
-function mkTile(S, draw) { const c = document.createElement('canvas'); c.width = c.height = S; const g = c.getContext('2d'); draw(g, S); return c.toDataURL('image/png'); }
+function mkTile(S, draw) { const c = document.createElement('canvas'); c.width = c.height = S; const g = c.getContext('2d', { willReadFrequently: true }); draw(g, S); return c.toDataURL('image/png'); }
 function weaveTile(o) {
   const n = o.n, p = o.p, S = n * p, R = prng(o.seed), wv = [], hv = [];
   for (let i = 0; i < n; i++) { wv.push((R() - .5) * o.v); hv.push((R() - .5) * o.v); }

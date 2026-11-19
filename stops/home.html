@@ -261,7 +261,8 @@ function fit(){ const w=st.clientWidth, h=st.clientHeight; if(w<60||h<60) return
   // lettering first: its height decides how far down the mountains sit
   const fam='"Bebas Neue",Impact,"Arial Narrow",sans-serif', UP=NAME.toUpperCase(), longest=UP.split(/\s+/).reduce((a,b)=>b.length>a.length?b:a,'');
   const fs=portrait?Math.min(ah*.085,aw*.86/(textW('100px '+fam,longest,3)/100)):Math.min(ah*.15,aw*.56/(textW('100px '+fam,UP,3)/100));
-  Object.assign(head.style,{left:ax+'px',top:(ay+ah*.035)+'px',width:aw+'px'});
+  const navH=portrait?parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--nav-h'))||0:0;   /* clear the shell's nav on phones */
+  Object.assign(head.style,{left:ax+'px',top:Math.max(ay+ah*.035,navH)+'px',width:aw+'px'});
   $('.cap',head).style.fontSize=Math.max(11,Math.round(fs*(portrait?.3:.22)))+'px';
   $('h1',head).style.fontSize=Math.round(fs)+'px'; $('h1',head).style.whiteSpace=portrait?'normal':'nowrap';
   head.style.fontSize=Math.round(clamp(fs*(portrait?.25:.18),13,20))+'px';

@@ -12,6 +12,8 @@
 <meta name="twitter:card" content="summary">
 <meta name="theme-color" content="#231e18">
 <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://cdnjs.cloudflare.com">
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600&family=IBM+Plex+Mono:wght@400;500&family=Cormorant+SC:wght@500;600&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -497,6 +499,15 @@ if (byId[hStop] && hStop !== 'home') {
 }
 frame(true);
 })();
+
+/* warm the cache for the heavy late stops: once the first screen is up and the visitor is idle, fetch three.js and the
+   map data at low priority, so Summit and Range only have to build (not download) when you get there */
+addEventListener('load', () => setTimeout(() => {
+  const go = () => ['https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js', 'data/summit-geo.js', 'data/summit-detail.js', 'data/range-geo.js',
+    'stops/journey.html', 'stops/gear.html', 'stops/trail.html', 'stops/hut.html', 'stops/summit.html', 'stops/range.html']
+    .forEach(h => { const l = document.createElement('link'); l.rel = 'prefetch'; l.href = h; document.head.appendChild(l); });
+  'requestIdleCallback' in window ? requestIdleCallback(go, { timeout: 4000 }) : go();
+}, 1500));
 </script>
 </body>
 </html>
