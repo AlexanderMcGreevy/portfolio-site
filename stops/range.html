@@ -90,7 +90,7 @@ button{font:inherit;color:inherit}
   .classic{padding:7px 10px;font-size:13px}.trip{margin-top:8px}.trip button{width:24px;height:24px;font-size:12px}
   #attr{bottom:auto;top:8px;right:96px;font-size:9px}
   .flag{padding:4px;gap:0}.flag span{display:none}.flag b{width:17px;height:17px;font-size:11px}
-  #cue{bottom:auto;top:56px}
+  #cue{bottom:auto;top:106px}   /* under the zoom / free-cam row */
 }
 @media (max-height:560px) and (min-width:701px){.card p{display:none}.card li{min-height:22px}}
 @media (prefers-reduced-motion:reduce){.toast{transition:none}}
@@ -835,7 +835,18 @@ addEventListener('keydown',e=>{if(!S)return;const tg=e.target;if(tg&&/INPUT|TEXT
 /* ---------- loop (only while visible) ---------- */
 const pv=new V3();
 function proj(el,v,isLab){pv.copy(v).project(cam);const x=(pv.x*.5+.5)*W,y=(-pv.y*.5+.5)*H,vis=pv.z<1&&x>-40&&x<W+40&&y>-40&&y<H+40;
-  el.style.display=vis?'':'none';if(vis)el.style.transform='translate('+x.toFixed(1)+'px,'+y.toFixed(1)+'px)'+(isLab?' translate(-50%,-100%)':'');return vis}
+  el.style.display=vis?'':'none';if(vis)el.style.transform='translate('+x.toFixed(1)+'px,'+y.toFixed(1)+'px)'+(isLab?' translate(-50%,-100%)':'');el._x=x;el._y=y;el._v=vis;return vis}
+/* keep map labels from piling up: route flags and the contact card win, then labels in the order they were added
+   (Mt. Washington, the peaks, then places). Mt. Washington hops above a flag it would sit on; the rest just hide. */
+function declutter(){
+  const placed=[],box=(x,y,w,h)=>({l:x-w/2-3,r:x+w/2+3,t:y-h-3,b:y+2}),hit=a=>placed.find(b=>a.l<b.r&&a.r>b.l&&a.t<b.b&&a.b>b.t);
+  ['register','tools','attr'].forEach(id=>{const e=document.getElementById(id);if(!e||e.hidden||e.hasAttribute('data-off'))return;const r=e.getBoundingClientRect();if(r.width)placed.push({l:r.left-6,r:r.right+6,t:r.top-6,b:r.bottom+6})});
+  S.flags.forEach(f=>{const e=f.el;if(!e._v||f.k<.02)return;const k=.6+.4*f.k;placed.push(box(e._x,e._y,(e._w||(e._w=e.offsetWidth))*k,(e._h||(e._h=e.offsetHeight))*k))});
+  S.labels.forEach(h=>{const e=h.el;if(!e._v)return;
+    const w=e._w||(e._w=e.offsetWidth),hh=(e._h||(e._h=e.offsetHeight))+8;let a=box(e._x,e._y,w,hh),o=hit(a);
+    if(o&&e.classList.contains('big')){const y=o.t-5;a=box(e._x,y,w,hh);o=hit(a);if(!o)e.style.transform='translate('+e._x.toFixed(1)+'px,'+y.toFixed(1)+'px) translate(-50%,-100%)'}
+    if(o){e.style.display='none';return}placed.push(a)});
+}
 let last=performance.now();
 function frame(now){if(!running)return;raf=requestAnimationFrame(frame);
   if(!renderer||!S)return;
@@ -846,6 +857,7 @@ function frame(now){if(!running)return;raf=requestAnimationFrame(frame);
   let moving=false;if(FC.on)fcUpdate(rdt);else moving=camUpdate(rdt);
   S.hits.forEach(h=>proj(h.el,h.v,false));S.labels.forEach(h=>proj(h.el,h.v,true));
   S.flags.forEach(f=>{if(f.k<.02){f.el.style.display='none';return}if(proj(f.el,f.v,false))f.el.style.transform+=' translate(-50%,-100%) scale('+(.6+.4*f.k).toFixed(3)+')';f.el.style.opacity=f.k.toFixed(3)});
+  declutter();
   post.render(S.scene,cam,F,S.grade);
   if(dirty>0)dirty--;if(moving)dirty=Math.max(dirty,1);
 }

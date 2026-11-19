@@ -449,6 +449,7 @@ function measure() {
     it: ITEMS.map(el => { const r = el.getBoundingClientRect(); return { cx: r.left + r.width / 2, cy: r.top + r.height / 2 }; }),
     over: Math.max(0, scroller.scrollHeight - view.clientHeight)
   };
+  geo.packPan = clamp(geo.my - view.getBoundingClientRect().top - view.clientHeight * .45, 0, geo.over);
   postMapLand();
   render(CL.progress);
 }
@@ -466,7 +467,9 @@ const easeIO = t => t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
 function render(p) {
   if (!geo) return;
   const rm = RM.matches;
-  const pan = geo.over * ss(.15, .75, p);           /* only when the layout is taller than the screen (phones) */
+  /* only when the layout is taller than the screen (phones, short laptops): pan down to read, then to wherever the
+     pack is (top on a short laptop, bottom on a phone) so it's in view while things go in */
+  const rd = geo.over * ss(.12, .55, p), pk = ss(.66, .78, p), pan = rd + (geo.packPan - rd) * pk;
   scroller.style.transform = pan ? `translateY(${-pan}px)` : '';
   let packed = 0;
   ITEMS.forEach((el, i) => {

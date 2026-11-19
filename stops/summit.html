@@ -274,7 +274,7 @@ const rgs=PEAKS.map((p,i)=>{const b=document.createElement('button');b.type='but
   const a=p.b*D2R;b.style.left=(50+Math.sin(a)*38).toFixed(1)+'%';b.style.top=(50-Math.cos(a)*38).toFixed(1)+'%';b.addEventListener('click',()=>turnTo(p.b));rose.appendChild(b);return b});
 const card=$('#card');let cardIdx=-1;
 function showCard(i){if(i===cardIdx)return;cardIdx=i;[pins,goalBtns,rgs].forEach(L=>L.forEach((b,k)=>b.classList.toggle('on',k===i)));
-  if(i<0){card.classList.remove('open');return}const p=PEAKS[i];$('#cardK').textContent=CS.sub||'';$('#cardT').textContent=p.title;$('#cardW').textContent=where(p);$('#cardX').textContent=p.text;card.classList.add('open')}
+  if(i<0){card.classList.remove('open');return}const p=PEAKS[i];$('#cardK').textContent='Goal '+(i+1)+' of '+PEAKS.length;$('#cardT').textContent=p.title;$('#cardW').textContent=where(p);$('#cardX').textContent=p.text;card.classList.add('open')}
 
 /* ---------------- view state: yaw = scroll path + free drag offset ---------------- */
 let PROG=Climb.progress||0,off=0,offVel=0,offAnim=null,pitch=-6,dragging=false,fogIn=Climb.embedded?0:1,outT=0,visible=true;

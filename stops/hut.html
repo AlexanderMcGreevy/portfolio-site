@@ -30,7 +30,7 @@ button{font:inherit;color:inherit}
 #note{position:absolute;left:50%;top:4%;transform:translate(-50%,-6px);padding:7px 12px;background:var(--panel);border:3px solid var(--amber);font:400 9px/1.6 'Press Start 2P',monospace;color:var(--amber);opacity:0;transition:opacity .3s,transform .3s;pointer-events:none;white-space:nowrap}
 #note.on{opacity:1;transform:translate(-50%,0)}
 /* "in this room" key: the readable list of everything in the hut */
-#key{flex:none;width:300px;overflow-y:auto;overscroll-behavior:contain;padding:calc(22px + var(--nav-h,0px)) 18px 28px;background:var(--panel);border-left:4px solid var(--edge);scrollbar-width:thin;scrollbar-color:#5a331c transparent}
+#key{flex:none;width:calc(300px + var(--rail,0px));overflow-y:auto;overscroll-behavior:contain;padding:calc(22px + var(--nav-h,0px)) calc(18px + var(--rail,0px)) 28px 18px;background:var(--panel);border-left:4px solid var(--edge);scrollbar-width:thin;scrollbar-color:#5a331c transparent}
 #key h2{margin:0 0 4px;font:400 11px/1.6 'Press Start 2P',monospace;color:var(--amber)}
 #key p.sub{margin:0 0 14px;color:var(--ink2);font-size:12px}
 #key ul{list-style:none;margin:0;padding:0}
@@ -41,7 +41,7 @@ button{font:inherit;color:inherit}
 #key .it b{display:block;margin:3px 0 3px;font:400 10px/1.5 'Press Start 2P',monospace;color:var(--rust)}
 #key .it .t{display:block;font-size:12.5px;line-height:1.5}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
-@media (max-width:900px) and (min-aspect-ratio:1/1){#key{width:230px;padding:calc(16px + var(--nav-h,0px)) 12px 16px}}
+@media (max-width:900px) and (min-aspect-ratio:1/1){#key{width:calc(230px + var(--rail,0px));padding:calc(16px + var(--nav-h,0px)) calc(12px + var(--rail,0px)) 16px 12px}}
 @media (max-aspect-ratio:1/1){
   #wrap{flex-direction:column}
   #room{flex:none}

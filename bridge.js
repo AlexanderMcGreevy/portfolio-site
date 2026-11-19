@@ -25,7 +25,13 @@
   const embedded = window.parent !== window;
   const id = document.documentElement.dataset.stop || '';
   /* the shell's nav pill sits in the top-right corner: stops push their top-right UI down by var(--nav-h) */
-  if (embedded) { document.documentElement.classList.add('climb-embedded'); document.documentElement.style.setProperty('--nav-h', '54px'); }
+  /* and the stop-marker rail runs down the right edge (hidden on phones): right-edge panels pad by var(--rail) */
+  if (embedded) {
+    document.documentElement.classList.add('climb-embedded');
+    const st = document.createElement('style');
+    st.textContent = '.climb-embedded{--nav-h:54px;--rail:34px}@media (max-width:600px){.climb-embedded{--rail:0px}}';
+    document.head.appendChild(st);
+  }
   const L = { prog: [], trans: [], vis: [] };
   const C = window.Climb = {
     embedded, id, progress: 0, visible: true, ownWheel: false,

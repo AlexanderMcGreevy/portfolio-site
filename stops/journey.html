@@ -64,7 +64,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 .tl{display:inline-block;margin-top:8px;padding:0;border:0;background:none;font:700 11px 'Space Mono',monospace;color:var(--trail);text-decoration:underline;text-underline-offset:3px}
 .tl:hover{text-decoration-thickness:2px}
 
-#log{position:fixed;right:0;top:0;bottom:0;width:var(--logw);background:var(--card);border-left:2px solid var(--ink);padding:calc(16px + var(--nav-h,0px)) 18px 12px;display:flex;flex-direction:column;gap:10px;overflow:auto;z-index:11}
+#log{position:fixed;right:0;top:0;bottom:0;width:var(--logw);background:var(--card);border-left:2px solid var(--ink);padding:calc(16px + var(--nav-h,0px)) calc(18px + var(--rail,0px)) 12px 18px;display:flex;flex-direction:column;gap:10px;overflow:auto;z-index:11}
 #log h2{margin:0;font:700 12px 'Space Mono',monospace;letter-spacing:.24em}
 #log .sub{display:block;font:400 10px 'Space Mono',monospace;opacity:.75;margin-top:2px}
 .odo{display:grid;grid-template-columns:1fr 1fr 1fr;border:2px solid var(--ink)}
@@ -111,7 +111,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 @media (max-width:760px){
   :root{--logw:0px;--ph:0px}
   #map{right:0;bottom:auto;height:58vh;height:58svh}
-  #log{left:0;right:0;top:58vh;top:58svh;width:auto;border-left:0;border-top:2px solid var(--ink);padding:12px 14px 14px}
+  #log{left:0;right:0;top:58vh;top:58svh;width:auto;border-left:0;border-top:2px solid var(--ink);padding:12px calc(14px + var(--rail,0px)) 14px 14px}
   #prof{display:none}
   .title{left:18px;top:18px;padding:6px 10px 7px;box-shadow:3px 3px 0 var(--ink)}
   .title .s{display:none}
@@ -570,8 +570,17 @@ function render(){
   if(oi>=0){ const p=toScreen(S.wpp[oi][0],S.wpp[oi][1]), cw=card.offsetWidth||300, ch=card.offsetHeight||190;
     const lbw=(markers[oi].querySelector('.lb')||{}).offsetWidth||0, fl=markers[oi].classList.contains('flip');
     /* card sits on the far side from the marker's label (over the walked trail), else just past the label */
-    let x=fl?p[0]+34:p[0]-34-cw; if(x<14||x+cw>W-14) x=fl?p[0]-34-lbw-10-cw:p[0]+34+lbw+10; x=clamp(x,14,Math.max(14,W-cw-14)); const y=clamp(p[1]-ch/2-10,14,Math.max(14,H-ch-14));
-    card.style.left=x.toFixed(0)+'px'; card.style.top=y.toFixed(0)+'px'; }
+    /* candidates: that side, past the label, below, above. Pick the one covering the least of the title, the marker + its
+       label, the compass and the scale bar (sticky, so it doesn't hop around while the camera drifts) */
+    const cx=(x)=>clamp(x,14,Math.max(14,W-cw-14)), cy=(y)=>clamp(y,14,Math.max(14,H-ch-14));
+    const C=[[fl?p[0]+34:p[0]-34-cw,p[1]-ch/2-10],[fl?p[0]-34-lbw-10-cw:p[0]+34+lbw+10,p[1]-ch/2-10],[p[0]-cw/2,p[1]+34],[p[0]-cw/2,p[1]-34-ch]].map(c=>[cx(c[0]),cy(c[1])]);
+    const mr=card.offsetParent?card.offsetParent.getBoundingClientRect():{left:0,top:0};
+    const obs=['.title','.compass','.scale'].map(s=>document.querySelector(s)).filter(e=>e&&e.offsetParent).map(e=>{const r=e.getBoundingClientRect();return[r.left-mr.left-8,r.top-mr.top-8,r.right-mr.left+8,r.bottom-mr.top+8]});
+    obs.push(fl?[p[0]-30-lbw-14,p[1]-26,p[0]+30,p[1]+26]:[p[0]-30,p[1]-26,p[0]+30+lbw+14,p[1]+26]);
+    const cost=(c,i)=>obs.reduce((a,o)=>a+Math.max(0,Math.min(c[0]+cw,o[2])-Math.max(c[0],o[0]))*Math.max(0,Math.min(c[1]+ch,o[3])-Math.max(c[1],o[1])),0)+i*400;
+    let bi=0,bc=1e12; C.forEach((c,i)=>{const v=cost(c,i);if(v<bc){bc=v;bi=i}});
+    if(card._ci!=null&&card._oi===oi&&cost(C[card._ci],card._ci)<=bc+2500) bi=card._ci; card._ci=bi; card._oi=oi;
+    card.style.left=C[bi][0].toFixed(0)+'px'; card.style.top=C[bi][1].toFixed(0)+'px'; }
   drawProf(); updHud();
 }
 function tag(P,t,x,y,center){ ctx.save(); ctx.font='700 11px "Space Mono",monospace'; const tw=ctx.measureText(t).width; let lx=center?x-tw/2-6:x, ly=y;

@@ -141,7 +141,7 @@ window.CONTENT = {
       text: 'White Mountains backpacker. Hiking with NUHOC, the Northeastern outing club.' },
     { id: 'firstaid', object: 'First-aid kit', title: 'Wilderness First Aid',
       text: 'Certified, because the nearest road is usually a long way down.' },
-    { id: 'guitar', object: 'Guitar', title: 'Guitar', text: 'Strum it.' },
+    { id: 'guitar', object: 'Guitar by the window', title: 'Guitar', text: 'Strum it.' },
     { id: 'mead', object: 'Mead jug', title: 'Mead', text: 'Brewing mead. It takes months. Patience is the main ingredient.' },
     { id: 'logbook', object: 'Hut logbook', title: 'Hackathons', text: '8 attended. I go for the 3 a.m. part.' }
   ],
