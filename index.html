@@ -1,0 +1,493 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Alexander McGreevy · The Climb</title>
+<meta name="description" content="Alexander McGreevy, software engineer. Scroll to hike up Mt. Washington through his work.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%232f5d3a%27/%3E%3Cpath d=%27M3 25 L12 11 L17 18 L21 13 L29 25 Z%27 fill=%27%23f6f1e4%27/%3E%3Cpath d=%27M12 11 L14.6 15 L12.8 14.2 L10.6 15.6 Z%27 fill=%27%232f5d3a%27/%3E%3C/svg%3E">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Alexander McGreevy · The Climb">
+<meta property="og:description" content="Software engineer. Scroll to hike up Mt. Washington through his work.">
+<meta name="twitter:card" content="summary">
+<meta name="theme-color" content="#231e18">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600&family=IBM+Plex+Mono:wght@400;500&family=Cormorant+SC:wght@500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#f6f1e4; --ink2:#c9c2b1; --pill:rgba(20,22,20,.62); --pill-line:rgba(255,255,255,.14);
+  --blaze:#f4f0e6; --blaze-on:#f2c14e; --table:#231e18;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--table);color:var(--ink);font-family:'IBM Plex Mono',ui-monospace,monospace}
+html{scrollbar-width:none}
+body::-webkit-scrollbar{display:none}
+#track{width:1px;pointer-events:none}
+#stage{position:fixed;inset:0;overflow:hidden;perspective:1800px;background:var(--table)}
+.layer{position:absolute;inset:0;visibility:hidden;transform-origin:50% 50%;backface-visibility:hidden;-webkit-backface-visibility:hidden;will-change:transform,opacity}
+.layer.on{visibility:visible}
+.layer iframe{position:absolute;inset:0;width:100%;height:100%;border:0;display:block;background:transparent}
+.layer .load{position:absolute;inset:0;display:grid;place-items:center;font:500 12px/1.4 'IBM Plex Mono',monospace;letter-spacing:.18em;text-transform:uppercase;color:rgba(255,255,255,.75);transition:opacity .5s}
+.layer .load i{display:block;width:44px;height:2px;margin:12px auto 0;background:currentColor;animation:ld 1.1s ease-in-out infinite;transform-origin:left}
+@keyframes ld{0%{transform:scaleX(0)}60%{transform:scaleX(1);opacity:1}100%{transform:scaleX(1);opacity:0}}
+.layer.ready .load{opacity:0;pointer-events:none}
+.crease{position:absolute;inset:0;pointer-events:none;opacity:0;
+  background:
+   linear-gradient(90deg,transparent 32.8%,rgba(0,0,0,.28) 33.3%,rgba(255,255,255,.18) 33.8%,transparent 34.4%,transparent 65.6%,rgba(0,0,0,.28) 66.2%,rgba(255,255,255,.18) 66.7%,transparent 67.2%),
+   linear-gradient(0deg,transparent 49.4%,rgba(0,0,0,.32) 50%,rgba(255,255,255,.2) 50.5%,transparent 51.2%)}
+#fx{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:20;opacity:0}
+#treeline{position:fixed;left:0;right:0;top:46%;z-index:21;text-align:center;pointer-events:none;opacity:0;
+  font:600 clamp(26px,5vw,56px)/1 'Cormorant SC',serif;letter-spacing:.12em;color:#5b6b74}
+#treeline small{display:block;margin-top:.6em;font:500 clamp(10px,1.2vw,13px)/1 'IBM Plex Mono',monospace;letter-spacing:.3em;color:#7c8a92}
+#doors{position:fixed;inset:0;z-index:22;pointer-events:none;perspective:1400px;display:none}
+.door{position:absolute;top:0;bottom:0;width:50.2%;
+  background:
+    radial-gradient(circle at 50% 50%,rgba(0,0,0,0) 60%,rgba(0,0,0,.35)),
+    repeating-linear-gradient(90deg,#6b4423 0 2px,#7d5130 2px 15.5%,#5a381c 15.5% calc(15.5% + 3px),#74492a calc(15.5% + 3px) 16.6%),
+    #6e4626;
+  box-shadow:inset 0 0 40px rgba(0,0,0,.5)}
+.door.l{left:0;transform-origin:0 50%;border-right:2px solid #2b1a0c}
+.door.r{right:0;transform-origin:100% 50%;border-left:2px solid #2b1a0c}
+.door .brace{position:absolute;left:8%;right:8%;height:7%;background:linear-gradient(#5b391b,#4a2e15);box-shadow:0 3px 6px rgba(0,0,0,.4)}
+.door .brace.t{top:14%}.door .brace.b{bottom:14%}
+.door .diag{position:absolute;left:8%;right:8%;top:21%;bottom:21%;background:linear-gradient(to top right,transparent calc(50% - 22px),#553517 calc(50% - 22px),#4a2e15 calc(50% + 22px),transparent calc(50% + 22px))}
+.door.r .diag{transform:scaleX(-1)}
+.door .hinge{position:absolute;height:3.2%;width:36%;background:linear-gradient(#2c2c2c,#111);border-radius:0 40px 40px 0}
+.door.l .hinge{left:0}.door.r .hinge{right:0;transform:scaleX(-1)}
+.door .hinge.t{top:15.8%}.door .hinge.b{bottom:15.8%}
+.door .win{position:absolute;top:30%;width:26%;aspect-ratio:1;border:10px solid #4a2e15;background:radial-gradient(#ffd38a,#e08a2e 70%,#8a4a17);box-shadow:inset 0 0 18px rgba(0,0,0,.6),0 0 40px rgba(255,170,70,.25)}
+.door.l .win{right:16%}.door.r .win{left:16%}
+.door .win::before,.door .win::after{content:'';position:absolute;background:#4a2e15}
+.door .win::before{left:50%;top:0;bottom:0;width:6px;margin-left:-3px}.door .win::after{top:50%;left:0;right:0;height:6px;margin-top:-3px}
+.door .knob{position:absolute;top:54%;width:22px;height:22px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#d7c08a,#6d5a2e)}
+.door.l .knob{right:7%}.door.r .knob{left:7%}
+#glow{position:fixed;inset:0;z-index:23;pointer-events:none;opacity:0;background:radial-gradient(ellipse at 50% 55%,rgba(255,190,110,.75),rgba(255,140,50,.25) 45%,transparent 75%)}
+#cover{position:fixed;inset:0;z-index:40;background:#111;opacity:0;pointer-events:none;transition:opacity .22s}
+
+/* ---- nav ---- */
+#top{position:fixed;top:max(12px,env(safe-area-inset-top));right:12px;z-index:50;display:flex;gap:6px;align-items:center}
+.pill{display:flex;align-items:center;gap:2px;padding:4px;border-radius:999px;background:var(--pill);border:1px solid var(--pill-line);backdrop-filter:blur(10px) saturate(1.2);-webkit-backdrop-filter:blur(10px) saturate(1.2)}
+.pill a,.pill button{font:500 11px/1 'IBM Plex Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--ink);text-decoration:none;background:none;border:0;padding:8px 11px;border-radius:999px;cursor:pointer}
+.pill a:hover,.pill button:hover,.pill a:focus-visible,.pill button:focus-visible{background:rgba(255,255,255,.14);outline:none}
+#patches{padding:6px 10px}
+/* phone menu: one small button replaces the pill + blaze column */
+#menuBtn{display:none;align-items:center;gap:8px;padding:8px 10px 8px 12px!important}
+#menuBtn .cnt{font-size:10px;letter-spacing:.06em;color:var(--blaze-on)}
+#menuBtn .burger{position:relative;width:14px;height:10px;border-top:2px solid var(--ink);border-bottom:2px solid var(--ink)}
+#menuBtn .burger::after{content:'';position:absolute;left:0;right:0;top:2px;border-top:2px solid var(--ink)}
+#menuBtn[aria-expanded=true] .burger{border-color:transparent}
+#menuBtn[aria-expanded=true] .burger::before,#menuBtn[aria-expanded=true] .burger::after{content:'';position:absolute;left:-1px;right:-1px;top:2px;border-top:2px solid var(--ink);transform:rotate(45deg)}
+#menuBtn[aria-expanded=true] .burger::before{transform:rotate(-45deg)}
+#menu{position:absolute;right:0;top:calc(100% + 8px);width:min(250px,calc(100vw - 24px));padding:8px;border-radius:16px;background:rgba(20,22,20,.94);border:1px solid var(--pill-line);box-shadow:0 18px 40px rgba(0,0,0,.45);transform-origin:100% 0;animation:mIn .18s ease-out}
+#menu[hidden]{display:none}
+@keyframes mIn{from{opacity:0;transform:scale(.96) translateY(-4px)}}
+#menu ol{list-style:none;margin:0;padding:0}
+#menu ol button,#menu a{display:flex;align-items:center;gap:10px;width:100%;padding:10px 10px;border:0;border-radius:10px;background:none;color:var(--ink);text-align:left;text-decoration:none;font:500 12px/1 'IBM Plex Mono',monospace;letter-spacing:.06em;text-transform:uppercase;cursor:pointer}
+#menu ol button i{width:9px;height:15px;border-radius:2px;background:var(--blaze);opacity:.45;flex:none}
+#menu ol button.on{background:rgba(255,255,255,.08)}#menu ol button.on i{background:var(--blaze-on);opacity:1}
+#menu ol button:hover,#menu a:hover,#menu ol button:focus-visible,#menu a:focus-visible{background:rgba(255,255,255,.12);outline:none}
+#menu hr{border:0;border-top:1px solid var(--pill-line);margin:6px 4px}
+#menu .mp{display:flex;align-items:center;justify-content:space-between;margin:4px 10px 6px;font:500 10px/1 'IBM Plex Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--ink2)}
+.pdots{display:flex;gap:4px;align-items:center}
+.pdots span{width:9px;height:9px;border-radius:50%;border:1.5px solid rgba(255,255,255,.5)}
+.pdots span.got{background:var(--blaze-on);border-color:var(--blaze-on);box-shadow:0 0 6px rgba(242,193,78,.7)}
+#blazes{position:fixed;right:8px;top:50%;transform:translateY(-50%);z-index:50;display:flex;flex-direction:column;gap:7px;padding:8px 5px;opacity:.6;transition:opacity .2s;border-radius:999px;background:var(--pill);border:1px solid var(--pill-line);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+#blazes:hover,#blazes:focus-within{opacity:1}
+#blazes button{position:relative;width:10px;height:17px;padding:0;border:0;border-radius:2px;background:var(--blaze);opacity:.45;cursor:pointer;transition:opacity .2s,background .2s,transform .2s}
+#blazes button:hover,#blazes button:focus-visible{opacity:1;outline:none;transform:scale(1.12)}
+#blazes button.on{opacity:1;background:var(--blaze-on)}
+#blazes button::after{content:attr(data-label);position:absolute;right:24px;top:50%;transform:translateY(-50%);white-space:nowrap;font:500 11px/1 'IBM Plex Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--ink);background:var(--pill);border:1px solid var(--pill-line);padding:6px 9px;border-radius:999px;opacity:0;pointer-events:none;transition:opacity .15s}
+#blazes button:hover::after,#blazes button:focus-visible::after{opacity:1}
+#toast{position:fixed;left:50%;bottom:max(18px,env(safe-area-inset-bottom));z-index:60;transform:translate(-50%,140%);display:flex;gap:12px;align-items:center;padding:10px 16px 10px 10px;border-radius:14px;background:#2f3b2c;color:#f6efd9;border:2px dashed #d9c48c;box-shadow:0 10px 30px rgba(0,0,0,.35);transition:transform .45s cubic-bezier(.2,1.4,.4,1);font:500 12px/1.35 'IBM Plex Mono',monospace}
+#toast.show{transform:translate(-50%,0)}
+#toast .badge{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;background:radial-gradient(#e9b949,#b8862a);border:3px solid #f6efd9;outline:2px dashed #7a5a16;outline-offset:-7px;font:600 15px/1 'Oswald',sans-serif;color:#3b2a0a}
+#toast b{display:block;font:600 13px/1.2 'Oswald',sans-serif;letter-spacing:.1em;text-transform:uppercase}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.skip:focus{position:fixed;left:12px;top:56px;z-index:70;width:auto;height:auto;clip:auto;padding:10px 14px;background:#fff;color:#111;border-radius:8px;font:600 13px/1 'IBM Plex Mono',monospace}
+@media (max-width:600px){
+  #blazes,#patches,#resume,#top .cl{display:none}
+  #menuBtn{display:flex}
+}
+</style>
+</head>
+<body>
+<a class="sr skip" href="classic.html">Skip the hike: open the classic portfolio</a>
+<noscript><p style="padding:24px">This site needs JavaScript for the hike. <a href="classic.html" style="color:#f2c14e">Open the classic portfolio</a>.</p></noscript>
+<div id="track"></div>
+<main id="stage" aria-label="The Climb"></main>
+<canvas id="fx" aria-hidden="true"></canvas>
+<div id="treeline" aria-hidden="true">Above the treeline<small>the area ahead has the worst weather in america</small></div>
+<div id="doors" aria-hidden="true">
+  <div class="door l"><div class="brace t"></div><div class="brace b"></div><div class="diag"></div><div class="hinge t"></div><div class="hinge b"></div><div class="win"></div><div class="knob"></div></div>
+  <div class="door r"><div class="brace t"></div><div class="brace b"></div><div class="diag"></div><div class="hinge t"></div><div class="hinge b"></div><div class="win"></div><div class="knob"></div></div>
+</div>
+<div id="glow" aria-hidden="true"></div>
+<div id="cover" aria-hidden="true"></div>
+
+<nav id="top" aria-label="Site">
+  <div class="pill">
+    <div id="patches" class="pdots" title="Trail patches: find the secret in each stop" role="img" aria-label="0 of 7 patches found"></div>
+    <a id="resume" href="#" target="_blank" rel="noopener">Resume</a>
+    <a class="cl" href="classic.html">Classic view</a>
+    <button id="menuBtn" type="button" aria-expanded="false" aria-controls="menu" aria-label="Menu"><span class="cnt" id="pcount">0/7</span><i class="burger" aria-hidden="true"></i></button>
+  </div>
+  <div id="menu" hidden>
+    <ol id="mstops" aria-label="Trail stops"></ol>
+    <hr>
+    <a href="classic.html">Classic portfolio →</a>
+    <a id="mres" href="#" target="_blank" rel="noopener">Resume ↗</a>
+    <hr>
+    <div class="mp">Trail patches <span class="pdots" id="mpatches" aria-hidden="true"></span></div>
+  </div>
+</nav>
+<nav id="blazes" aria-label="Trail stops"></nav>
+<div id="toast" role="status" aria-live="polite"><div class="badge">7</div><div><b>Patch earned</b><span></span></div></div>
+
+<script src="content.js"></script>
+<script>
+(() => {
+const C = window.CONTENT;
+if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+/* dev: ?dir=_stubs loads placeholder stops */
+const DIR = (new URLSearchParams(location.search).get('dir') || 'stops').replace(/[^\w-]/g, '');
+const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ---------- the route ---------- */
+const STOPS = [
+  { id: 'home',    name: 'Home',       len: 1.5, bg: 'transparent', load: 'unrolling the postcard' },
+  { id: 'journey', name: 'The Journey',len: 4,   bg: '#e9e1cc', load: 'surveying the map' },
+  { id: 'gear',    name: 'Gear Check', len: 2.5, bg: '#b8a57f', load: 'laying out the gear' },
+  { id: 'trail',   name: 'The Trail',  len: 5,   bg: '#1b2a1e', load: 'growing the forest' },
+  { id: 'hut',     name: 'The Hut',    len: 2,   bg: '#24150c', load: 'lighting the lanterns' },
+  { id: 'summit',  name: 'The Summit', len: 3,   bg: '#a9bccb', load: 'clearing the fog' },
+  { id: 'range',   name: 'The Range',  len: 2.5, bg: '#cfdde3', load: 'building the range' }
+];
+/* transition from STOPS[i] to STOPS[i+1] */
+const TRANS = [
+  { fx: 'flip',     len: 1 },
+  { fx: 'fold',     len: 1 },
+  { fx: 'tilt',     len: 1 },
+  { fx: 'doors',    len: 1.1 },
+  { fx: 'fog',      len: 1.3 },
+  { fx: 'pullback', len: 1.1 }
+];
+/* where the folded map lands in the gear flat-lay (fractions of the viewport); updated from the gear stop */
+let MAP_LAND = { x: .3, y: .55, w: .2, rot: -6 };
+
+let pos = 0;
+STOPS.forEach((s, i) => {
+  s.i = i; s.start = pos; s.end = pos + s.len; pos = s.end;
+  if (i < TRANS.length) { TRANS[i].start = pos; TRANS[i].end = pos + TRANS[i].len; pos = TRANS[i].end; }
+});
+const TOTAL = pos;
+const byId = Object.fromEntries(STOPS.map(s => [s.id, s]));
+
+/* ---------- DOM ---------- */
+const stage = document.getElementById('stage'), track = document.getElementById('track');
+const vh = () => innerHeight;
+function sizeTrack() { track.style.height = (TOTAL * vh() + vh()) + 'px'; }
+sizeTrack();
+
+STOPS.forEach(s => {
+  const L = document.createElement('section');
+  L.className = 'layer'; L.id = 'L-' + s.id; L.style.background = s.bg;
+  L.setAttribute('aria-label', s.name);
+  L.innerHTML = '<div class="load">' + s.load + '…<i></i></div>' + (s.id === 'journey' ? '<div class="crease"></div>' : '');
+  stage.appendChild(L); s.el = L; s.frame = null; s.ready = false; s.lastP = -1; s.lastVis = null; s.anchors = null;
+});
+['resume', 'mres'].forEach(id => { const a = document.getElementById(id); if (C.links.resume) a.href = C.links.resume; else a.remove(); });
+
+const blazes = document.getElementById('blazes');
+STOPS.forEach(s => {
+  const b = document.createElement('button');
+  b.dataset.label = (s.i + 1) + ' · ' + s.name; b.setAttribute('aria-label', 'Go to ' + s.name);
+  b.onclick = () => goto(s.id); blazes.appendChild(b); s.blaze = b;
+});
+
+/* phone menu */
+const menu = document.getElementById('menu'), menuBtn = document.getElementById('menuBtn'), mstops = document.getElementById('mstops');
+STOPS.forEach(s => {
+  const li = document.createElement('li'), b = document.createElement('button');
+  b.type = 'button'; b.innerHTML = '<i aria-hidden="true"></i>' + (s.i + 1) + ' · ' + s.name;
+  b.onclick = () => { setMenu(false); goto(s.id); }; li.appendChild(b); mstops.appendChild(li); s.mitem = b;
+});
+function setMenu(open) {
+  if (open === !menu.hidden) return;
+  menu.hidden = !open; menuBtn.setAttribute('aria-expanded', open);
+  if (open) { const on = mstops.querySelector('.on') || mstops.querySelector('button'); on && on.focus(); }
+}
+menuBtn.onclick = () => setMenu(menu.hidden);
+menu.addEventListener('click', e => { if (e.target.closest('a')) setMenu(false); });
+addEventListener('keydown', e => { if (e.key === 'Escape' && !menu.hidden) { setMenu(false); menuBtn.focus(); } });
+/* a tap inside a stop moves focus into its iframe, which blurs this window */
+addEventListener('blur', () => setMenu(false));
+document.addEventListener('pointerdown', e => { if (!e.target.closest('#top')) setMenu(false); });
+document.querySelectorAll('[data-goto]').forEach(a => a.addEventListener('click', e => { e.preventDefault(); goto(a.dataset.goto); }));
+
+/* ---------- iframes: mount current ±1 ---------- */
+function mount(s) {
+  if (s.frame) return;
+  const f = document.createElement('iframe');
+  f.src = DIR + '/' + s.id + '.html'; f.title = s.name; f.allow = 'autoplay; fullscreen; accelerometer; gyroscope';
+  s.el.appendChild(f); s.frame = f; s.ready = false; s.lastP = -1; s.lastVis = null;
+}
+function unmount(s) {
+  if (!s.frame) return;
+  s.frame.remove(); s.frame = null; s.ready = false; s.el.classList.remove('ready');
+}
+function send(s, m) { if (s.frame && s.ready) s.frame.contentWindow.postMessage(Object.assign({ climb: 1 }, m), '*'); }
+
+window.addEventListener('message', e => {
+  const m = e.data; if (!m || !m.climb) return;
+  const s = STOPS.find(x => x.frame && x.frame.contentWindow === e.source); if (!s) return;
+  switch (m.type) {
+    case 'ready': s.ready = true; s.el.classList.add('ready'); s.lastP = -1; s.lastVis = null; frame(true); break;
+    case 'scroll': setMenu(false); nudge(m.dy, !!m.touch); break;
+    case 'touchend': fling(); break;
+    case 'key': nudge(m.screens * vh(), false); break;
+    case 'patch': earn(m.stop || s.id); break;
+    case 'goto': goto(m.stop, m.anchor); break;
+    case 'classic': location.href = 'classic.html'; break;
+    case 'anchors':
+      s.anchors = m.anchors;
+      if (pending && pending.stop === s.id) { const p = pending; pending = null; goto(p.stop, p.anchor, true); }
+      break;
+    case 'mapLand': MAP_LAND = Object.assign(MAP_LAND, m.land); break;
+  }
+});
+
+/* ---------- scrolling (smoothed, fed by native scroll + forwarded input) ---------- */
+let y = scrollY, target = scrollY, animating = false, vel = 0, lastT = 0;
+const maxY = () => TOTAL * vh();
+function nudge(dy, touch) {
+  target = Math.max(0, Math.min(maxY(), (animating ? target : scrollY) + dy));
+  if (touch || RM) { y = target; scrollTo(0, y); animating = false; const now = performance.now(); vel = dy / Math.max(8, now - lastT); lastT = now; return; }
+  if (!animating) { animating = true; y = scrollY; requestAnimationFrame(tick); }
+}
+function fling() {
+  if (RM) return;
+  let v = vel * 16; const step = () => { if (Math.abs(v) < .5) return; nudge(v, true); v *= .94; requestAnimationFrame(step); };
+  requestAnimationFrame(step);
+}
+function tick() {
+  if (!animating) return;
+  y += (target - y) * .16;
+  if (Math.abs(target - y) < .5) { y = target; animating = false; }
+  scrollTo(0, y);
+  if (animating) requestAnimationFrame(tick);
+}
+addEventListener('scroll', () => { lastScrollT = performance.now(); if (!animating) { y = target = scrollY; } frame(); }, { passive: true });
+addEventListener('resize', () => { sizeTrack(); frame(true); });
+
+/* ---------- jumping ---------- */
+let pending = null;
+function goto(id, anchor, instant) {
+  const s = byId[id]; if (!s) return;
+  let p = 0;
+  if (anchor) { if (s.anchors && s.anchors[anchor] != null) p = s.anchors[anchor]; else pending = { stop: id, anchor }; }
+  const ty = (s.start + p * s.len) * vh() + 1;
+  const far = Math.abs(ty / vh() - scrollY / vh()) > 2.5;
+  if (far && !instant && !RM) {
+    const cv = document.getElementById('cover'); cv.style.opacity = 1;
+    setTimeout(() => { animating = false; y = target = ty; scrollTo(0, ty); frame(true); setTimeout(() => cv.style.opacity = 0, 120); }, 230);
+  } else { animating = false; nudge(ty - scrollY, false); if (instant) { animating = false; y = target = ty; scrollTo(0, ty); } }
+}
+
+/* ---------- patches ---------- */
+let got = new Set();
+try { got = new Set(JSON.parse(localStorage.getItem('climb.patches') || '[]')); } catch (e) {}
+function drawPatches() {
+  document.querySelectorAll('.pdots').forEach(P => {
+    P.innerHTML = '';
+    STOPS.forEach(s => { const d = document.createElement('span'); if (got.has(s.id)) d.className = 'got'; d.title = s.name + (got.has(s.id) ? ': found' : ': hidden'); P.appendChild(d); });
+  });
+  document.getElementById('patches').setAttribute('aria-label', got.size + ' of 7 patches found');
+  document.getElementById('pcount').textContent = got.size + '/7';
+  menuBtn.setAttribute('aria-label', 'Menu · ' + got.size + ' of 7 patches found');
+}
+drawPatches();
+let toastT;
+function earn(id) {
+  if (!byId[id] || got.has(id)) return;
+  got.add(id); try { localStorage.setItem('climb.patches', JSON.stringify([...got])); } catch (e) {}
+  drawPatches();
+  const T = document.getElementById('toast');
+  T.querySelector('.badge').textContent = byId[id].i + 1;
+  T.querySelector('span').textContent = got.size === 7 ? 'All 7 found. The off-trail bonus is coming soon.' : byId[id].name + ' · ' + got.size + ' of 7';
+  T.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => T.classList.remove('show'), 3200);
+}
+
+/* ---------- transitions ---------- */
+const fx = document.getElementById('fx'), fctx = fx.getContext('2d');
+const doors = document.getElementById('doors'), dl = doors.children[0], dr = doors.children[1], glow = document.getElementById('glow');
+const treeline = document.getElementById('treeline');
+const clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
+const ss = (a, b, v) => { const t = clamp((v - a) / (b - a)); return t * t * (3 - 2 * t); };
+const ease = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+function resetLayer(s) { const e = s.el.style; e.transform = e.opacity = e.filter = e.zIndex = e.transformOrigin = e.clipPath = e.boxShadow = e.maskImage = e.webkitMaskImage = ''; const c = s.el.querySelector('.crease'); if (c) c.style.opacity = 0; }
+function resetFx() { fx.style.opacity = 0; doors.style.display = 'none'; glow.style.opacity = 0; treeline.style.opacity = 0; }
+
+/* fog banks */
+const FOGB = (() => { let s = 7; const r = () => (s = (s * 16807) % 2147483647) / 2147483647;
+  return Array.from({ length: 34 }, () => ({ x: r() * 1.4, y: r(), r: .12 + r() * .22, v: (r() < .5 ? -1 : 1) * (.3 + r() * .5) })); })();
+function spruceLine(g, w, h, yb, t, col, amp, seed) {
+  g.fillStyle = col; g.beginPath(); g.moveTo(0, h);
+  let s = seed; const r = () => (s = (s * 16807) % 2147483647) / 2147483647;
+  for (let x = -20; x <= w + 20; x += 14 + r() * 18) {
+    const top = yb - (amp * (.4 + r() * .6));
+    g.lineTo(x, yb); g.lineTo(x + 8, top); g.lineTo(x + 16 + r() * 6, yb);
+  }
+  g.lineTo(w + 20, h); g.closePath(); g.fill();
+}
+const FX = {
+  flip(A, B, t) {
+    const e = RM ? t : ease(t), dip = 1 - .16 * Math.sin(Math.PI * e);
+    A.el.style.transform = `scale(${dip}) rotateY(${-180 * e}deg)`;
+    B.el.style.transform = `scale(${dip}) rotateY(${180 - 180 * e}deg)`;
+    A.el.style.boxShadow = B.el.style.boxShadow = '0 30px 80px rgba(0,0,0,.55)';
+    if (RM) { A.el.style.transform = B.el.style.transform = ''; A.el.style.opacity = 1 - t; B.el.style.opacity = t; }
+  },
+  fold(A, B, t) {
+    const e = ease(t), W = innerWidth, H = innerHeight, L = MAP_LAND;
+    const k = 1 + (L.w - 1) * e, tx = (L.x - .5) * W * e, ty = (L.y - .5) * H * e;
+    A.el.style.zIndex = 2;
+    A.el.style.transform = `translate(${tx}px,${ty}px) rotate(${L.rot * e}deg) scale(${k})`;
+    A.el.style.boxShadow = `0 ${10 + 30 * e}px ${30 + 40 * e}px rgba(0,0,0,${.25 + .25 * e})`;
+    A.el.style.opacity = 1 - ss(.82, 1, t);
+    const c = A.el.querySelector('.crease'); if (c) c.style.opacity = ss(.05, .5, t);
+    B.el.style.opacity = ss(0, .35, t); B.el.style.transform = `scale(${1.06 - .06 * e})`;
+  },
+  tilt(A, B, t) {
+    const e = ease(t);
+    A.el.style.zIndex = 2; A.el.style.transformOrigin = '50% 100%';
+    A.el.style.transform = `translateY(${18 * e}vh) rotateX(${78 * e}deg)`;
+    A.el.style.opacity = 1 - ss(.45, .8, t);
+    A.el.style.filter = `brightness(${1 - .5 * e})`;
+    B.el.style.opacity = ss(.3, .75, t); B.el.style.transform = `translateY(${-10 + 10 * e}vh) scale(${1.15 - .15 * e})`;
+  },
+  doors(A, B, t) {
+    doors.style.display = 'block';
+    const close = ss(0, .42, t), open = ss(.58, 1, t);
+    const a = 96 * (1 - close) + 96 * open;   /* degrees away from shut */
+    dl.style.transform = `rotateY(${-a}deg)`; dr.style.transform = `rotateY(${a}deg)`;
+    const swap = t >= .5;
+    A.el.style.opacity = swap ? 0 : 1; B.el.style.opacity = swap ? 1 : 0;
+    A.el.style.transform = `scale(${1 + .08 * close})`; B.el.style.transform = `scale(${1.08 - .08 * open})`;
+    glow.style.opacity = swap ? .9 * (1 - ss(.7, 1, t)) * ss(.55, .7, t) : 0;
+    if (RM) { doors.style.display = 'none'; A.el.style.opacity = 1 - t; B.el.style.opacity = t; A.el.style.transform = B.el.style.transform = ''; }
+  },
+  fog(A, B, t) {
+    const W = fx.width = Math.ceil(innerWidth / 2), H = fx.height = Math.ceil(innerHeight / 2);
+    fx.style.opacity = 1;
+    const white = ss(.12, .48, t) * (1 - ss(.56, .92, t));
+    const swap = t >= .5;
+    A.el.style.opacity = swap ? 0 : 1; B.el.style.opacity = swap ? 1 : 0;
+    A.el.style.transform = `scale(${1 + .18 * ss(0, .5, t)})`; B.el.style.transform = `scale(${1.12 - .12 * ss(.5, 1, t)})`;
+    fctx.clearRect(0, 0, W, H);
+    /* krummholz falling away below you as you climb out of the scrub */
+    const k = ss(0, .45, t) * (1 - ss(.45, .5, t));
+    if (k > 0 && !swap) {
+      const drop = ss(0, .45, t);
+      spruceLine(fctx, W, H, H * (.72 + .5 * drop), t, `rgba(28,46,32,${.9 * k})`, 60, 11);
+      spruceLine(fctx, W, H, H * (.86 + .6 * drop), t, `rgba(18,30,22,${k})`, 90, 29);
+    }
+    fctx.globalAlpha = 1;
+    fctx.fillStyle = `rgba(236,241,244,${white})`; fctx.fillRect(0, 0, W, H);
+    /* soft fog banks drifting sideways (individual blobs, no tiling seams) */
+    const tex = Math.min(1, white * 1.6 + .25 * Math.sin(Math.PI * t));
+    for (const b of FOGB) {
+      const bx = ((b.x + t * b.v) % 1.4 + 1.4) % 1.4 - .2, x = bx * W, yy = b.y * H, rad = b.r * Math.max(W, H);
+      const gr = fctx.createRadialGradient(x, yy, 0, x, yy, rad);
+      gr.addColorStop(0, `rgba(244,247,249,${.6 * tex})`); gr.addColorStop(1, 'rgba(244,247,249,0)');
+      fctx.fillStyle = gr; fctx.fillRect(x - rad, yy - rad, rad * 2, rad * 2);
+    }
+    treeline.style.opacity = ss(.3, .45, t) * (1 - ss(.58, .72, t));
+    if (RM) { fx.style.opacity = 0; treeline.style.opacity = 0; A.el.style.opacity = 1 - t; B.el.style.opacity = t; A.el.style.transform = B.el.style.transform = ''; }
+  },
+  pullback(A, B, t) {
+    const e = ease(t);
+    A.el.style.zIndex = 2;
+    A.el.style.transform = `scale(${1 - .45 * e})`; A.el.style.opacity = 1 - ss(.15, .6, t);
+    A.el.style.filter = `blur(${8 * ss(.1, .6, t)}px)`;
+    /* soften the shrinking frame's edges so it reads as distance, not a picture */
+    const fe = 70 - 30 * ss(0, .4, t);
+    A.el.style.webkitMaskImage = A.el.style.maskImage = `radial-gradient(ellipse at 50% 50%, #000 ${fe}%, transparent ${fe + 28}%)`;
+    B.el.style.transform = `scale(${2.1 - 1.1 * e})`; B.el.style.opacity = ss(0, .4, t);
+    B.el.style.filter = `blur(${10 * (1 - ss(.3, 1, t))}px)`;
+    if (RM) { A.el.style.transform = B.el.style.transform = A.el.style.filter = B.el.style.filter = ''; A.el.style.opacity = 1 - t; B.el.style.opacity = t; }
+  }
+};
+
+/* ---------- per-frame layout ---------- */
+let curId = null, lastTrans = null, lastScrollT = 0, idleT = 0;
+function frame(force) {
+  const g = clamp(scrollY / vh(), 0, TOTAL);
+  let active = [], trans = null, tt = 0;
+  for (let i = 0; i < STOPS.length; i++) {
+    const s = STOPS[i];
+    if (g >= s.start && g < s.end) { active = [s]; break; }
+    const T = TRANS[i];
+    if (T && g >= T.start && g < T.end) { trans = i; tt = (g - T.start) / T.len; active = [s, STOPS[i + 1]]; break; }
+  }
+  if (!active.length) active = [STOPS[STOPS.length - 1]];
+  const main = trans == null ? active[0] : (tt < .5 ? active[0] : active[1]);
+
+  /* mount window: the stops on screen mount at once; the neighbours preload only once scrolling pauses
+     (or when you're about to reach them), because a stop's first build can block the page for a moment
+     and that should land while you're reading, not mid-scroll */
+  const idx = main.i, idle = performance.now() - lastScrollT > 380;
+  STOPS.forEach(s => {
+    const d = Math.abs(s.i - idx);
+    const near = s.i > idx ? s.start - g < .9 + (TRANS[s.i - 1] ? TRANS[s.i - 1].len : 0) : s.i < idx ? g - s.end < .9 + (TRANS[s.i] ? TRANS[s.i].len : 0) : true;
+    if (active.includes(s) || (d === 1 && (idle || near))) mount(s);
+    else if (d >= 2) unmount(s);
+  });
+  if (!idle && !idleT) idleT = setTimeout(() => { idleT = 0; frame(); }, 420);
+
+  /* visibility + base styles */
+  STOPS.forEach(s => {
+    const on = active.includes(s);
+    s.el.classList.toggle('on', on);
+    if (!on || trans == null) resetLayer(s);
+    const p = g < s.start ? 0 : g >= s.end ? 1 : (g - s.start) / s.len;
+    if (s.ready && (force || Math.abs(p - s.lastP) > 1e-4)) { s.lastP = p; send(s, { type: 'progress', p }); }
+    if (s.ready && (force || s.lastVis !== on)) { s.lastVis = on; send(s, { type: 'visible', v: on }); }
+  });
+
+  if (trans !== lastTrans) {
+    resetFx(); STOPS.forEach(resetLayer);
+    /* left a transition (often by a fast scroll or a jump that skipped its end): tell both stops it finished,
+       so nothing stays half-faded, e.g. the summit's arrival fog */
+    if (lastTrans != null) {
+      const T = TRANS[lastTrans], te = g >= T.end ? 1 : 0;
+      send(STOPS[lastTrans], { type: 'transition', dir: 'out', t: te, fx: T.fx });
+      send(STOPS[lastTrans + 1], { type: 'transition', dir: 'in', t: te, fx: T.fx });
+    }
+  }
+  if (trans != null) {
+    const A = STOPS[trans], B = STOPS[trans + 1];
+    FX[TRANS[trans].fx](A, B, clamp(tt));
+    send(A, { type: 'transition', dir: 'out', t: tt, fx: TRANS[trans].fx });
+    send(B, { type: 'transition', dir: 'in', t: tt, fx: TRANS[trans].fx });
+  }
+  lastTrans = trans;
+
+  if (main.id !== curId) {
+    curId = main.id;
+    STOPS.forEach(s => { s.blaze.classList.toggle('on', s === main); s.mitem.classList.toggle('on', s === main); s.mitem.toggleAttribute('aria-current', s === main); });
+    history.replaceState(null, '', '#' + main.id);
+    document.title = main.name + ' · ' + C.person.name;
+  }
+}
+
+/* ---------- start ---------- */
+const [hStop, hAnchor] = location.hash.slice(1).split('/');
+if (byId[hStop] && hStop !== 'home') {
+  scrollTo(0, byId[hStop].start * vh() + 1); y = target = scrollY;
+  if (hAnchor) pending = { stop: hStop, anchor: hAnchor };
+}
+frame(true);
+})();
+</script>
+</body>
+</html>

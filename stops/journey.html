@@ -1,0 +1,686 @@
+<!doctype html>
+<html lang="en" data-stop="journey" data-span="4">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>The Journey · The Climb</title>
+<link rel="icon" href="data:,">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+/* ② THE JOURNEY · survey-quad traverse (from mockup 2F)
+   Scroll walks the hiker waypoint to waypoint; the terrain itself never moves. */
+:root{--bg:#f3eedf;--card:#fbf7ea;--ink:#2b2418;--minor:#b37c4a;--major:#8a4a1c;--trail:#c4361f;--wood:#d5e5bf;--water:#2f7fc1;--waterF:#b7daf1;--logw:348px;--ph:200px}
+*{box-sizing:border-box}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(--ink);font:13px/1.45 'Space Mono',ui-monospace,Menlo,monospace;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:3px solid #ffb703;outline-offset:2px}
+.qbox{background:var(--card);border:2px solid var(--ink);box-shadow:4px 4px 0 var(--ink)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+#map{position:fixed;left:0;top:0;right:var(--logw);bottom:var(--ph);overflow:hidden;user-select:none;-webkit-user-select:none;touch-action:pan-y}
+#map canvas{position:absolute;left:0;top:0;display:block}
+#map.measuring canvas{cursor:crosshair}
+.frame{position:absolute;inset:10px;border:2px solid var(--ink);pointer-events:none;z-index:2}
+.frame::after{content:'';position:absolute;inset:4px;border:1px solid var(--ink);opacity:.6}
+.title{position:absolute;left:26px;top:24px;max-width:min(430px,calc(100% - 140px));padding:8px 13px 9px;z-index:9}
+.title .k{font:700 11px 'Space Mono',monospace;letter-spacing:.2em;color:var(--trail)}
+.title h1{margin:2px 0 3px;font:700 clamp(18px,2vw,26px)/1.1 'Space Mono',monospace;letter-spacing:-.02em}
+.title .s{margin:0;font:400 10px/1.4 'Space Mono',monospace;letter-spacing:.04em;opacity:.8}
+.scale{position:absolute;left:28px;bottom:26px;padding:6px 10px 5px;font:400 9px/1.3 'Space Mono',monospace;box-shadow:none;border-width:1.5px;z-index:9}
+.scale svg{display:block;overflow:visible;margin-bottom:2px}
+.compass{position:absolute;right:28px;bottom:28px;width:84px;height:84px;padding:0;border:0;background:none;border-radius:50%;z-index:12;-webkit-tap-highlight-color:transparent}
+.compass svg{position:absolute;inset:0;width:100%;height:100%;display:block;overflow:visible}
+.compass .dial{filter:drop-shadow(2px 2px 0 var(--ink));transition:transform .25s}
+.compass:hover .dial{transform:scale(1.04)}
+.compass .nw{position:absolute;inset:0;animation:wob 5s ease-in-out infinite;pointer-events:none}
+.compass .needle{transition:transform 1.7s cubic-bezier(.12,.8,.2,1.06)}
+@keyframes wob{0%,100%{transform:rotate(-3deg)}50%{transform:rotate(4deg)}}
+.toast{position:absolute;left:50%;top:18px;transform:translate(-50%,-14px);opacity:0;transition:opacity .35s,transform .35s;pointer-events:none;z-index:40;padding:9px 16px;border-radius:99px;font:700 12px 'Space Mono',monospace;white-space:nowrap;max-width:92%;overflow:hidden;text-overflow:ellipsis;background:var(--ink);color:var(--bg);box-shadow:0 6px 22px rgba(0,0,0,.28)}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+
+.wp{position:absolute;left:0;top:0;width:28px;height:28px;margin:-14px 0 0 -14px;padding:0;border:0;background:none;opacity:0;pointer-events:none;transition:opacity .45s;z-index:8}
+.wp.on{opacity:1;pointer-events:auto}
+.wp svg{display:block;width:28px;height:28px;transition:transform .25s;overflow:visible}
+.wp:hover svg,.wp:focus-visible svg,.wp.cur svg{transform:scale(1.25)}
+.wp .lb{position:absolute;left:32px;top:50%;transform:translateY(-50%);white-space:nowrap;text-align:left;font:700 10.5px/1.25 'Space Mono',monospace;color:var(--ink);background:var(--card);border:1.5px solid var(--ink);padding:3px 8px}
+.wp.flip .lb{left:auto;right:32px;text-align:right}
+.wp .lb b{display:block;letter-spacing:.05em;text-transform:uppercase}
+.wp .lb em{display:block;font-style:normal;font-weight:400;font-size:10px}
+.hiker{position:absolute;left:0;top:0;width:36px;height:36px;margin:-18px 0 0 -18px;padding:0;border:2px solid var(--ink);border-radius:50%;background:var(--card);box-shadow:2px 2px 0 var(--ink);z-index:10;cursor:grab;touch-action:none;display:none;color:var(--trail)}
+.hiker svg{display:block;width:100%;height:100%}
+.hiker:active{cursor:grabbing}
+.hiker:hover,.hiker:focus-visible{transform:scale(1.1)}
+
+.card{position:absolute;left:0;top:0;z-index:20;width:300px;background:var(--card);color:var(--ink);border:2px solid var(--ink);box-shadow:5px 5px 0 var(--ink);font:400 11.5px/1.5 'Space Mono',monospace;padding:12px 14px 13px;opacity:0;visibility:hidden;pointer-events:none;transform:translateY(6px);transition:opacity .2s,transform .2s,visibility .2s}
+.card.show{opacity:1;visibility:visible;pointer-events:auto;transform:none}
+.card .k{font:700 9.5px 'Space Mono',monospace;letter-spacing:.2em;color:var(--trail);text-transform:uppercase;margin-bottom:3px}
+.card h3{margin:0;font:700 15px/1.2 'Space Mono',monospace}
+.card .r{font-weight:700;margin-top:2px}
+.card .w{opacity:.8}
+.card .l{margin:6px 0 0}
+.card .m{margin-top:8px;padding-top:6px;border-top:1px dashed var(--ink);font-size:10px;opacity:.8}
+.tl{display:inline-block;margin-top:8px;padding:0;border:0;background:none;font:700 11px 'Space Mono',monospace;color:var(--trail);text-decoration:underline;text-underline-offset:3px}
+.tl:hover{text-decoration-thickness:2px}
+
+#log{position:fixed;right:0;top:0;bottom:0;width:var(--logw);background:var(--card);border-left:2px solid var(--ink);padding:calc(16px + var(--nav-h,0px)) 18px 12px;display:flex;flex-direction:column;gap:10px;overflow:auto;z-index:11}
+#log h2{margin:0;font:700 12px 'Space Mono',monospace;letter-spacing:.24em}
+#log .sub{display:block;font:400 10px 'Space Mono',monospace;opacity:.75;margin-top:2px}
+.odo{display:grid;grid-template-columns:1fr 1fr 1fr;border:2px solid var(--ink)}
+.odo div{padding:5px 8px 6px;border-right:1.5px solid var(--ink)}
+.odo div:last-child{border-right:0}
+.odo span{display:block;font:700 8.5px 'Space Mono',monospace;letter-spacing:.18em;opacity:.7}
+.odo b{display:block;font:700 18px/1.15 'Space Mono',monospace;letter-spacing:-.02em;white-space:nowrap}
+.near{font:400 10.5px/1.35 'Space Mono',monospace;min-height:28px}
+.near b{color:var(--trail)}
+.rows{list-style:none;margin:0;padding:0;border-top:1.5px solid var(--ink)}
+.rows li{border-bottom:1px dashed rgba(127,127,127,.6);padding:0 0 6px;transition:opacity .4s}
+.rows li.ahead{opacity:.62}
+.rows .row{display:grid;grid-template-columns:40px 1fr 58px;gap:8px;width:100%;text-align:left;background:none;border:0;padding:7px 4px 2px;color:inherit;align-items:start}
+.rows .row:hover,.rows .row:focus-visible,.rows li[aria-current=true] .row{background:rgba(127,127,127,.15)}
+.rows li[aria-current=true] .mi{color:var(--trail)}
+.rows .mi{font:700 11px/1.3 'Space Mono',monospace}
+.rows .nm b{display:block;font:700 11.5px/1.25 'Space Mono',monospace}
+.rows .nm em{display:block;font:400 10px/1.35 'Space Mono',monospace;font-style:normal;opacity:.9}
+.rows .nm i{display:block;font:700 15px/1.05 Caveat,cursive;font-style:normal;color:var(--trail);margin-top:1px}
+.rows .nm .wh{display:block;font:400 9.5px 'Space Mono',monospace;opacity:.7}
+.rows .el{font:700 10.5px/1.3 'Space Mono',monospace;text-align:right}
+.rows .ln{margin:2px 4px 0 52px;font:400 10.5px/1.4 'Space Mono',monospace}
+.rows .tl{margin:3px 0 0 52px}
+.tools h3{margin:0 0 5px;font:700 9px 'Space Mono',monospace;letter-spacing:.22em;opacity:.75}
+.layers{display:flex;flex-wrap:wrap;gap:4px 12px;margin-bottom:9px;font:400 10.5px 'Space Mono',monospace}
+.layers label{display:inline-flex;align-items:center;gap:5px;cursor:pointer}
+.layers input{appearance:none;-webkit-appearance:none;flex:none;width:12px;height:12px;margin:0;border:1.5px solid var(--ink);background:var(--card);border-radius:1px;cursor:pointer}
+.layers input:checked{background:var(--ink);box-shadow:inset 0 0 0 2px var(--card)}
+.mrow{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+#measure{height:26px;padding:0 10px;border:1.5px solid var(--ink);background:var(--card);font:700 10.5px 'Space Mono',monospace;letter-spacing:.06em}
+#measure[aria-pressed=true]{background:var(--ink);color:var(--card)}
+#mread{font:400 10px/1.3 'Space Mono',monospace}
+.note{margin:auto 0 0;font:400 9px/1.35 'Space Mono',monospace;opacity:.7}
+
+#prof{position:fixed;left:0;bottom:0;right:var(--logw);height:var(--ph);background:var(--card);border-top:2px solid var(--ink);padding:9px 16px 6px;display:flex;flex-direction:column;z-index:11}
+.ph{display:flex;align-items:baseline;gap:14px}
+.ph h2{margin:0;font:700 11px 'Space Mono',monospace;letter-spacing:.22em}
+.ph span{font:400 10px 'Space Mono',monospace;opacity:.75}
+.ph .u{margin-left:auto}
+#chart{position:relative;flex:1;min-height:0;cursor:ew-resize;touch-action:none;outline-offset:-2px}
+#chart canvas{position:absolute;left:0;top:0;display:block;pointer-events:none}
+
+/* phone / narrow: map on top, log underneath, no profile */
+@media (max-width:760px){
+  :root{--logw:0px;--ph:0px}
+  #map{right:0;bottom:auto;height:58vh;height:58svh}
+  #log{left:0;right:0;top:58vh;top:58svh;width:auto;border-left:0;border-top:2px solid var(--ink);padding:12px 14px 14px}
+  #prof{display:none}
+  .title{left:18px;top:18px;padding:6px 10px 7px;box-shadow:3px 3px 0 var(--ink)}
+  .title .s{display:none}
+  .scale{display:none}
+  .compass{width:56px;height:56px;right:18px;bottom:18px}
+  .card{left:14px!important;right:14px;top:auto!important;bottom:14px;width:auto;max-height:calc(100% - 90px);overflow:auto;box-shadow:3px 3px 0 var(--ink)}
+  .wp .lb em{display:none}
+  .odo b{font-size:15px}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none!important;transition-duration:.01ms!important}
+}
+</style>
+</head>
+<body>
+<div id="map" aria-label="Topographic map of the journey">
+  <canvas id="cv" aria-hidden="true"></canvas>
+  <div class="frame"></div>
+  <header class="title qbox"><div class="k">② THE JOURNEY</div><h1>Where I've been</h1><p class="s">scroll to hike · drag the hiker · shift-drag to measure</p></header>
+  <div class="scale qbox" aria-hidden="true"><svg id="scale" height="20"></svg>CONTOUR INTERVAL 200 FT</div>
+  <div id="markers"></div>
+  <button class="hiker" id="hiker" type="button" role="slider" aria-label="Hiker position along the trail" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><svg viewBox="0 0 36 36" aria-hidden="true"><circle cx="19" cy="8.5" r="3" fill="currentColor"/><path d="M18 12.5 L16 20 L12.5 27.5 M16 20 L19.5 23 L20.5 28.5 M17.5 14.5 L21.5 18 L24 17 M17.5 13.5 L13.5 17.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><rect x="18.6" y="12" width="5.2" height="7" rx="1.4" transform="rotate(14 21 15.5)" fill="currentColor"/><path d="M24.5 17 L26.5 28.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg></button>
+  <div class="card" id="card" role="region" aria-label="Waypoint details" aria-live="polite"></div>
+  <button class="compass" id="compass" type="button" aria-label="Compass"><svg class="dial" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="47" fill="var(--card)" stroke="var(--ink)" stroke-width="2.5"/><circle cx="50" cy="50" r="39" fill="none" stroke="var(--ink)" stroke-width=".9"/><path data-ticks="36,39,46" stroke="var(--ink)" stroke-width=".9" fill="none"/><path data-ticks="4,33,46" stroke="var(--ink)" stroke-width="2.2" fill="none"/><g font-family="'Space Mono',monospace" font-weight="700" font-size="10" fill="var(--ink)" text-anchor="middle"><text x="50" y="25">N</text><text x="78" y="54">E</text><text x="50" y="84">S</text><text x="22" y="54">W</text></g></svg><span class="nw"><svg class="needle" viewBox="0 0 100 100" aria-hidden="true"><path d="M50 29 L57 50 L43 50Z" fill="var(--trail)"/><path d="M50 71 L57 50 L43 50Z" fill="var(--ink)"/><circle cx="50" cy="50" r="4" fill="var(--card)" stroke="var(--ink)" stroke-width="1.6"/></svg></span></button>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+</div>
+
+<aside id="log" aria-label="Trail log">
+  <div><h2>TRAIL LOG</h2><span class="sub" id="logSub"></span></div>
+  <div class="odo"><div><span>MILE</span><b id="oMi">0.00</b></div><div><span>ELEV FT</span><b id="oFt">—</b></div><div><span>GAIN FT</span><b id="oGain">+0</b></div></div>
+  <div class="near" id="near" aria-live="off">At the trailhead</div>
+  <ol class="rows" id="rows"></ol>
+  <div class="tools">
+    <h3>MAP LAYERS</h3>
+    <div class="layers">
+      <label><input type="checkbox" data-layer="trail" checked>Trail</label>
+      <label><input type="checkbox" data-layer="contours" checked>Contours</label>
+      <label><input type="checkbox" data-layer="wood" checked>Woodland</label>
+      <label><input type="checkbox" data-layer="water" checked>Water</label>
+      <label><input type="checkbox" data-layer="relief" checked>Relief</label>
+      <label><input type="checkbox" data-layer="names" checked>Names</label>
+    </div>
+    <h3>TOOLS</h3>
+    <div class="mrow"><button id="measure" type="button" aria-pressed="false">Measure (M)</button><span id="mread">drag on the map to measure distance + bearing</span></div>
+  </div>
+  <p class="note">Terrain, mileage and elevations are illustrative.</p>
+</aside>
+
+<section id="prof" aria-label="Elevation profile">
+  <div class="ph"><h2>ELEVATION PROFILE</h2><span id="ve"></span><span class="u">drag to hike · ← → keys</span></div>
+  <div id="chart" tabindex="0" role="slider" aria-label="Hiker position along the trail (profile)" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><canvas id="pc" aria-hidden="true"></canvas></div>
+</section>
+
+<script src="../content.js"></script>
+<script src="../bridge.js"></script>
+<script>
+'use strict';
+/* ---------- pure helpers (math, noise, paths, contours, colour schemes) from mockup 02 ---------- */
+const TAU=Math.PI*2, lerp=(a,b,t)=>a+(b-a)*t, clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const ease=t=>t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;
+const smooth=(a,b,x)=>{ const t=clamp((x-a)/(b-a),0,1); return t*t*(3-2*t); };
+
+/* colors: palettes use #rrggbb only so they can be cross-faded */
+function hexRGB(h){ const n=parseInt(h.slice(1),16); return [n>>16&255,n>>8&255,n&255]; }
+function mixHex(a,b,t){ const A=hexRGB(a),B=hexRGB(b); const c=A.map((v,i)=>Math.round(v+(B[i]-v)*t));
+  return '#'+c.map(v=>v.toString(16).padStart(2,'0')).join(''); }
+function rgba(h,al){ const c=hexRGB(h); return `rgba(${c[0]},${c[1]},${c[2]},${al})`; }
+
+/* noise */
+function hash(n){ const s=Math.sin(n*127.1+311.7)*43758.5453; return s-Math.floor(s); }
+function vn(x){ const i=Math.floor(x),f=x-i,u=f*f*(3-2*f); return lerp(hash(i),hash(i+1),u); }
+function fbm(x,o=4){ let s=0,a=.5,f=1,n=0; for(let i=0;i<o;i++){ s+=a*vn(x*f+i*17.3); n+=a; f*=2.03; a*=.5; } return s/n; }
+function h2(x,y){ const s=Math.sin(x*127.1+y*311.7)*43758.5453; return s-Math.floor(s); }
+function vn2(x,y){ const i=Math.floor(x),j=Math.floor(y),fx=x-i,fy=y-j,ux=fx*fx*(3-2*fx),uy=fy*fy*(3-2*fy);
+  return lerp(lerp(h2(i,j),h2(i+1,j),ux),lerp(h2(i,j+1),h2(i+1,j+1),ux),uy); }
+function rng(seed){ return ()=>{ seed|=0; seed=seed+0x6D2B79F5|0; let t=Math.imul(seed^seed>>>15,1|seed); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
+
+/* gaussian hills: peaks = [[nx,ny,amp,sigmaFracOfWidth]] */
+function peaksAt(peaks,x,y,w,h){ let v=0; for(const p of peaks){ const dx=(x-p[0]*w)/(p[3]*w), dy=(y-p[1]*h)/(p[3]*w); v+=p[2]*Math.exp(-(dx*dx+dy*dy)); } return v; }
+
+
+
+/* ---- color scheme with ~0.8s cross-fade ---- */
+class Scheme{
+  constructor(list){ this.list=list; this.i=0; this.cur=Object.assign({},list[0]); this.from=Object.assign({},list[0]); this.to=list[0]; this.t=1; }
+  get name(){ return this.list[this.i].name; }
+  next(instant){ this.from=Object.assign({},this.cur); this.i=(this.i+1)%this.list.length; this.to=this.list[this.i]; this.t=instant?1:0; this.mixNow(); }
+  mixNow(){ const e=ease(this.t);
+    for(const k in this.to){ const a=this.from[k], b=this.to[k];
+      this.cur[k]=(typeof b==='number')?lerp(a,b,e):(typeof b==='string'&&b[0]==='#')?mixHex(a,b,e):b; } }
+  update(dt){ if(this.t>=1) return false; this.t=Math.min(1,this.t+dt/0.8); this.mixNow(); return true; }
+}
+
+/* ---- trail paths: Catmull-Rom through control points, sampled, with arc length ---- */
+function samplePath(pts,steps){
+  steps=steps||14; const n=pts.length, out=[];
+  for(let i=0;i<n-1;i++){
+    const p0=pts[Math.max(0,i-1)],p1=pts[i],p2=pts[i+1],p3=pts[Math.min(n-1,i+2)];
+    for(let s=0;s<steps;s++){ const t=s/steps,t2=t*t,t3=t2*t;
+      out.push([0.5*((2*p1[0])+(-p0[0]+p2[0])*t+(2*p0[0]-5*p1[0]+4*p2[0]-p3[0])*t2+(-p0[0]+3*p1[0]-3*p2[0]+p3[0])*t3),
+                0.5*((2*p1[1])+(-p0[1]+p2[1])*t+(2*p0[1]-5*p1[1]+4*p2[1]-p3[1])*t2+(-p0[1]+3*p1[1]-3*p2[1]+p3[1])*t3)]); } }
+  out.push(pts[n-1].slice());
+  const cum=[0]; for(let i=1;i<out.length;i++) cum.push(cum[i-1]+Math.hypot(out[i][0]-out[i-1][0],out[i][1]-out[i-1][1]));
+  const P={pts:out,cum,len:cum[cum.length-1],steps,nodeT:pts.map((_,i)=>cum[Math.min(out.length-1,i*steps)]/cum[cum.length-1])};
+  P.at=(t)=>ptAt(P,t*P.len);
+  P.d=()=>'M'+out.map(p=>p[0].toFixed(1)+' '+p[1].toFixed(1)).join('L');
+  return P;
+}
+function ptAt(P,d){ d=clamp(d,0,P.len); let lo=0,hi=P.cum.length-1;
+  while(hi-lo>1){ const m=(lo+hi)>>1; if(P.cum[m]<=d) lo=m; else hi=m; }
+  const seg=(P.cum[hi]-P.cum[lo])||1, u=(d-P.cum[lo])/seg;
+  return [lerp(P.pts[lo][0],P.pts[hi][0],u),lerp(P.pts[lo][1],P.pts[hi][1],u)]; }
+function strokeRange(ctx,P,t0,t1){ if(t1<=t0) return; const d0=t0*P.len,d1=t1*P.len; ctx.beginPath();
+  const a=ptAt(P,d0); ctx.moveTo(a[0],a[1]);
+  for(let i=1;i<P.pts.length;i++){ if(P.cum[i]<=d0) continue; if(P.cum[i]>=d1) break; ctx.lineTo(P.pts[i][0],P.pts[i][1]); }
+  const b=ptAt(P,d1); ctx.lineTo(b[0],b[1]); ctx.stroke(); }
+function distToPath(P,x,y){ let m=1e9; for(let i=0;i<P.pts.length;i+=2){ const dx=P.pts[i][0]-x,dy=P.pts[i][1]-y; const d=dx*dx+dy*dy; if(d<m) m=d; } return Math.sqrt(m); }
+
+/* ---- marching squares ----
+   cell corners: a=TL(8) b=TR(4) c=BR(2) d=BL(1); edges 0=top 1=right 2=bottom 3=left */
+const MS={1:[[3,2]],2:[[2,1]],3:[[3,1]],4:[[0,1]],5:[[0,3],[2,1]],6:[[0,2]],7:[[0,3]],8:[[0,3]],9:[[0,2]],10:[[0,1],[3,2]],11:[[0,1]],12:[[3,1]],13:[[2,1]],14:[[3,2]]};
+/* calls cb(k,x1,y1,x2,y2) for every contour segment at levels L=k*dL (k>=1) */
+function marching(f,cols,rows,cs,dL,cb){
+  for(let j=0;j<rows-1;j++) for(let i=0;i<cols-1;i++){
+    const a=f[j*cols+i],b=f[j*cols+i+1],c=f[(j+1)*cols+i+1],d=f[(j+1)*cols+i];
+    const mn=Math.min(a,b,c,d),mx=Math.max(a,b,c,d);
+    let k0=Math.floor(mn/dL)+1; const k1=Math.ceil(mx/dL)-1; if(k0<1) k0=1;
+    const x=i*cs,y=j*cs;
+    for(let k=k0;k<=k1;k++){ const L=k*dL;
+      const id=(a>L?8:0)|(b>L?4:0)|(c>L?2:0)|(d>L?1:0); if(id===0||id===15) continue;
+      const segs=MS[id];
+      for(let s=0;s<segs.length;s++){ const e1=segs[s][0],e2=segs[s][1];
+        const x1=e1===0?x+cs*(L-a)/(b-a):e1===1?x+cs:e1===2?x+cs*(L-d)/(c-d):x;
+        const y1=e1===0?y:e1===1?y+cs*(L-b)/(c-b):e1===2?y+cs:y+cs*(L-a)/(d-a);
+        const x2=e2===0?x+cs*(L-a)/(b-a):e2===1?x+cs:e2===2?x+cs*(L-d)/(c-d):x;
+        const y2=e2===0?y:e2===1?y+cs*(L-b)/(c-b):e2===2?y+cs:y+cs*(L-a)/(d-a);
+        cb(k,x1,y1,x2,y2); } } }
+}
+/* closed loops of the region f>L (border must be < L so every loop closes) */
+function stitchLoops(f,cols,rows,cs,L){
+  const key=(i,j,v)=>(j*cols+i)*2+v, nbr=new Map();
+  const link=(a,b)=>{ const n=nbr.get(a); if(n) n.push(b); else nbr.set(a,[b]); };
+  for(let j=0;j<rows-1;j++) for(let i=0;i<cols-1;i++){
+    const a=f[j*cols+i],b=f[j*cols+i+1],c=f[(j+1)*cols+i+1],d=f[(j+1)*cols+i];
+    const id=(a>L?8:0)|(b>L?4:0)|(c>L?2:0)|(d>L?1:0); if(id===0||id===15) continue;
+    const E=[key(i,j,0),key(i+1,j,1),key(i,j+1,0),key(i,j,1)];
+    for(const s of MS[id]){ link(E[s[0]],E[s[1]]); link(E[s[1]],E[s[0]]); } }
+  const edgePt=k=>{ const v=k&1, idx=k>>1, i=idx%cols, j=(idx/cols)|0;
+    if(v===0){ const a=f[idx],b=f[idx+1]; return [(i+(L-a)/(b-a))*cs,j*cs]; }
+    const a=f[idx],b=f[idx+cols]; return [i*cs,(j+(L-a)/(b-a))*cs]; };
+  const seen=new Set(), loops=[];
+  for(const k0 of nbr.keys()){ if(seen.has(k0)) continue; const loop=[]; let prev=-1,k=k0;
+    for(;;){ seen.add(k); loop.push(edgePt(k)); const n=nbr.get(k); const nx=(n[0]!==prev)?n[0]:n[1];
+      if(nx===undefined||seen.has(nx)) break; prev=k; k=nx; }
+    if(loop.length>5) loops.push(loop); }
+  return loops;
+}
+function chaikin(loop){ const out=[]; for(let i=0;i<loop.length;i++){ const a=loop[i],b=loop[(i+1)%loop.length];
+  out.push([a[0]*.75+b[0]*.25,a[1]*.75+b[1]*.25],[a[0]*.25+b[0]*.75,a[1]*.25+b[1]*.75]); } return out; }
+function loopsToD(loops){ return loops.map(l=>'M'+l.map(p=>p[0].toFixed(1)+' '+p[1].toFixed(1)).join('L')+'Z').join(''); }
+
+const fmt=n=>Math.round(n).toLocaleString('en-US');
+const BEAR_IMG=null;
+/* illustrative terrain + trail shape (normalised to the map area) */
+const QD={
+  peaks:[[0.87,0.06,1.15,0.2],[0.7,0.15,0.42,0.06],[0.47,0.27,0.55,0.12],[0.17,0.3,0.5,0.1],[0.8,0.84,0.48,0.12],[0.42,0.9,0.28,0.09]],
+  trail:[[0.2,0.82],[0.27,0.72],[0.36,0.6],[0.45,0.55],[0.55,0.45],[0.6,0.36],[0.7,0.28],[0.78,0.17],[0.85,0.035]],
+  MI:6.2
+};
+/* ---------- the static quad (terrain never moves; built once per layout) ---------- */
+class Quad{
+  fld(x,y){ const w=this.w,h=this.h; return peaksAt(QD.peaks,x,y,w,h)+0.24*vn2(x/w*3.2+3,y/w*3.2)+0.1*vn2(x/w*8.5,y/w*8.5+3); }
+  sample(x,y){ const {cs,cols,rows,f}=this; const gx=clamp(x/cs,0,cols-1.001), gy=clamp(y/cs,0,rows-1.001), i=gx|0, j=gy|0, fx=gx-i, fy=gy-j;
+    return lerp(lerp(f[j*cols+i],f[j*cols+i+1],fx),lerp(f[(j+1)*cols+i],f[(j+1)*cols+i+1],fx),fy); }
+  ft(x,y){ return 1000+this.sample(x,y)*2500; }
+  woodV(x,y,fv){ const w=this.w; let v=0.62*vn2(x/w*4.2+11,y/w*4.2+7)+0.38*vn2(x/w*11+3,y/w*11+9); if(fv>0.9) v-=(fv-0.9)*3.5; return v; }
+  trace(sx,sy,near){ const cs=this.cs, w=this.w, h=this.h, pts=[[sx,sy]]; let x=sx,y=sy,vx=0,vy=0,fp=this.sample(x,y),stall=0;
+    for(let n=0;n<700;n++){ const e=cs*.8, gx=this.sample(x+e,y)-this.sample(x-e,y), gy=this.sample(x,y+e)-this.sample(x,y-e), g=Math.hypot(gx,gy)||1e-9;
+      vx=vx*.6-gx/g*.4; vy=vy*.6-gy/g*.4; const vl=Math.hypot(vx,vy)||1; x+=vx/vl*cs*.55; y+=vy/vl*cs*.55;
+      if(x<-4||y<-4||x>w+4||y>h+4){ pts.push([x,y]); return {pts,end:'edge'}; }
+      const fv=this.sample(x,y); if(fv>fp-1e-5){ if(++stall>7){ pts.splice(Math.max(1,pts.length-6)); return {pts,end:'min'}; } } else { stall=0; fp=fv; }
+      pts.push([x,y]); if(n>6&&near(x,y)) return {pts,end:'merge'}; }
+    return {pts,end:'max'}; }
+  build(w,h,av,relief,opt){
+    const O=this.opt=Object.assign({dL:0.08,passes:2,seeds:16,spots:6,quiet:false},opt||{});
+    this.w=w; this.h=h; const cs=this.cs=Math.max(6,Math.round(w/180)), cols=this.cols=Math.ceil(w/cs)+2, rows=this.rows=Math.ceil(h/cs)+2;
+    const f=this.f=new Float32Array(cols*rows);
+    for(let j=0;j<rows;j++) for(let i=0;i<cols;i++) f[j*cols+i]=this.fld(i*cs,j*cs);
+    const R=av.rects, PT=av.pts, WPS=av.wps;
+    const ok=(x,y,pad)=>{ if(x<pad||y<pad||x>w-pad||y>h-pad) return false; for(const r of R) if(x>r.x0-pad&&x<r.x1+pad&&y>r.y0-pad&&y<r.y1+pad) return false; return true; };
+    const dpt=(x,y)=>{ let m=1e12; for(const p of PT){ const d=(p[0]-x)*(p[0]-x)+(p[1]-y)*(p[1]-y); if(d<m) m=d; } return Math.sqrt(m); };
+    /* contours (200 ft) + index contours (1,000 ft) with label spots */
+    const minor=new Path2D(), major=new Path2D(), segs={};
+    marching(f,cols,rows,cs,O.dL,(k,x1,y1,x2,y2)=>{ if(k%5===0){ major.moveTo(x1,y1); major.lineTo(x2,y2); (segs[k]||(segs[k]=[])).push([(x1+x2)/2,(y1+y2)/2,Math.atan2(y2-y1,x2-x1)]); } else { minor.moveTo(x1,y1); minor.lineTo(x2,y2); } });
+    this.minor=minor; this.major=major; this.clabels=[];
+    for(const k in segs){ const arr=segs[k], chosen=[];
+      for(let pass=0;pass<O.passes;pass++){ let best=null,bs=0;
+        for(let n=0;n<arr.length;n+=2){ const sg=arr[n]; if(!ok(sg[0],sg[1],30)) continue; let sc=Math.min(dpt(sg[0],sg[1]),140);
+          for(const c of chosen) sc=Math.min(sc,Math.hypot(c[0]-sg[0],c[1]-sg[1])/3);
+          for(const c of this.clabels) sc=Math.min(sc,Math.hypot(c.x-sg[0],c.y-sg[1]));
+          if(sc>bs){ bs=sc; best=sg; } }
+        if(best&&bs>40){ chosen.push(best); let a=best[2]; if(a>Math.PI/2) a-=Math.PI; if(a<-Math.PI/2) a+=Math.PI; const t=fmt(1000+2500*O.dL*k); this.clabels.push({x:best[0],y:best[1],a,t,tw:t.length*5.5}); } } }
+    /* woodland tint (green) with clearings and an open alpine zone up high */
+    const c2=Math.round(cs*1.4), oc=Math.ceil(w/c2)+4, orr=Math.ceil(h/c2)+4, W=new Float32Array(oc*orr);
+    for(let j=0;j<orr;j++) for(let i=0;i<oc;i++){ const k=j*oc+i; if(i===0||j===0||i===oc-1||j===orr-1){ W[k]=-1; continue; } const x=(i-1)*c2, y=(j-1)*c2; W[k]=this.woodV(x,y,this.sample(x,y)); }
+    const wood=new Path2D(); for(const l0 of stitchLoops(W,oc,orr,c2,0.47)){ const l=chaikin(chaikin(l0)); wood.moveTo(l[0][0]-c2,l[0][1]-c2); for(let n=1;n<l.length;n++) wood.lineTo(l[n][0]-c2,l[n][1]-c2); wood.closePath(); }
+    this.woodP=wood;
+    /* streams follow the real downhill gradient; ponds sit in the low spots they reach */
+    const hs=new Set(), hk=(x,y)=>((x/7)|0)+','+((y/7)|0);
+    const near=(x,y)=>{ const cx=(x/7)|0, cy=(y/7)|0; for(let a=-1;a<=1;a++) for(let b=-1;b<=1;b++) if(hs.has((cx+a)+','+(cy+b))) return true; return false; };
+    const r=rng(11), seeds=[];
+    for(let n=0;n<500&&seeds.length<O.seeds;n++){ const x=20+r()*(w-40), y=20+r()*(h-40), fv=this.sample(x,y); if(fv<0.5||fv>1.05) continue; if(seeds.some(s=>Math.hypot(s[0]-x,s[1]-y)<85)) continue; seeds.push([x,y]); }
+    this.streams=[]; const mins=[];
+    for(const sd of seeds){ const tr=this.trace(sd[0],sd[1],near); if(tr.pts.length<16) continue;
+      const sm=tr.pts.map((p,i,a)=>(i===0||i===a.length-1)?p:[(a[i-1][0]+p[0]*2+a[i+1][0])/4,(a[i-1][1]+p[1]*2+a[i+1][1])/4]);
+      this.streams.push(sm.slice(Math.floor(sm.length*0.12))); for(const p of tr.pts) hs.add(hk(p[0],p[1]));
+      if(tr.end==='min') mins.push(tr.pts[tr.pts.length-1]); }
+    const sp=new Path2D(); for(const s of this.streams){ sp.moveTo(s[0][0],s[0][1]); for(let n=1;n<s.length;n++) sp.lineTo(s[n][0],s[n][1]); } this.streamP=sp;
+    this.ponds=[];
+    for(const m of mins){ if(!ok(m[0],m[1],14)||dpt(m[0],m[1])<34) continue; if(this.ponds.some(p=>Math.hypot(p.x-m[0],p.y-m[1])<90)) continue; this.ponds.push({x:m[0],y:m[1],r:8+hash(m[0]*.13)*7}); if(this.ponds.length>=4) break; }
+    const pp=new Path2D(); this.ponds.forEach((p,q)=>{ const n=24; for(let k=0;k<=n;k++){ const a=k/n*TAU, rr=p.r*(1+0.28*(vn(a*1.7+q*9)-.5)); const x=p.x+Math.cos(a)*rr*1.3, y=p.y+Math.sin(a)*rr; k?pp.lineTo(x,y):pp.moveTo(x,y); } pp.closePath(); }); this.pondP=pp;
+    /* names: spot heights, South Peak, brooks, ledges, alpine zone */
+    this.spots=[]; this.names=[];
+    for(let j=3;j<rows-3;j++) for(let i=3;i<cols-3;i++){ const v=f[j*cols+i]; if(v<0.45) continue; let mx=true;
+      for(let b=-3;b<=3&&mx;b++) for(let a=-3;a<=3;a++){ if((a||b)&&f[(j+b)*cols+i+a]>=v){ mx=false; break; } }
+      if(mx&&i*cs<w-8&&j*cs<h-8) this.spots.push({x:i*cs,y:j*cs,ft:Math.round((1000+v*2500)/10)*10,major:false}); }
+    this.spots.sort((a,b)=>b.ft-a.ft);
+    let nMaj=0; for(const p of this.spots){ if(nMaj>=O.spots) break; if(!ok(p.x,p.y,26)||dpt(p.x,p.y)<26) continue; if(this.spots.some(o=>o.major&&Math.hypot(o.x-p.x,o.y-p.y)<120)) continue; p.major=true; nMaj++; }
+    { let bestS=null,bd=1e9; for(const p of this.spots){ const d=Math.hypot(p.x-0.7*w,p.y-0.15*h); if(d<bd&&d<110){ bd=d; bestS=p; } }
+      if(bestS){ bestS.major=true; this.peakSP=bestS;  } }
+    if(this.spots.length&&!O.quiet){ const top=this.spots[0]; if(top!==this.peakSP&&ok(top.x,top.y+26,30)) this.names.push({x:top.x,y:top.y+28,t:'ALPINE ZONE',k:'alpine'}); }
+    const brook=(wp,label,skip)=>{ let best=null,bd=1e9,bi=-1;
+      this.streams.forEach((s,si)=>{ if(si===skip) return; for(let n=3;n<s.length-3;n++){ const p=s[n], d=Math.hypot(p[0]-wp[0],p[1]-wp[1]); if(d<bd&&d<230&&ok(p[0],p[1],20)&&dpt(p[0],p[1])>22){ bd=d; best=[s,n]; bi=si; } } });
+      if(!best) return -1; const [s,n]=best, a0=s[Math.max(0,n-3)], a1=s[Math.min(s.length-1,n+3)]; let a=Math.atan2(a1[1]-a0[1],a1[0]-a0[0]); if(a>Math.PI/2) a-=Math.PI; if(a<-Math.PI/2) a+=Math.PI;
+      this.names.push({x:s[n][0]-Math.sin(a)*9,y:s[n][1]+Math.cos(a)*9,t:label,k:'water',a}); return bi; };
+    for(const p of this.ponds) if(p.name) this.names.push({x:p.x,y:p.y+p.r+11,t:p.name,k:'water',a:0});
+    /* the trailhead: register box on a post, and the road in from ① */
+    const ps=WPS[0]; this.reg={x:ps[0]+6,y:ps[1]+30};
+    const rd=new Path2D(); rd.moveTo(ps[0]+86,h+6); rd.quadraticCurveTo(ps[0]+70,ps[1]+40,ps[0]+16,ps[1]+12); this.roadP=rd; this.roadLab={x:ps[0]+84,y:Math.min(h-14,ps[1]+64)};
+    /* the ranger bear, off duty in a clearing: fine print, loupe only */
+    this.bear=null; for(let k=0;k<160&&!this.bear;k++){ const a=k*2.4, rr=k*3.2, x=0.6*w+Math.cos(a)*rr, y=0.74*h+Math.sin(a)*rr;
+      if(ok(x,y,34)&&dpt(x,y)>70&&this.woodV(x,y,this.sample(x,y))<0.44) this.bear={x,y}; }
+    this.shade=relief?this.hillshade():null;
+  }
+  hillshade(){ const sc=3, lw=Math.ceil(this.w/sc)+1, lh=Math.ceil(this.h/sc)+1, c=document.createElement('canvas'); c.width=lw; c.height=lh; const x=c.getContext('2d'); if(!x||!x.createImageData) return null;
+    const id=x.createImageData(lw,lh), d=id.data, K=95, Lx=-0.55, Ly=-0.6, Lz=0.58, Ln=Math.hypot(Lx,Ly,Lz), d0=Lz/Ln;
+    for(let j=0;j<lh;j++) for(let i=0;i<lw;i++){ const X=i*sc, Y=j*sc, gx=(this.sample(X+sc,Y)-this.sample(X-sc,Y))/(2*sc)*K, gy=(this.sample(X,Y+sc)-this.sample(X,Y-sc))/(2*sc)*K;
+      const dd=((-gx)*Lx+(-gy)*Ly+Lz)/(Math.hypot(gx,gy,1)*Ln)-d0, o=(j*lw+i)*4;
+      if(dd<0){ d[o]=d[o+1]=d[o+2]=18; d[o+3]=Math.min(150,-dd*330); } else { d[o]=d[o+1]=d[o+2]=255; d[o+3]=Math.min(110,dd*260); } }
+    x.putImageData(id,0,0); this.shSc=sc; return c; }
+  /* o: {ox,oy, s (line scale), fine (loupe-only print)} */
+  draw(ctx,P,L,o){ const s=o.s||1, w=this.w, h=this.h;
+    ctx.save(); ctx.translate(o.ox,o.oy); ctx.beginPath(); ctx.rect(0,0,w,h); ctx.clip();
+    ctx.fillStyle=P.bg; ctx.fillRect(0,0,w,h);
+    const Q=this.opt&&this.opt.quiet;
+    if(L.wood){ ctx.fillStyle=P.wood; if(Q) ctx.globalAlpha=.6; ctx.fill(this.woodP,'evenodd'); ctx.globalAlpha=1; }
+    if(L.relief&&this.shade){ ctx.globalAlpha=P.shA; ctx.imageSmoothingEnabled=true; ctx.drawImage(this.shade,0,0,this.shade.width*this.shSc,this.shade.height*this.shSc); ctx.globalAlpha=1; }
+    ctx.lineJoin='round'; ctx.lineCap='round';
+    if(L.water){ ctx.fillStyle=P.waterF; ctx.fill(this.pondP); ctx.strokeStyle=P.water; ctx.lineWidth=1.3*s; ctx.stroke(this.pondP); ctx.lineWidth=1.25*s; ctx.stroke(this.streamP); }
+    if(L.contours){
+      ctx.save(); ctx.beginPath(); ctx.rect(-10,-10,w+20,h+20);
+      for(const l of this.clabels){ const c=Math.cos(l.a), sn=Math.sin(l.a), hw=l.tw/2+3, hh=6.5;
+        [[-hw,-hh],[hw,-hh],[hw,hh],[-hw,hh]].forEach(([u,v],q)=>{ const X=l.x+u*c-v*sn, Y=l.y+u*sn+v*c; q?ctx.lineTo(X,Y):ctx.moveTo(X,Y); }); ctx.closePath(); }
+      ctx.clip('evenodd');
+      ctx.strokeStyle=P.minor; ctx.lineWidth=(Q?0.7:0.85)*s; ctx.globalAlpha=Q?.55:.9; ctx.stroke(this.minor); ctx.globalAlpha=Q?.75:1;
+      ctx.strokeStyle=P.major; ctx.lineWidth=(Q?1.2:1.7)*s; ctx.stroke(this.major); ctx.globalAlpha=1; ctx.restore();
+      ctx.font='700 9px "Space Mono",monospace'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillStyle=P.major;
+      for(const l of this.clabels){ ctx.save(); ctx.translate(l.x,l.y); ctx.rotate(l.a); ctx.fillText(l.t,0,.5); ctx.restore(); } }
+    if(L.names) this.drawNames(ctx,P,!!o.fine,s);
+    ctx.restore(); }
+  drawNames(ctx,P,fine,s){
+    const LS=('letterSpacing' in ctx), sp=v=>{ if(LS) ctx.letterSpacing=v; };
+    ctx.save(); ctx.lineJoin='round'; ctx.lineCap='round';
+    ctx.strokeStyle=P.ink; ctx.lineWidth=4.2*s; ctx.stroke(this.roadP); ctx.strokeStyle=P.bg; ctx.lineWidth=2.2*s; ctx.stroke(this.roadP);
+    const g=this.reg; ctx.fillStyle=P.ink; ctx.fillRect(g.x-.8,g.y,1.6,8); ctx.fillRect(g.x-5,g.y-6,10,6.5); ctx.fillStyle=P.bg; ctx.fillRect(g.x-3.4,g.y-4.4,6.8,1.3);
+    ctx.textBaseline='middle';
+    const halo=(t,x,y,fs)=>{ ctx.strokeStyle=rgba(P.bg,.9); ctx.lineWidth=Math.max(.8,fs*.36); ctx.strokeText(t,x,y); ctx.fillText(t,x,y); };
+    ctx.textAlign='left';
+    for(const p of this.spots){ if(!p.major&&!fine) continue; const fs=p.major?8.5:4.4; ctx.font=`700 ${fs}px "Space Mono",monospace`; ctx.fillStyle=P.ink; halo('× '+fmt(p.ft),p.x-fs*.3,p.y,fs); }
+    ctx.textAlign='center';
+    for(const n of this.names){
+      if(n.k==='water'){ ctx.save(); ctx.translate(n.x,n.y); ctx.rotate(n.a||0); ctx.font='italic 400 13px "IM Fell English",Georgia,serif'; ctx.fillStyle=P.water; halo(n.t,0,0,9); ctx.restore(); continue; }
+      const fs=n.k==='peak'?10:n.k==='alpine'?9:8.5; ctx.font=`700 ${fs}px "Space Mono",monospace`; sp(n.k==='alpine'?'4px':n.k==='peak'?'2px':'1.5px');
+      ctx.fillStyle=n.k==='alpine'?rgba(P.ink,.75):P.ink; halo(n.t,n.x,n.y,fs); sp('0px');
+      if(n.ledge){ ctx.strokeStyle=P.ink; ctx.lineWidth=1*s; ctx.beginPath(); for(let k=-5;k<=5;k++){ const x=n.x+k*7, y=n.y-12+Math.sin(k)*1.5; ctx.moveTo(x,y); ctx.lineTo(x+1.5,y+5); } ctx.stroke(); } }
+    if(fine){ ctx.fillStyle=P.ink; ctx.font='700 3.8px "Space Mono",monospace'; sp('.5px');
+      halo('TRAIL REGISTER',g.x,g.y+12,3.8); ctx.font='400 3.2px "Space Mono",monospace'; halo('please sign in · pencil on a string',g.x,g.y+16.5,3.2);
+      ctx.font='700 3.6px "Space Mono",monospace'; halo('FROM ① HOME',this.roadLab.x,this.roadLab.y,3.6); sp('0px');
+      if(this.bear){ const b=this.bear, im=BEAR_IMG; if(im&&im.complete&&im.naturalWidth) ctx.drawImage(im,b.x-4.5,b.y-5,9,9);
+        ctx.font='700 3px "Space Mono",monospace'; ctx.fillStyle=P.ink; halo('R. BEAR · OFF DUTY',b.x,b.y+6.6,3); } }
+    ctx.restore(); }
+}
+
+
+/* =====================================================================
+   ② JOURNEY · stop logic
+   Scroll (Climb.onProgress) walks the hiker along the trail: the trail draws
+   behind them, they pause at each waypoint (its card opens), and at the end the
+   camera pulls back so the whole finished map is visible for the fold into ③.
+   Dragging the hiker / profile explores freely until the next scroll takes over.
+   Words come only from CONTENT.journey. Terrain/mileage/elevation are illustrative.
+   ===================================================================== */
+(function(){
+const J=(window.CONTENT&&CONTENT.journey)||[], N=J.length, Climb=window.Climb;
+const $=(s,r)=>(r||document).querySelector(s), $$=(s,r)=>Array.from((r||document).querySelectorAll(s));
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let REDUCE=false; try{ const mq=matchMedia('(prefers-reduced-motion: reduce)'); REDUCE=mq.matches; if(mq.addEventListener) mq.addEventListener('change',e=>{ REDUCE=e.matches; dirty=true; }); }catch(_){}
+
+/* colour schemes (the compass secret cycles them; ~0.8s cross-fade) */
+const scheme=new Scheme([
+  {name:'USGS quad',    bg:'#f3eedf', card:'#fbf7ea', ink:'#2b2418', minor:'#b37c4a', major:'#8a4a1c', trail:'#c4361f', wood:'#d5e5bf', water:'#2f7fc1', waterF:'#b7daf1', shA:0.6},
+  {name:'Night survey', bg:'#050a08', card:'#0a1510', ink:'#a8f3cb', minor:'#2c8a62', major:'#8fe3b4', trail:'#ffd479', wood:'#0c2118', water:'#5fb8ff', waterF:'#0a2333', shA:0.7},
+  {name:'Blueprint',    bg:'#164b8f', card:'#103f7c', ink:'#e6f1ff', minor:'#6fa6e6', major:'#e6f1ff', trail:'#ffd166', wood:'#1c5799', water:'#cfe8ff', waterF:'#2a66ad', shA:0.45}
+]);
+const rootEl=document.documentElement;
+function applyVars(){ const c=scheme.cur; for(const k in c) if(k!=='name'&&typeof c[k]==='string') rootEl.style.setProperty('--'+k,c[k]); }
+applyVars();
+$$('[data-ticks]').forEach(p=>{ const a=p.dataset.ticks.split(',').map(Number); let d='';
+  for(let i=0;i<a[0];i++){ const t=i/a[0]*TAU-Math.PI/2, c=Math.cos(t), s=Math.sin(t); d+=`M${(50+c*a[1]).toFixed(2)} ${(50+s*a[1]).toFixed(2)}L${(50+c*a[2]).toFixed(2)} ${(50+s*a[2]).toFixed(2)}`; }
+  p.setAttribute('d',d); });
+
+const mapEl=$('#map'), cv=$('#cv'), ctx=cv.getContext('2d'), hiker=$('#hiker'), card=$('#card'), chart=$('#chart'), pc=$('#pc'), px=pc.getContext('2d'),
+      toastEl=$('#toast'), logEl=$('#log'), rowsEl=$('#rows'), needle=$('.needle'), compass=$('#compass');
+hiker.setAttribute('data-own-wheel','');            // touch-dragging the hiker must not also scroll the climb
+const q=new Quad();
+const L={trail:true,contours:true,wood:true,water:true,relief:true,names:true};
+const S={W:0,H:0,dpr:1,mx:0,my:0,mw:0,mh:0,P:null,tAt:[],wpp:[],E:[],G:[],N:240,Lmi:0,miPx:0,wpFt:[],wpMi:[]};
+const cam={z:1,cx:0,cy:0};
+let prog=0, sUser=null, sDisp=0, drawn=0, dirty=true, visible=true, raf=0, last=0, built=false;
+let pin=-1, hov=-1, hovT=0, openIdx=-2, mode=null, ms=null, measureOn=false, glide=null, hoverX=-1, found=false, rot=0, toastT=0, scaleZ=0;
+const mouse={x:0,y:0,in:false};
+
+/* ---------- scroll timeline: dwell at each waypoint, walk between, then pull back ---------- */
+const P0=0.05, P1=0.86, TEND=N>1?0.8:0;
+S.tAt=J.map((_,i)=>N>1?i/(N-1)*TEND:0);
+const segs=[], dwell=[];
+{ const D=1, Wk=1.25, Wf=0.8, units=N*D+Math.max(0,N-1)*Wk+Wf, u=(P1-P0)/units; let p=P0;
+  for(let i=0;i<N;i++){ if(i>0){ segs.push({p0:p,p1:p+Wk*u,s0:S.tAt[i-1],s1:S.tAt[i]}); p+=Wk*u; }
+    segs.push({p0:p,p1:p+D*u,s0:S.tAt[i],s1:S.tAt[i],d:i}); dwell[i]=[p,p+D*u]; p+=D*u; }
+  segs.push({p0:p,p1:P1,s0:N?S.tAt[N-1]:0,s1:1}); }
+function sOf(p){ if(p<=P0) return 0; if(p>=P1) return 1; for(const g of segs) if(p<=g.p1){ const u=clamp((p-g.p0)/((g.p1-g.p0)||1),0,1); return g.s0+(g.s1-g.s0)*smooth(0,1,u); } return 1; }
+function dwellAt(p){ for(let i=0;i<N;i++) if(p>=dwell[i][0]&&p<dwell[i][1]) return i; return -1; }
+function nearWp(s){ let b=-1; for(let i=0;i<N;i++) if(Math.abs(S.tAt[i]-s)<0.02) b=i; return b; }
+
+/* ---------- DOM: markers, log rows ---------- */
+$('#logSub').textContent=N?(J[0].place+(N>1?' → '+J[N-1].place:'')):'';
+const markers=J.map((e,i)=>{ const b=document.createElement('button'); b.type='button'; b.className='wp';
+  b.setAttribute('aria-label',[e.place,e.role,e.dates].filter(Boolean).join(', ')); b.tabIndex=-1;
+  b.innerHTML=`<svg viewBox="0 0 28 28" aria-hidden="true"><path d="M14 3 L24.5 23 H3.5Z" fill="var(--card)" stroke="var(--ink)" stroke-width="2.4" stroke-linejoin="round"/><circle cx="14" cy="17" r="2.3" fill="var(--trail)"/></svg><span class="lb"><b>${esc(e.place)}</b>${e.dates?`<em>${esc(e.dates)}</em>`:''}</span>`;
+  $('#markers').appendChild(b); bindHover(b,i); b.addEventListener('click',()=>{ pin=pin===i?-1:i; dirty=true; }); return b; });
+rowsEl.innerHTML=J.map((e,i)=>`<li data-i="${i}"><button type="button" class="row"><span class="mi">—</span><span class="nm"><b>${esc(e.place)}</b>${e.role?`<em>${esc(e.role)}</em>`:''}${e.dates?`<i>${esc(e.dates)}</i>`:''}${e.where?`<span class="wh">${esc(e.where)}</span>`:''}</span><span class="el">—</span></button>${e.line?`<p class="ln">${esc(e.line)}</p>`:''}${e.trail?`<button type="button" class="tl" data-trail="${esc(e.trail)}">see the work on the trail →</button>`:''}</li>`).join('');
+const rowLis=$$('#rows li'), rowBtns=$$('#rows .row');
+rowBtns.forEach((b,i)=>{ bindHover(b,i); b.addEventListener('click',()=>goTo(i)); });
+function bindHover(el,i){ el.addEventListener('pointerenter',e=>{ if(e.pointerType!=='touch'){ clearTimeout(hovT); hov=i; dirty=true; } });
+  el.addEventListener('pointerleave',e=>{ if(e.pointerType!=='touch'){ clearTimeout(hovT); hovT=setTimeout(()=>{ if(hov===i){ hov=-1; dirty=true; } },160); } });
+  el.addEventListener('focus',()=>{ hov=i; dirty=true; }); el.addEventListener('blur',()=>{ if(hov===i){ hov=-1; dirty=true; } }); }
+card.addEventListener('pointerenter',()=>clearTimeout(hovT));
+card.addEventListener('pointerleave',()=>{ if(hov>=0){ const i=hov; hovT=setTimeout(()=>{ if(hov===i){ hov=-1; dirty=true; } },160); } });
+document.addEventListener('click',e=>{ const t=e.target.closest&&e.target.closest('.tl'); if(t){ Climb.goto('trail',t.dataset.trail); return; }
+  if(pin>=0&&!(e.target.closest&&e.target.closest('.wp,.card,.row,.hiker,#chart'))){ pin=-1; dirty=true; } });
+function goTo(i){ const t=S.tAt[i]; if(REDUCE) sUser=t; else glide={a:sDisp,b:t,k:0}; pin=i; dirty=true; }
+function cardHTML(i){ const e=J[i];
+  return `<div class="k">Waypoint ${i+1} of ${N}</div><h3>${esc(e.place)}</h3>${e.role?`<div class="r">${esc(e.role)}</div>`:''}<div class="w">${[e.dates,e.where].filter(Boolean).map(esc).join(' · ')}</div>${e.line?`<p class="l">${esc(e.line)}</p>`:''}${e.trail?`<button type="button" class="tl" data-trail="${esc(e.trail)}">see the work on the trail →</button>`:''}<div class="m">BM ${fmt(S.wpFt[i]||0)} ft · mile ${(S.wpMi[i]||0).toFixed(1)} · illustrative</div>`; }
+
+/* ---------- layers + measure + toast + compass secret ---------- */
+$$('input[data-layer]').forEach(inp=>{ const k=inp.dataset.layer; inp.checked=L[k]; inp.addEventListener('change',()=>{ L[k]=inp.checked; dirty=true; }); });
+function toggleMeasure(on){ measureOn=(on===undefined)?!measureOn:on; $('#measure').setAttribute('aria-pressed',measureOn?'true':'false'); mapEl.classList.toggle('measuring',measureOn); if(!measureOn) ms=null; updMeasure(); dirty=true; }
+$('#measure').addEventListener('click',()=>toggleMeasure());
+function mInfo(){ const a=ms.a,b=ms.b,dx=b[0]-a[0],dy=b[1]-a[1],mi=Math.hypot(dx,dy)*S.miPx,brg=(Math.atan2(dx,-dy)*180/Math.PI+360)%360,dz=ftAt(b[0],b[1])-ftAt(a[0],a[1]);
+  return `${mi.toFixed(2)} mi · ${String(Math.round(brg)%360).padStart(3,'0')}° · ${dz>=0?'+':'−'}${fmt(Math.abs(Math.round(dz/10)*10))} ft`; }
+function updMeasure(){ $('#mread').textContent=ms&&Math.hypot(ms.b[0]-ms.a[0],ms.b[1]-ms.a[1])>3/cam.z?mInfo():(measureOn?'drag on the map: distance · bearing · climb':'drag on the map to measure distance + bearing'); }
+function say(m){ toastEl.textContent=m; toastEl.classList.add('show'); clearTimeout(toastT); toastT=setTimeout(()=>toastEl.classList.remove('show'),3200); }
+compass.addEventListener('click',()=>{ scheme.next(REDUCE); if(REDUCE) applyVars(); rot+=REDUCE?90:720+Math.floor(Math.random()*270); needle.style.transform=`rotate(${rot}deg)`;
+  say(found?`Map scheme: ${scheme.name}`:`★ Found it! Trail patch earned · ${scheme.name}`); found=true; Climb.patch('compass'); dirty=true; });
+document.addEventListener('keydown',e=>{ if(e.metaKey||e.ctrlKey||e.altKey) return; const tg=e.target; if(tg&&/^(INPUT|TEXTAREA|SELECT)$/.test(tg.tagName)) return;
+  if(e.key==='m'||e.key==='M'){ toggleMeasure(); }
+  else if(e.key==='Escape'){ if(ms||measureOn) toggleMeasure(false); pin=-1; hov=-1; dirty=true; } });
+
+/* ---------- camera (world = map at zoom 1) ---------- */
+const toScreen=(x,y)=>[(x-cam.cx)*cam.z+S.W/2,(y-cam.cy)*cam.z+S.H/2];
+const toWorld=(x,y)=>[(x-S.W/2)/cam.z+cam.cx,(y-S.H/2)/cam.z+cam.cy];
+function camTarget(){ const zm=S.W<600?1.3:1.55, a=REDUCE?0:smooth(0.03,0.1,prog)*(1-smooth(P1,0.95,prog)), z=1+(zm-1)*a;
+  const h=S.P.at(sDisp); let cx=lerp(S.W/2,h[0],a), cy=lerp(S.H/2,h[1],a); const hw=S.W/(2*z), hh=S.H/(2*z);
+  return {z,cx:clamp(cx,hw,S.W-hw),cy:clamp(cy,hh,S.H-hh)}; }
+
+/* ---------- layout (rebuilds the static quad for this size) ---------- */
+function layout(){
+  const r=mapEl.getBoundingClientRect(); if(r.width<10||r.height<10) return;
+  S.W=r.width; S.H=r.height; S.dpr=Math.min(2,window.devicePixelRatio||1);
+  cv.width=Math.round(S.W*S.dpr); cv.height=Math.round(S.H*S.dpr); cv.style.width=S.W+'px'; cv.style.height=S.H+'px';
+  const m=S.W<600?12:18; S.mx=m; S.my=m; S.mw=S.W-2*m; S.mh=S.H-2*m; S.miPx=QD.MI/S.mw;
+  const pts0=QD.trail.map(p=>[S.mx+p[0]*S.mw,S.my+p[1]*S.mh]); S.P=samplePath(pts0,14);
+  S.wpp=S.tAt.map(t=>S.P.at(t));
+  const rects=$$('.title,.compass,.scale').map(el=>{ const b=el.getBoundingClientRect(); return {x0:b.left-r.left-S.mx,y0:b.top-r.top-S.my,x1:b.right-r.left-S.mx,y1:b.bottom-r.top-S.my}; }).filter(b=>b.x1>b.x0);
+  S.wpp.forEach(p=>{ const x=p[0]-S.mx, y=p[1]-S.my, fl=p[0]>S.W*0.62; rects.push(fl?{x0:x-230,y0:y-26,x1:x+14,y1:y+26}:{x0:x-14,y0:y-26,x1:x+230,y1:y+26}); });
+  const pts=[]; for(let i=0;i<S.P.pts.length;i+=2) pts.push([S.P.pts[i][0]-S.mx,S.P.pts[i][1]-S.my]);
+  const wps=S.wpp.length?S.wpp.map(p=>[p[0]-S.mx,p[1]-S.my]):[[pts0[0][0]-S.mx,pts0[0][1]-S.my]];
+  q.build(S.mw,S.mh,{rects,pts,wps},true);
+  S.Lmi=S.P.len*S.miPx; S.E=[]; S.G=[0];
+  for(let i=0;i<=S.N;i++){ const p=S.P.at(i/S.N); S.E.push(q.ft(p[0]-S.mx,p[1]-S.my)); if(i) S.G.push(S.G[i-1]+Math.max(0,S.E[i]-S.E[i-1])); }
+  S.wpFt=S.tAt.map(t=>Math.round(elevAt(t)/10)*10); S.wpMi=S.tAt.map(t=>t*S.Lmi);
+  rowBtns.forEach((b,i)=>{ $('.mi',b).textContent=S.wpMi[i].toFixed(1); $('.el',b).textContent=fmt(S.wpFt[i])+' ft'; });
+  const t=camTarget(); cam.z=t.z; cam.cx=t.cx; cam.cy=t.cy; scaleZ=0;
+  layoutChart(); openIdx=-2; built=true; dirty=true;
+  if(logEl.scrollHeight>logEl.clientHeight+2) logEl.setAttribute('data-own-wheel',''); else logEl.removeAttribute('data-own-wheel');
+}
+const ftAt=(x,y)=>q.ft(x-S.mx,y-S.my);
+function elevAt(t){ const x=clamp(t,0,1)*S.N, i=Math.min(S.N-1,x|0); return lerp(S.E[i],S.E[i+1],x-i); }
+function gainAt(t){ const x=clamp(t,0,1)*S.N, i=Math.min(S.N-1,x|0); return lerp(S.G[i],S.G[i+1],x-i); }
+function scaleBar(){ const svg=$('#scale'), Wd=Math.round(S.mw/QD.MI*cam.z), seg=Wd/4; let d='';
+  for(let k=0;k<4;k++) d+=`<rect x="${(k*seg).toFixed(1)}" y="3" width="${seg.toFixed(1)}" height="4" fill="${k%2?'var(--card)':'var(--ink)'}" stroke="var(--ink)" stroke-width="1"/>`;
+  d+=`<g font-family="Space Mono,monospace" font-size="8.5" font-weight="700" fill="var(--ink)" text-anchor="middle"><text x="0" y="17">0</text><text x="${(Wd/2).toFixed(1)}" y="17">½</text><text x="${Wd}" y="17">1 MILE</text></g>`;
+  svg.setAttribute('width',Wd+24); svg.setAttribute('viewBox',`-12 0 ${Wd+24} 20`); svg.innerHTML=d; scaleZ=cam.z; }
+
+/* ---------- drawing ---------- */
+function drawTrail(c,P,s,t1,walk){ if(t1<=0.0005) return; c.save(); c.lineJoin='round';
+  c.lineCap='round'; c.strokeStyle=rgba(P.bg,.8); c.lineWidth=6.5*s; strokeRange(c,S.P,0,t1);
+  c.setLineDash([9*s,6*s]); c.lineCap='butt'; c.lineWidth=2.8*s; c.strokeStyle=P.trail; strokeRange(c,S.P,0,t1);
+  if(walk>0.0005){ c.setLineDash([]); c.lineCap='round'; c.lineWidth=4.2*s; strokeRange(c,S.P,0,Math.min(walk,t1)); }
+  c.restore();
+  if(t1>=0.999){ const e=S.P.at(1), b=S.P.at(0.985), a=Math.atan2(e[1]-b[1],e[0]-b[0]);
+    c.save(); c.translate(e[0],e[1]); c.rotate(a); c.fillStyle=P.trail; c.beginPath(); c.moveTo(6*s,0); c.lineTo(-5*s,-5*s); c.lineTo(-5*s,5*s); c.closePath(); c.fill(); c.restore();
+    c.save(); c.font=`700 ${9*s}px "Space Mono",monospace`; c.textAlign='right'; c.textBaseline='middle'; c.fillStyle=P.ink; c.strokeStyle=rgba(P.bg,.9); c.lineWidth=3*s;
+    const t='TO THE SUMMIT'; c.strokeText(t,e[0]-14*s,e[1]+12*s); c.fillText(t,e[0]-14*s,e[1]+12*s); c.restore(); } }
+function drawMiles(c,P,k,t1){ const n=Math.floor(S.Lmi); c.save(); c.font=`700 ${9*k}px "Space Mono",monospace`; c.textAlign='center'; c.textBaseline='middle';
+  for(let m=1;m<=n;m++){ const t=m/S.Lmi; if(t>t1) break; const a=S.P.at(t), b=S.P.at(Math.min(1,t+0.004)), an=Math.atan2(b[1]-a[1],b[0]-a[0]), nx=-Math.sin(an), ny=Math.cos(an);
+    c.strokeStyle=P.ink; c.lineWidth=1.6*k; c.beginPath(); c.moveTo(a[0]-nx*6*k,a[1]-ny*6*k); c.lineTo(a[0]+nx*6*k,a[1]+ny*6*k); c.stroke();
+    const lx=a[0]+nx*16*k, ly=a[1]+ny*16*k; c.strokeStyle=rgba(P.bg,.9); c.lineWidth=3*k; c.strokeText(m+' MI',lx,ly); c.fillStyle=P.ink; c.fillText(m+' MI',lx,ly); }
+  c.restore(); }
+function render(){
+  const P=scheme.cur, W=S.W, H=S.H, s=1/Math.sqrt(cam.z);
+  ctx.setTransform(S.dpr,0,0,S.dpr,0,0); ctx.fillStyle=P.bg; ctx.fillRect(0,0,W,H);
+  ctx.save(); ctx.translate(W/2,H/2); ctx.scale(cam.z,cam.z); ctx.translate(-cam.cx,-cam.cy);
+  q.draw(ctx,P,L,{ox:S.mx,oy:S.my,s,fine:false});
+  if(L.trail&&prog>0.015){ drawTrail(ctx,P,s,drawn,sDisp); drawMiles(ctx,P,s,drawn); }
+  if(ms){ const a=ms.a,b=ms.b,Lw=Math.hypot(b[0]-a[0],b[1]-a[1]);
+    if(Lw>3/cam.z){ const ux=(b[0]-a[0])/Lw, uy=(b[1]-a[1])/Lw, qd=0.25/S.miPx;
+      ctx.save(); ctx.lineCap='round'; ctx.strokeStyle=rgba(P.bg,.85); ctx.lineWidth=5*s; ctx.beginPath(); ctx.moveTo(a[0],a[1]); ctx.lineTo(b[0],b[1]); ctx.stroke();
+      ctx.strokeStyle=P.ink; ctx.lineWidth=1.8*s; ctx.setLineDash([7*s,4*s]); ctx.stroke(); ctx.setLineDash([]); ctx.lineWidth=1.4*s; ctx.beginPath();
+      for(let d=qd,k=1;d<Lw;d+=qd,k++){ const x=a[0]+ux*d, y=a[1]+uy*d, mm=(k%4===0?7:k%2===0?5:3)*s; ctx.moveTo(x-uy*mm,y+ux*mm); ctx.lineTo(x+uy*mm,y-ux*mm); } ctx.stroke();
+      for(const p of [a,b]){ ctx.fillStyle=P.card; ctx.beginPath(); ctx.arc(p[0],p[1],4.5*s,0,TAU); ctx.fill(); ctx.stroke(); } ctx.restore(); } }
+  ctx.restore();
+  if(ms&&Math.hypot(ms.b[0]-ms.a[0],ms.b[1]-ms.a[1])>3/cam.z){ const m=toScreen((ms.a[0]+ms.b[0])/2,(ms.a[1]+ms.b[1])/2), t=mInfo(); tag(P,t,m[0],m[1]-34,true); }
+  if(mouse.in&&!mode&&built){ const w=toWorld(mouse.x,mouse.y); ctx.strokeStyle=P.ink; ctx.lineWidth=1.2; ctx.beginPath(); ctx.moveTo(mouse.x-9,mouse.y); ctx.lineTo(mouse.x+9,mouse.y); ctx.moveTo(mouse.x,mouse.y-9); ctx.lineTo(mouse.x,mouse.y+9); ctx.stroke();
+    tag(P,fmt(Math.round(ftAt(w[0],w[1])/10)*10)+' ft'+(measureOn?' · drag to measure':''),mouse.x+14,mouse.y-26,false); }
+  if(Math.abs(scaleZ-cam.z)>0.01) scaleBar();
+  /* DOM on top of the canvas */
+  const showH=prog>0.015; hiker.style.display=showH?'block':'none';
+  if(showH){ const h=toScreen(...S.P.at(sDisp)); hiker.style.transform=`translate(${h[0].toFixed(1)}px,${h[1].toFixed(1)}px)`; }
+  const scrollCard=(sUser==null&&!glide)?(prog<P1?dwellAt(prog):-1):nearWp(sDisp);
+  const oi=pin>=0?pin:hov>=0?hov:scrollCard;
+  markers.forEach((b,i)=>{ const on=prog>0.015&&drawn>=S.tAt[i]-1e-4, p=toScreen(S.wpp[i][0],S.wpp[i][1]);
+    b.classList.toggle('on',on); b.tabIndex=on?0:-1; b.classList.toggle('flip',p[0]>W*0.62); b.classList.toggle('cur',oi===i);
+    b.style.left=p[0].toFixed(1)+'px'; b.style.top=p[1].toFixed(1)+'px'; });
+  if(oi!==openIdx){ openIdx=oi; if(oi>=0){ card.innerHTML=cardHTML(oi); card.classList.add('show'); } else card.classList.remove('show'); }
+  if(oi>=0){ const p=toScreen(S.wpp[oi][0],S.wpp[oi][1]), cw=card.offsetWidth||300, ch=card.offsetHeight||190;
+    const lbw=(markers[oi].querySelector('.lb')||{}).offsetWidth||0, fl=markers[oi].classList.contains('flip');
+    /* card sits on the far side from the marker's label (over the walked trail), else just past the label */
+    let x=fl?p[0]+34:p[0]-34-cw; if(x<14||x+cw>W-14) x=fl?p[0]-34-lbw-10-cw:p[0]+34+lbw+10; x=clamp(x,14,Math.max(14,W-cw-14)); const y=clamp(p[1]-ch/2-10,14,Math.max(14,H-ch-14));
+    card.style.left=x.toFixed(0)+'px'; card.style.top=y.toFixed(0)+'px'; }
+  drawProf(); updHud();
+}
+function tag(P,t,x,y,center){ ctx.save(); ctx.font='700 11px "Space Mono",monospace'; const tw=ctx.measureText(t).width; let lx=center?x-tw/2-6:x, ly=y;
+  if(lx+tw+14>S.W) lx=S.W-tw-20; if(lx<8) lx=8; if(ly<6) ly=y+40;
+  ctx.fillStyle=P.card; ctx.fillRect(lx,ly,tw+12,21); ctx.strokeStyle=P.ink; ctx.lineWidth=1.4; ctx.strokeRect(lx,ly,tw+12,21); ctx.fillStyle=P.ink; ctx.textBaseline='alphabetic'; ctx.fillText(t,lx+6,ly+15); ctx.restore(); }
+
+/* ---------- elevation profile (miles + a WHEN row of the dates) ---------- */
+let pad={l:58,r:26,t:24,b:48}, cwid=0, chgt=0, pw=0, phh=0, lo=0, hi=1;
+function layoutChart(){ cwid=chart.clientWidth; chgt=chart.clientHeight; if(cwid<20||chgt<20) return;
+  pw=cwid-pad.l-pad.r; phh=Math.max(30,chgt-pad.t-pad.b);
+  pc.width=Math.round(cwid*S.dpr); pc.height=Math.round(chgt*S.dpr); pc.style.width=cwid+'px'; pc.style.height=chgt+'px'; px.setTransform(S.dpr,0,0,S.dpr,0,0);
+  lo=Math.floor(Math.min(...S.E)/500)*500; hi=Math.ceil(Math.max(...S.E)/500)*500; if(hi-lo<1500) hi=lo+1500;
+  const ve=((S.Lmi*5280)/pw)/((hi-lo)/phh); $('#ve').textContent=`vertical exaggeration ≈ ×${ve<3?ve.toFixed(1):Math.round(ve)}`; }
+const yOf=ft=>pad.t+phh*(1-(ft-lo)/(hi-lo));
+function drawProf(){
+  if(chart.clientWidth!==cwid||chart.clientHeight!==chgt) layoutChart(); if(cwid<20||chgt<20) return;
+  const c=px, P=scheme.cur, {l,r,t}=pad, d=prog>0.015?drawn:0, s=Math.min(sDisp,d), base=t+phh, Nn=S.N;
+  c.clearRect(0,0,cwid,chgt); c.textBaseline='middle'; c.font='400 9.5px "Space Mono",monospace'; c.textAlign='right';
+  for(let v=lo;v<=hi;v+=500){ const y=yOf(v); c.strokeStyle=rgba(P.ink,v%1000===0?.28:.12); c.lineWidth=1; c.beginPath(); c.moveTo(l,y); c.lineTo(cwid-r,y); c.stroke(); if(v%1000===0||phh>110){ c.fillStyle=P.ink; c.fillText(fmt(v),l-8,y); } }
+  c.textAlign='center'; c.fillStyle=P.ink;
+  for(let m=0;m<=Math.floor(S.Lmi);m++){ const x=l+m/S.Lmi*pw; c.strokeStyle=rgba(P.ink,.14); c.setLineDash([2,3]); c.beginPath(); c.moveTo(x,t); c.lineTo(x,base); c.stroke(); c.setLineDash([]); c.fillText(String(m),x,base+11); }
+  c.textAlign='right'; c.font='700 8.5px "Space Mono",monospace'; c.fillText('MI',l-14,base+11); c.fillText('WHEN',l-14,base+28);
+  if(d>0.001){ c.save(); c.beginPath(); c.rect(l-2,0,d*pw+2,chgt); c.clip();
+    const poly=()=>{ c.beginPath(); c.moveTo(l,base); for(let i=0;i<=Nn;i++) c.lineTo(l+i/Nn*pw,yOf(S.E[i])); c.lineTo(l+pw,base); c.closePath(); };
+    poly(); c.fillStyle=rgba(P.minor,.22); c.fill();
+    c.save(); c.beginPath(); c.rect(l-2,0,s*pw+2,chgt); c.clip(); poly(); c.fillStyle=rgba(P.trail,.22); c.fill(); c.restore();
+    c.beginPath(); for(let i=0;i<=Nn;i++){ const x=l+i/Nn*pw, y=yOf(S.E[i]); i?c.lineTo(x,y):c.moveTo(x,y); } c.lineJoin='round'; c.lineWidth=2; c.strokeStyle=P.ink; c.stroke(); c.restore(); }
+  c.strokeStyle=P.ink; c.lineWidth=1.5; c.beginPath(); c.moveTo(l,base); c.lineTo(cwid-r,base); c.stroke();
+  let gap=1e9; for(let i=1;i<N;i++) gap=Math.min(gap,(S.tAt[i]-S.tAt[i-1])*pw); const crowd=gap<170;
+  S.tAt.forEach((tt,i)=>{ if(d<tt-1e-4||prog<=0.015) return; const st=crowd&&i%2===1, x=l+tt*pw, y=yOf(elevAt(tt)), al=i===0?'left':'center', ax=i===0?x-4:x;
+    c.strokeStyle=rgba(P.ink,.45); c.setLineDash([3,3]); c.lineWidth=1; c.beginPath(); c.moveTo(x,y); c.lineTo(x,base+20); c.stroke(); c.setLineDash([]);
+    c.fillStyle=P.card; c.strokeStyle=P.ink; c.lineWidth=1.8; c.beginPath(); c.moveTo(x,y-7); c.lineTo(x+6.5,y+5); c.lineTo(x-6.5,y+5); c.closePath(); c.fill(); c.stroke();
+    c.textAlign=al; c.font='700 10px "Space Mono",monospace'; c.fillStyle=P.ink; c.fillText(J[i].place,ax,Math.max(9,y-(st?29:16)));
+    if(J[i].dates){ c.font='700 9.5px "Space Mono",monospace'; c.fillStyle=P.trail; c.fillText(J[i].dates,ax,base+(st?40:28)); } });
+  if(d>=0.999){ c.textAlign='right'; c.font='700 9px "Space Mono",monospace'; c.fillStyle=P.ink; c.fillText('↗ the summit',cwid-r,t-10); }
+  if(hoverX>=l&&hoverX<=l+d*pw&&mode!=='hike'){ const tt=(hoverX-l)/pw; c.strokeStyle=rgba(P.ink,.5); c.lineWidth=1; c.setLineDash([2,3]); c.beginPath(); c.moveTo(hoverX,t); c.lineTo(hoverX,base); c.stroke(); c.setLineDash([]);
+    c.font='700 9.5px "Space Mono",monospace'; c.textAlign='left'; c.fillStyle=P.ink; c.fillText(`${fmt(Math.round(elevAt(tt)/10)*10)} ft · mi ${(tt*S.Lmi).toFixed(1)}`,Math.min(hoverX+6,cwid-r-130),t+6); }
+  if(d>0.001){ const sx=l+s*pw, sy=yOf(elevAt(s)); c.strokeStyle=P.trail; c.lineWidth=2; c.beginPath(); c.moveTo(sx,t-4); c.lineTo(sx,base); c.stroke();
+    c.fillStyle=P.trail; c.strokeStyle=P.card; c.lineWidth=2.5; c.beginPath(); c.arc(sx,sy,5.5,0,TAU); c.stroke(); c.fill(); }
+}
+function updHud(){
+  const s=prog>0.015?sDisp:0, ft=Math.round(elevAt(s)/10)*10, set=(id,v)=>{ const e=$(id); if(e.textContent!==v) e.textContent=v; };
+  set('#oMi',(s*S.Lmi).toFixed(2)); set('#oFt',prog>0.015?fmt(ft):'—'); set('#oGain','+'+fmt(Math.round(gainAt(s)/10)*10));
+  let at=-1,lastI=-1; S.tAt.forEach((v,i)=>{ if(Math.abs(v-s)<0.02) at=i; if(v<=s+0.005) lastI=i; });
+  let txt; if(!N) txt=''; else if(at>=0) txt=`At <b>${esc(J[at].place)}</b>${J[at].dates?' · '+esc(J[at].dates):''}`;
+  else if(lastI>=N-1) txt=`Past <b>${esc(J[N-1].place)}</b> · climbing toward the summit`;
+  else if(lastI>=0) txt=`Between <b>${esc(J[lastI].place)}</b> and <b>${esc(J[lastI+1].place)}</b>`; else txt='At the trailhead';
+  const nr=$('#near'); if(nr.innerHTML!==txt) nr.innerHTML=txt;
+  rowLis.forEach((li,i)=>{ li.setAttribute('aria-current',i===(at>=0?at:lastI)&&prog>0.015?'true':'false'); li.classList.toggle('ahead',S.tAt[i]>drawn+1e-3||prog<=0.015); });
+  const pct=String(Math.round(s*100)), vt=`Mile ${(s*S.Lmi).toFixed(1)}, ${fmt(ft)} feet`;
+  for(const el of [hiker,chart]) if(el.getAttribute('aria-valuenow')!==pct){ el.setAttribute('aria-valuenow',pct); el.setAttribute('aria-valuetext',vt); }
+}
+
+/* ---------- input: drag the hiker / trail / profile; shift-drag measures ---------- */
+function nearestT(x,y){ const pts=S.P.pts; let bi=0,bd=1e12; for(let i=0;i<pts.length;i++){ const d=(pts[i][0]-x)**2+(pts[i][1]-y)**2; if(d<bd){ bd=d; bi=i; } }
+  let best=S.P.cum[bi], bdd=Math.sqrt(bd);
+  for(const j of [bi-1,bi]){ if(j<0||j>=pts.length-1) continue; const a=pts[j], b=pts[j+1], vx=b[0]-a[0], vy=b[1]-a[1], L2=vx*vx+vy*vy||1, u=clamp(((x-a[0])*vx+(y-a[1])*vy)/L2,0,1), ex=a[0]+vx*u, ey=a[1]+vy*u, d=Math.hypot(ex-x,ey-y);
+    if(d<bdd){ bdd=d; best=S.P.cum[j]+u*Math.sqrt(L2); } }
+  return {t:best/S.P.len,d:bdd}; }
+function setUser(t){ sUser=clamp(t,0,1); glide=null; dirty=true; }
+const loc=e=>{ const r=mapEl.getBoundingClientRect(); return [e.clientX-r.left,e.clientY-r.top]; };
+mapEl.addEventListener('pointerdown',e=>{
+  const onH=!!(e.target.closest&&e.target.closest('.hiker')); if(!onH&&e.target!==cv) return;
+  if(!onH&&e.pointerType==='touch') return;                       // touch on the map = scroll the climb; drag the hiker itself
+  const [sx,sy]=loc(e), w=toWorld(sx,sy);
+  if(!onH&&(measureOn||e.shiftKey)){ mode='measure'; ms={a:w,b:w.slice()}; try{ mapEl.setPointerCapture(e.pointerId); }catch(_){} dirty=true; e.preventDefault(); return; }
+  const n=nearestT(w[0],w[1]); if(onH||n.d*cam.z<40){ mode='hike'; try{ mapEl.setPointerCapture(e.pointerId); }catch(_){} setUser(onH?sDisp:n.t); e.preventDefault(); } });
+mapEl.addEventListener('pointermove',e=>{ const [sx,sy]=loc(e); mouse.x=sx; mouse.y=sy; mouse.in=e.pointerType!=='touch'&&(e.target===cv||!!mode); dirty=true;
+  if(!mode) return; const w=toWorld(sx,sy); if(mode==='measure'){ ms.b=w; updMeasure(); } else setUser(nearestT(w[0],w[1]).t); });
+const up=()=>{ if(mode==='measure') updMeasure(); mode=null; dirty=true; };
+mapEl.addEventListener('pointerup',up); mapEl.addEventListener('pointercancel',up);
+mapEl.addEventListener('pointerleave',()=>{ mouse.in=false; dirty=true; });
+const xToT=e=>{ const r=chart.getBoundingClientRect(); return clamp((e.clientX-r.left-pad.l)/Math.max(1,pw),0,1); };
+chart.addEventListener('pointerdown',e=>{ mode='hike'; try{ chart.setPointerCapture(e.pointerId); }catch(_){} setUser(Math.min(xToT(e),Math.max(drawn,xToT(e)))); });
+chart.addEventListener('pointermove',e=>{ const r=chart.getBoundingClientRect(); hoverX=e.clientX-r.left; if(mode==='hike') setUser(xToT(e)); dirty=true; });
+chart.addEventListener('pointerup',up); chart.addEventListener('pointercancel',up);
+chart.addEventListener('pointerleave',()=>{ hoverX=-1; dirty=true; });
+const keys=e=>{ const st=e.shiftKey?0.05:0.01; let t=sUser!=null?sUser:sDisp, nxt=null;
+  if(e.key==='ArrowRight'||e.key==='ArrowUp') t+=st; else if(e.key==='ArrowLeft'||e.key==='ArrowDown') t-=st; else if(e.key==='Home') t=0; else if(e.key==='End') t=1;
+  else if(e.key==='PageDown'){ nxt=S.tAt.findIndex(v=>v>t+0.005); if(nxt<0) nxt=N-1; }
+  else if(e.key==='PageUp'){ nxt=-1; S.tAt.forEach((v,i)=>{ if(v<t-0.005) nxt=i; }); if(nxt<0) nxt=0; }
+  else return;
+  e.preventDefault(); if(nxt!==null&&nxt>=0){ goTo(nxt); return; } setUser(t); };
+chart.addEventListener('keydown',keys); hiker.addEventListener('keydown',keys);
+
+/* ---------- scroll + visibility + loop ---------- */
+Climb.onProgress((p,dp)=>{ prog=p; if(dp!==0&&!mode){ sUser=null; glide=null; pin=-1; } dirty=true; });
+if(N) Climb.anchors(Object.fromEntries(J.map((e,i)=>[e.id,+((dwell[i][0]+dwell[i][1])/2).toFixed(4)])));
+Climb.onVisible(v=>{ visible=v; if(v){ last=performance.now(); if(!raf) raf=requestAnimationFrame(loop); } else if(raf){ cancelAnimationFrame(raf); raf=0; } });
+function loop(now){ raf=0; const dt=Math.min(.05,Math.max(0,(now-last)/1000)); last=now;
+  if(!built||Math.abs(mapEl.clientWidth-S.W)>1||Math.abs(mapEl.clientHeight-S.H)>1) layout();
+  if(built){
+    if(scheme.update(dt)){ applyVars(); dirty=true; }
+    if(glide){ glide.k=Math.min(1,glide.k+dt/0.9); sUser=lerp(glide.a,glide.b,ease(glide.k)); if(glide.k>=1) glide=null; dirty=true; }
+    const tgt=sUser!=null?sUser:sOf(prog);
+    if(REDUCE||mode==='hike'||glide||Math.abs(sDisp-tgt)<1e-4) { if(sDisp!==tgt){ sDisp=tgt; dirty=true; } }
+    else { sDisp=lerp(sDisp,tgt,1-Math.exp(-dt*7)); dirty=true; }
+    drawn=Math.max(sOf(prog),sDisp);
+    if(mode!=='hike'){ const t=camTarget(), k=REDUCE?1:1-Math.exp(-dt*6);
+      for(const key of ['z','cx','cy']){ const v=lerp(cam[key],t[key],k); if(Math.abs(v-t[key])<(key==='z'?1e-4:0.05)){ if(cam[key]!==t[key]){ cam[key]=t[key]; dirty=true; } } else { cam[key]=v; dirty=true; } } }
+    if(dirty){ dirty=false; render(); }
+  }
+  if(visible) raf=requestAnimationFrame(loop); }
+try{ document.fonts.ready.then(()=>{ dirty=true; layoutChart(); }); }catch(_){}
+last=performance.now(); raf=requestAnimationFrame(loop);
+/* for headless checks */
+window.__journey={get prog(){ return prog; }, get s(){ return sDisp; }, get cam(){ return cam; }, get open(){ return openIdx; }, get scheme(){ return scheme.name; }, tAt:S.tAt, dwell};
+})();
+
+</script>
+</body>
+</html>

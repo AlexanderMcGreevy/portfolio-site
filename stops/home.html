@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en" data-stop="home" data-span="1.5">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>The Climb · Home</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Josefin+Sans:wght@600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#1c1915}
+html.embedded,html.embedded body{background:transparent}
+body{font:14px/1.4 system-ui,-apple-system,'Segoe UI',Helvetica,Arial,sans-serif}
+button{font:inherit;color:inherit}
+
+/* the postcard: full-bleed at p=0, settles flat and centred (slightly lifted) by p=1 for the shell's flip */
+#card{position:absolute;inset:0;transform-origin:50% 50%}
+.stage{position:absolute;inset:0;overflow:hidden;container-type:size;user-select:none;-webkit-user-select:none;touch-action:manipulation;
+  background:#f3e8cf;
+  --f:'Bebas Neue',Impact,'Arial Narrow',sans-serif;--k:1.05;--ls:.05em;
+  --ink:#2a2540;--title:#c0392b;--tsh:#2a2540;
+  --sgb:#c0392b;--sgf:#fbf5ea;--sge:#2a2540;--exb:#3f6b4f;--exf:#fbf5ea;--exe:#1d3b2c;--post:#2a2540;--focus:#c0392b;
+  --bandb:#2a2540;--bandf:#f6dcc0;--tb:#2a2540;--tf:#f6dcc0;--hint:#f08a3c;
+  --bf:#8a5a34;--bi:#6a4122;--bm:#d9b98a;--bs:#3f6b4f;--bh:#c0392b;--bb:#fbf5ea;--bo:#2a2540;--bd:#2a2540;--bg:#f6dcc0;
+  transition:background-color .8s}
+.stage.night{background:#141224;--ink:#ece4cf;--title:#ece4cf;--tsh:#0a0918;
+  --sgb:#e9c46a;--sgf:#141224;--sge:#141224;--exb:#163126;--exf:#ece4cf;--exe:#8fbfa0;--post:#0a0918;--focus:#e9c46a;
+  --bandb:#0a0918;--bandf:#c9c4dc;--tb:#ece4cf;--tf:#141224;--hint:#efe9f7;--bf:#5a4060;--bi:#3a2a40;--bm:#a9a0c0;--bs:#163126;--bh:#6a2a3a;--bo:#0a0918}
+.stage canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+
+/* the lettering is real text */
+.head{position:absolute;text-align:center;pointer-events:none;z-index:2}
+.head .cap{margin:0;font-family:var(--f);letter-spacing:.32em;text-transform:uppercase;color:var(--ink);transition:color .8s}
+.head h1{margin:0;font-family:var(--f);font-weight:400;line-height:.98;letter-spacing:.03em;text-transform:uppercase;color:var(--title);
+  text-shadow:.035em .04em 0 var(--tsh);text-wrap:balance;transition:color .8s,text-shadow .8s}
+.head .one,.head .why{margin:.55em auto 0;max-width:min(44em,88%);font-family:'Josefin Sans','Avenir Next','Century Gothic',system-ui,sans-serif;font-weight:600;
+  line-height:1.35;color:var(--ink);text-wrap:balance;transition:color .8s}
+.head .why{margin-top:.3em;opacity:.85}
+.head .why:empty,.head .one:empty{display:none}
+
+.band{position:absolute;display:flex;align-items:center;justify-content:center;text-align:center;white-space:nowrap;overflow:hidden;pointer-events:none;z-index:2;
+  background:var(--bandb);color:var(--bandf);font-family:var(--f);font-size:var(--bfs);letter-spacing:.22em;text-transform:uppercase;
+  border-top:3px solid var(--bandf);border-radius:0 0 14px 14px;transition:background-color .8s,color .8s,border-color .8s}
+
+/* signs */
+.sign{position:absolute;transform:translate(-50%,-100%);display:flex;flex-direction:column;align-items:center;background:none;border:0;padding:0;cursor:pointer;z-index:5;-webkit-tap-highlight-color:transparent}
+.sign .board{display:block;font-family:var(--f);font-size:max(14px,calc(var(--k,1) * clamp(16px,min(2.7cqw,4.6cqh),42px)));line-height:1.04;letter-spacing:var(--ls,.04em);text-transform:uppercase;
+  text-align:center;width:max-content;max-width:10.5em;padding:.42em .7em .48em;text-wrap:balance;
+  background:var(--sgb);color:var(--sgf);border:.14em solid var(--sge);border-radius:.18em;box-shadow:inset 0 0 0 .07em var(--sgb),inset 0 0 0 .12em var(--sge);
+  transition:background-color .8s,color .8s,border-color .8s,box-shadow .8s,transform .18s ease}
+.sign.cue .board{font-size:max(12px,calc(var(--k,1) * .74 * clamp(16px,min(2.7cqw,4.6cqh),42px)));background:var(--exb);color:var(--exf);border-color:var(--exe);
+  box-shadow:inset 0 0 0 .07em var(--exb),inset 0 0 0 .12em var(--exf)}
+.sign::after{content:"";display:block;width:.9cqmin;min-width:6px;height:clamp(12px,3.2cqh,34px);background:var(--post);transition:background-color .8s}
+.sign:hover .board{transform:translateY(-3px) rotate(-.7deg)}
+.sign:active .board{transform:translateY(1px)}
+.sign:focus-visible{outline:none}
+.sign:focus-visible .board{outline:4px solid var(--focus);outline-offset:5px}
+.sign.cue{transition:opacity .25s}
+.sign.cue .arr{display:inline-block;animation:bob 1.6s ease-in-out infinite}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(.18em)}}
+.driving .sign{pointer-events:none;opacity:.78}
+
+/* secret (the sun) */
+.secret{position:absolute;transform:translate(-50%,-50%);border-radius:50%;background:transparent;border:0;padding:0;cursor:pointer;z-index:4}
+.secret:focus-visible{outline:3px dashed var(--focus);outline-offset:5px}
+
+.toast{position:absolute;left:50%;transform:translate(-50%,10px);opacity:0;pointer-events:none;z-index:8;padding:.55em 1.1em;border-radius:99px;
+  font:600 14px/1.2 system-ui,-apple-system,sans-serif;white-space:nowrap;max-width:94%;overflow:hidden;text-overflow:ellipsis;background:var(--tb);color:var(--tf);border:2px solid var(--tf);transition:opacity .35s,transform .35s}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+
+/* the ranger bear cameo */
+.bear{position:absolute;width:clamp(26px,3.3cqw,54px);transform:translate(-50%,-100%);pointer-events:none;z-index:3}
+.bear svg{display:block;width:100%;height:auto;overflow:visible;stroke:var(--bo);stroke-width:1.1;stroke-linejoin:round}
+.bear .fur{fill:var(--bf)} .bear .inner{fill:var(--bi)} .bear .muzzle{fill:var(--bm)} .bear .shirt{fill:var(--bs)} .bear .hat{fill:var(--bh)} .bear .hband{fill:var(--bb)}
+.bear .dark{fill:var(--bd);stroke:none} .bear .badge{fill:var(--bg);stroke-width:.6}
+.bear .arm{transform-box:view-box;transform-origin:34px 34px;animation:wave 4.4s ease-in-out infinite}
+@keyframes wave{0%,58%,100%{transform:rotate(0)}64%{transform:rotate(-38deg)}70%{transform:rotate(-8deg)}76%{transform:rotate(-38deg)}82%{transform:rotate(-8deg)}90%{transform:rotate(0)}}
+@media(prefers-reduced-motion:reduce){.bear .arm,.sign.cue .arr{animation:none}.stage,.stage *,.stage *::after{transition-duration:.01s!important}}
+</style>
+</head>
+<body>
+<div id="card">
+  <div class="stage">
+    <canvas aria-hidden="true"></canvas>
+    <div class="head"><p class="cap"></p><h1 class="name"></h1><p class="one"></p><p class="why"></p></div>
+    <div class="band"></div>
+    <div class="bear"></div>
+    <button class="sign cue" type="button"><span class="board">Scroll to start the climb <span class="arr" aria-hidden="true">↓</span></span></button>
+    <button class="sign classic" type="button"><span class="board">View classic portfolio →</span></button>
+    <button class="secret" type="button" aria-pressed="false" aria-label="The sun (secret): switch between day and night print"></button>
+    <div class="toast" role="status" aria-live="polite"></div>
+  </div>
+</div>
+<script src="../content.js"></script>
+<script src="../bridge.js"></script>
+<script>
+(()=>{
+'use strict';
+/* =====================================================================
+   THE CLIMB · stop ① HOME · the Grand Hotel postcard (mockup variant I)
+   Flat WPA-postcard shapes, a slowly turning sunburst, the funny sun,
+   paper grain. The sun is the secret (day print ↔ night print).
+   Scroll: gentle drift only; by p=1 the postcard sits flat and centred
+   so the shell can flip it over onto the Journey map.
+   ===================================================================== */
+const CL=window.Climb, PER=(window.CONTENT&&window.CONTENT.person)||{};
+if(CL&&CL.embedded) document.documentElement.classList.add('embedded');
+const TAU=Math.PI*2, lerp=(a,b,t)=>a+(b-a)*t, clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const smooth=t=>t*t*(3-2*t), dip=nt=>Math.sin(Math.PI*nt);
+const $=(s,r=document)=>r.querySelector(s);
+const RM=window.matchMedia('(prefers-reduced-motion: reduce)');
+const DPR=Math.min(1.5,window.devicePixelRatio||1);
+const _hc={};
+function rgb(h){ if(_hc[h]) return _hc[h]; const n=parseInt(h.slice(1),16); return _hc[h]=[n>>16&255,n>>8&255,n&255]; }
+function mix(a,b,t,al){ const A=rgb(a),B=rgb(b),k=al===undefined?1:al; return 'rgba('+((A[0]+(B[0]-A[0])*t)|0)+','+((A[1]+(B[1]-A[1])*t)|0)+','+((A[2]+(B[2]-A[2])*t)|0)+','+k+')'; }
+function rng(seed){ return ()=>{ seed|=0; seed=seed+0x6D2B79F5|0; let t=Math.imul(seed^seed>>>15,1|seed); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
+function off(w,h){ const c=document.createElement('canvas'); c.width=Math.ceil(w*DPR); c.height=Math.ceil(h*DPR); const x=c.getContext('2d'); x.setTransform(DPR,0,0,DPR,0,0); return [c,x]; }
+function grainTile(alpha,size=160){ const c=document.createElement('canvas'); c.width=c.height=size; const g=c.getContext('2d'); const id=g.createImageData(size,size);
+  for(let k=0;k<id.data.length;k+=4){ const v=Math.random()*255|0; id.data[k]=id.data[k+1]=id.data[k+2]=v; id.data[k+3]=alpha; } g.putImageData(id,0,0); return c; }
+function poly(c,pts,close=true){ c.beginPath(); for(let i=0;i<pts.length;i++){ if(i) c.lineTo(pts[i][0],pts[i][1]); else c.moveTo(pts[i][0],pts[i][1]); } if(close) c.closePath(); }
+function lens(c,x0,y0,x1,y1,wd){ const mx=(x0+x1)/2,my=(y0+y1)/2,dx=x1-x0,dy=y1-y0,d=Math.hypot(dx,dy)||1,nx=-dy/d*wd,ny=dx/d*wd;
+  c.moveTo(x0,y0); c.quadraticCurveTo(mx+nx,my+ny,x1,y1); c.quadraticCurveTo(mx-nx,my-ny,x0,y0); }
+function star4(c,x,y,r){ c.moveTo(x,y-r); c.quadraticCurveTo(x,y,x+r,y); c.quadraticCurveTo(x,y,x,y+r); c.quadraticCurveTo(x,y,x-r,y); c.quadraticCurveTo(x,y,x,y-r); }
+function textW(font,text,track){ const g=document.createElement('canvas').getContext('2d'); g.font=font; const a=Array.from(text); return a.reduce((s,ch)=>s+g.measureText(ch).width,0)+track*(a.length-1); }
+function letterLine(c,text,cx,cy,font,track){ c.font=font; c.textBaseline='middle'; c.textAlign='left';
+  const chs=Array.from(text), adv=chs.map(ch=>c.measureText(ch).width), tot=adv.reduce((a,b)=>a+b,0)+track*(chs.length-1); let x=cx-tot/2;
+  chs.forEach((ch,i)=>{ c.fillText(ch,x,cy); x+=adv[i]+track; }); }
+function arcLine(c,text,cx,cy,R,font,track){ c.font=font; c.textAlign='center'; c.textBaseline='alphabetic';
+  const chs=Array.from(text), adv=chs.map(ch=>c.measureText(ch).width), tot=adv.reduce((a,b)=>a+b,0)+track*(chs.length-1); let a=-Math.PI/2-tot/2/R;
+  chs.forEach((ch,i)=>{ const ac=a+adv[i]/2/R; c.save(); c.translate(cx+Math.cos(ac)*R,cy+Math.sin(ac)*R); c.rotate(ac+Math.PI/2); c.fillText(ch,0,0); c.restore(); a+=(adv[i]+track)/R; }); }
+function rrPath(c,x,y,w,h,r){ c.moveTo(x+r,y); c.arcTo(x+w,y,x+w,y+h,r); c.arcTo(x+w,y+h,x,y+h,r); c.arcTo(x,y+h,x,y,r); c.arcTo(x,y,x+w,y,r); c.closePath(); }
+
+/* ---- the Mt. Washington Auto Road: switchbacks up a mountain profile ---- */
+function crossings(prof,y){ let xl=Infinity,xr=-Infinity; for(let i=0;i<prof.length-1;i++){ const a=prof[i],b=prof[i+1]; if((a[1]-y)*(b[1]-y)<=0&&a[1]!==b[1]){ const x=a[0]+(b[0]-a[0])*(y-a[1])/(b[1]-a[1]); xl=Math.min(xl,x); xr=Math.max(xr,x); } } return [xl,xr]; }
+function makeRoad(R){ const V=[R.start.slice()];
+  for(let k=1;k<R.n;k++){ const u=k/R.n, y=lerp(R.base,R.top,1-Math.pow(1-u,1.3)), [xl,xr]=crossings(R.prof,y); if(!isFinite(xl)) continue; const wd=xr-xl; const ins=R.inset+(R.inset2||0)*(1-u); V.push([k%2?xr-wd*ins:xl+wd*ins,y]); }
+  V.push(R.apex.slice());
+  const mp=(a,b,t)=>[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t], pts=[V[0]];
+  for(let i=1;i<V.length-1;i++){ const a=mp(V[i],V[i-1],R.r), b=mp(V[i],V[i+1],R.r); pts.push(a);
+    for(let s=1;s<8;s++){ const t=s/8,u=1-t; pts.push([u*u*a[0]+2*u*t*V[i][0]+t*t*b[0],u*u*a[1]+2*u*t*V[i][1]+t*t*b[1]]); } pts.push(b); }
+  pts.push(V[V.length-1]);
+  const len=[0]; for(let i=1;i<pts.length;i++) len.push(len[i-1]+Math.hypot(pts[i][0]-pts[i-1][0],pts[i][1]-pts[i-1][1]));
+  const total=len[len.length-1];
+  return {pts,len,total,yBot:R.start[1],yTop:R.apex[1],
+    at(u){ const d=clamp(u,0,1)*total; let lo=0,hi=len.length-1; while(hi-lo>1){ const m=(lo+hi)>>1; if(len[m]<d) lo=m; else hi=m; }
+      const a=pts[lo],b=pts[hi],t=(d-len[lo])/((len[hi]-len[lo])||1); return {x:lerp(a[0],b[0],t),y:lerp(a[1],b[1],t),dx:b[0]-a[0],dy:b[1]-a[1]}; }}; }
+function strokeRoad(c,road,wBot,wTop,col){ c.lineCap='round'; c.lineJoin='round'; c.strokeStyle=col;
+  for(let i=0;i<road.pts.length-1;i++){ const a=road.pts[i],b=road.pts[i+1], f=clamp((a[1]-road.yTop)/(road.yBot-road.yTop),0,1); c.lineWidth=lerp(wTop,wBot,f); c.beginPath(); c.moveTo(a[0],a[1]); c.lineTo(b[0],b[1]); c.stroke(); } }
+function dashRoad(c,road,col,lw,dash,gap){ c.save(); c.strokeStyle=col; c.lineWidth=lw; c.lineCap='butt'; c.setLineDash([dash,gap]); poly(c,road.pts,false); c.stroke(); c.restore(); }
+function aPine(c,x,base,H,W){ for(let k=0;k<3;k++){ const top=base-H+k*H*.25; c.beginPath(); c.moveTo(x,top); c.lineTo(x+W*(.6+k*.25),top+H*.42); c.lineTo(x-W*(.6+k*.25),top+H*.42); c.closePath(); c.fill(); } c.fillRect(x-W*.08,base-H*.1,W*.16,H*.12); }
+
+/* the ranger bear: an original character in a campaign hat (not named, no slogans) */
+const BEAR='<svg viewBox="0 0 44 58" aria-hidden="true" focusable="false">'+
+'<ellipse class="fur" cx="15" cy="53" rx="5.2" ry="3.4"/><ellipse class="fur" cx="29" cy="53" rx="5.2" ry="3.4"/>'+
+'<ellipse class="fur" cx="22" cy="43" rx="12.5" ry="12"/><path class="shirt" d="M10.2 40.5C11 33.5 33 33.5 33.8 40.5L35 51Q22 55.5 9 51Z"/>'+
+'<circle class="badge" cx="27.5" cy="42.5" r="2"/><ellipse class="fur" cx="8.2" cy="42" rx="3.1" ry="6.4" transform="rotate(8 8.2 42)"/>'+
+'<g class="arm"><ellipse class="fur" cx="35.8" cy="38.5" rx="3.1" ry="6.4" transform="rotate(-22 35.8 38.5)"/></g>'+
+'<circle class="fur" cx="11.6" cy="18.5" r="4.6"/><circle class="fur" cx="32.4" cy="18.5" r="4.6"/><circle class="inner" cx="11.6" cy="18.8" r="2.1" stroke="none"/><circle class="inner" cx="32.4" cy="18.8" r="2.1" stroke="none"/>'+
+'<circle class="fur" cx="22" cy="24.5" r="11"/><ellipse class="muzzle" cx="22" cy="28.6" rx="5.6" ry="4.1"/>'+
+'<ellipse class="dark" cx="22" cy="26.8" rx="2.2" ry="1.4"/><path d="M19.6 30.6Q22 32.4 24.4 30.6" fill="none" stroke="var(--bd)" stroke-width="1"/>'+
+'<circle class="dark" cx="17.4" cy="23.2" r="1.25"/><circle class="dark" cx="26.6" cy="23.2" r="1.25"/>'+
+'<ellipse class="hat" cx="22" cy="17.2" rx="15.5" ry="3.3"/><path class="hat" d="M14.6 16.8L16.2 6.4Q22 4 27.8 6.4L29.4 16.8Q22 19.4 14.6 16.8Z"/>'+
+'<path class="hband" d="M14.8 14.4Q22 17 29.2 14.4L29.4 16.8Q22 19.4 14.6 16.8Z"/><path d="M17.6 5.6Q22 9.6 26.4 5.6" fill="none" stroke-width=".9"/></svg>';
+
+/* the funny little sun (and its sleepy moon form) */
+function sunBody(c,v,x,y,r,o){ const moon=v.nt>.5, col=moon?o.moon:o.sun, fc=moon?(o.mface||o.face):o.face; c.save(); c.lineCap='round'; c.lineJoin='round';
+  c.beginPath(); c.arc(x,y,r,0,TAU); c.fillStyle=col; c.fill(); c.strokeStyle=fc; c.fillStyle=fc; c.lineWidth=Math.max(1.3,r*.09);
+  const ex=r*.34, ey=-r*.12, er=Math.max(1.4,r*.11);
+  if(!moon){ let dx=0,dy=0; if(v.inside){ const a=Math.atan2(v.my-y,v.mx-x); dx=Math.cos(a)*r*.07; dy=Math.sin(a)*r*.07; } const big=v.hover?1.4:1;
+    for(const k of[-1,1]){ c.beginPath(); c.arc(x+k*ex+dx,y+ey+dy,er*big,0,TAU); c.fill(); }
+    c.beginPath(); if(v.hover){ c.arc(x,y+r*.25,r*.15,0,TAU); c.fill(); } else { c.arc(x,y+r*.06,r*.32,.18*Math.PI,.82*Math.PI); c.stroke(); } }
+  else{ for(const k of[-1,1]){ c.beginPath(); c.arc(x+k*ex,y+ey-er,er*1.5,.15*Math.PI,.85*Math.PI); c.stroke(); }
+    c.beginPath(); c.arc(x,y+r*.34,r*.08,0,TAU); c.stroke(); const zt=(v.t*.6)%1; c.globalAlpha=1-zt; c.fillStyle=col; c.font='700 '+Math.max(10,r*.6)+'px system-ui,sans-serif'; c.fillText('z',x+r*.95+zt*r*.5,y-r*.7-zt*r); }
+  c.restore(); }
+function eCloud(c,X,Y,W,seed,col,colS){ const r=rng(seed), n=6, lobes=[]; for(let i=0;i<n;i++){ const f=(i+.5)/n; lobes.push([X+(f-.5)*W*(.9+r()*.1),W*(.06+.11*Math.sin(f*Math.PI))*(.8+r()*.45)]); }
+  for(const [col2,dy] of[[colS,W*.03],[col,0]]){ c.save(); c.beginPath(); c.rect(X-W,Y-W,W*2,W+dy); c.clip(); c.fillStyle=col2; c.beginPath(); for(const [lx,lr] of lobes){ c.moveTo(lx+lr,Y+dy); c.arc(lx,Y+dy,lr,0,TAU); } c.fill(); c.restore(); } }
+
+/* ---- the print: day and night inks ---- */
+const DI={paper:'#f3e8cf',sky:'#f7dcc0',ray:'#fae9d2',far:'#bcadcc',farF:'#d8cde2',snow:'#fcf7ec',mtn:'#8b7fae',mtnL:'#a99dc6',mtnD:'#6c6191',forest:'#3f6b4f',meadow:'#a5c26f',meadow2:'#8fb35e',
+          hill:'#2f5a40',pine:'#1d3b2c',hotel:'#fcf7ec',hotelS:'#ddcfb6',roof:'#c0392b',win:'#46566a',ink:'#2a2540',road:'#f3e8cf',redge:'#2a2540',mark:'#2a2540',cloud:'#fcf7ec',cloudS:'#efd6c4'};
+const NI={paper:'#141224',sky:'#1b1838',ray:'#232050',far:'#2c2a52',farF:'#36346a',snow:'#b8b3d6',mtn:'#262250',mtnL:'#302c62',mtnD:'#1c1940',forest:'#122a22',meadow:'#24402c',meadow2:'#1e3826',
+          hill:'#0e2219',pine:'#07140e',hotel:'#c9c4dc',hotelS:'#8f89aa',roof:'#6a2a3a',win:'#f2c86b',ink:'#ece4cf',road:'#9e99b8',redge:'#0a0918',mark:'#c9c4dc',cloud:'#2e2c5a',cloudS:'#25234c'};
+const SUN={sun:'#f08a3c',moon:'#efe9f7',face:'#5b2a10',mface:'#2c2a52'};
+
+function pcFar(c,K,L,list,baseF){ const {aw,P,Q}=L; for(const [px,py,hw] of list){ const apx=P(px),apy=Q(py),hwp=hw*aw,base=Q(baseF);
+  c.fillStyle=K.far; c.beginPath(); c.moveTo(apx-hwp,base); c.lineTo(apx,apy); c.lineTo(apx+hwp,base); c.closePath(); c.fill();
+  c.fillStyle=K.farF; c.beginPath(); c.moveTo(apx,apy); c.lineTo(apx-hwp,base); c.lineTo(apx-hwp*.25,base); c.lineTo(apx-hwp*.04,apy+(base-apy)*.45); c.closePath(); c.fill();
+  const d=(base-apy)*.2, sw=hwp*.2; c.fillStyle=K.snow; c.beginPath(); c.moveTo(apx,apy); c.lineTo(apx+sw,apy+d); c.lineTo(apx+sw*.4,apy+d*.8); c.lineTo(apx,apy+d*1.05); c.lineTo(apx-sw*.45,apy+d*.75); c.lineTo(apx-sw,apy+d); c.closePath(); c.fill(); } }
+function observatory(c,K,aw,ah,apex){ const tw=aw*.0136, th=ah*.029; c.fillStyle=K.snow; c.fillRect(apex[0]-tw/2,apex[1]-th,tw,th); c.fillStyle=K.ink; c.fillRect(apex[0]-tw*.62,apex[1]-th*1.22,tw*1.24,th*.28);
+  c.strokeStyle=K.ink; c.lineWidth=Math.max(1.2,aw*.001); c.beginPath(); c.moveTo(apex[0]+tw*.2,apex[1]-th*1.22); c.lineTo(apex[0]+tw*.2,apex[1]-th*2.1); c.stroke();
+  c.fillRect(apex[0]-tw*.3,apex[1]-th*.7,tw*.22,th*.3); c.fillRect(apex[0]+tw*.1,apex[1]-th*.7,tw*.22,th*.3); }
+function paintHotel(c,K,H){ const {cx,base,W,Hh}=H, block=(x0,x1,ht,rows)=>{ const top=base-ht, rh=Hh*.26;
+    c.fillStyle=K.hotel; c.fillRect(x0,top,x1-x0,ht); c.fillStyle=K.hotelS; c.fillRect(x1-(x1-x0)*.06,top,(x1-x0)*.06,ht);
+    c.fillStyle=K.roof; poly(c,[[x0-2,top],[x1+2,top],[x1-rh*.7,top-rh],[x0+rh*.7,top-rh]]); c.fill();
+    c.fillStyle=K.hotel; for(let x=x0+rh;x<x1-rh;x+=W*.045){ poly(c,[[x-W*.008,top],[x+W*.008,top],[x,top-rh*.7]]); c.fill(); }
+    c.fillStyle=K.win; for(let r2=0;r2<rows;r2++){ const y=top+ht*(.16+r2*.22); for(let x=x0+W*.012;x<x1-W*.016;x+=W*.019) c.fillRect(x,y,W*.0075,ht*.1); } };
+  block(cx-W*.5,cx-W*.17,Hh*.72,3); block(cx+W*.17,cx+W*.5,Hh*.72,3); block(cx-W*.19,cx+W*.19,Hh,4);
+  for(const sd of[-1,1]){ const tx=cx+sd*W*.075, tw=W*.05, th=Hh*1.55;
+    c.fillStyle=K.hotel; c.fillRect(tx-tw/2,base-th,tw,th); c.fillStyle=K.hotelS; c.fillRect(tx+tw*.3,base-th,tw*.2,th);
+    c.fillStyle=K.win; for(let k=0;k<5;k++) c.fillRect(tx-tw*.18,base-th+th*(.1+k*.17),tw*.36,th*.07);
+    c.fillStyle=K.roof; c.beginPath(); c.moveTo(tx-tw*.62,base-th); c.quadraticCurveTo(tx-tw*.6,base-th-tw*.95,tx,base-th-tw*1.05); c.quadraticCurveTo(tx+tw*.6,base-th-tw*.95,tx+tw*.62,base-th); c.closePath(); c.fill();
+    c.strokeStyle=K.ink; c.lineWidth=1.2; c.beginPath(); c.moveTo(tx,base-th-tw*1.05); c.lineTo(tx,base-th-tw*2); c.stroke();
+    c.fillStyle=K.roof; poly(c,[[tx,base-th-tw*2],[tx+tw*.55,base-th-tw*1.82],[tx,base-th-tw*1.64]]); c.fill(); }
+  c.fillStyle=K.hotelS; c.fillRect(cx-W*.47,base-Hh*.2,W*.94,Hh*.2); c.fillStyle=K.roof; c.fillRect(cx-W*.48,base-Hh*.22,W*.96,Hh*.04);
+  c.fillStyle=K.ink; for(let x=cx-W*.46;x<cx+W*.46;x+=W*.014) c.fillRect(x,base-Hh*.18,Math.max(1,W*.0018),Hh*.18); }
+
+function paint(c,K,L,road){ const {w,h,m,ax,ay,aw,ah,P,Q,dy}=L, wp=L.prof, apex=wp[L.ai];
+  // paper border outside the rounded picture
+  c.fillStyle=K.paper; c.beginPath(); c.rect(0,0,w,h); rrPath(c,ax,ay,aw,ah+L.band.h,L.rr); c.fill('evenodd');
+  c.save(); c.beginPath(); rrPath(c,ax,ay,aw,ah+L.band.h,L.rr); c.clip();
+  pcFar(c,K,L,[[.06,.48+dy*.7,.18],[.6,.45+dy*.7,.16],[.78,.5+dy*.7,.18],[.95,.46+dy*.7,.15]],.8);
+  c.fillStyle=K.mtn; poly(c,[...wp,[wp[wp.length-1][0],Q(1)],[wp[0][0],Q(1)]]); c.fill(); c.save(); c.clip();
+  c.fillStyle=K.mtnL; poly(c,[apex,[P(-.1),Q(.9)],[P(.28),Q(.9)],[P(.36),Q(.45+dy)]]); c.fill();
+  c.fillStyle=K.mtnD; poly(c,[apex,[P(.43),Q(.32+dy)],[P(.7),Q(.9)],[P(.5),Q(.9)]]); c.fill(); poly(c,[[P(.6),Q(.42+dy)],[P(.72),Q(.9)],[P(.8),Q(.9)],[P(.64),Q(.44+dy)]]); c.fill();
+  c.fillStyle=K.snow; c.beginPath(); c.moveTo(P(-.1),Q(.1)); c.lineTo(P(1.1),Q(.1));
+  for(let i=0;i<=22;i++){ const f=1.1-i/22*1.2, jag=(i%2?-1:1)*ah*.015; c.lineTo(P(f),Q(.355+dy+.22*Math.abs(f-.38)+.04*Math.max(0,f-.5))+jag); } c.closePath(); c.fill();
+  c.fillStyle=K.forest; c.beginPath(); c.moveTo(P(-.05),Q(1)); for(let i=0;i<=50;i++){ const f=-.05+i/50*1.1; c.lineTo(P(f),Q(.56+dy*.3-.025*Math.abs(Math.sin(f*8))+(i%2?-.01:.01))); } c.lineTo(P(1.05),Q(1)); c.closePath(); c.fill();
+  c.restore();
+  observatory(c,K,aw,ah,apex);
+  const my=f=>Q(.645+.012*Math.sin(f*5+.4)); const mp=[[ax,ay+ah]]; for(let i=0;i<=50;i++){ const f=i/50; mp.push([P(f),my(f)]); } mp.push([ax+aw,ay+ah]);
+  c.fillStyle=K.meadow; poly(c,mp); c.fill(); c.save(); poly(c,mp); c.clip(); c.fillStyle=K.meadow2; for(let k=-6;k<14;k+=2){ poly(c,[[P(k*.08),Q(.6)],[P(k*.08+.08),Q(.6)],[P(k*.08-.1),Q(1)],[P(k*.08-.18),Q(1)]]); c.fill(); } c.restore();
+  const r=rng(61), H0=L.hotel, hx0=(H0.cx-H0.W*.55-ax)/aw, hx1=(H0.cx+H0.W*.6-ax)/aw; c.fillStyle=K.pine;
+  for(let f=0;f<1;f+=.008+r()*.012){ if(f>hx0&&f<hx1) continue; const H=ah*(.035+r()*.04); aPine(c,P(f),my(f)+ah*.02,H,H*.32); }
+  paintHotel(c,K,H0);
+  c.fillStyle=K.pine; for(const [f,H] of[[-.53,.07],[-.45,.05],[.52,.065],[.58,.085]]){ const hh=ah*H; aPine(c,H0.cx+f*H0.W,H0.base+ah*.012,hh,hh*.32); }
+  c.fillStyle=K.hill; c.beginPath(); c.moveTo(ax,ay+ah); for(let i=0;i<=50;i++){ const f=i/50; c.lineTo(P(f),Q(.93+.025*Math.sin(f*4+2)+.008*Math.sin(f*13))); } c.lineTo(ax+aw,ay+ah); c.closePath(); c.fill();
+  c.fillStyle=K.pine; for(const [f,H] of[[.015,.3],[.055,.22],[.09,.14],[.955,.2],[.99,.28]]){ const hh=Math.min(ah*H,aw*H*1.4); aPine(c,P(f),Q(.99),hh,hh*.34); }
+  strokeRoad(c,road,L.rw[0]+4,L.rw[1]+2.5,K.redge); strokeRoad(c,road,L.rw[0],L.rw[1],K.road); dashRoad(c,road,K.redge,Math.max(1,aw*.0011),aw*.007,aw*.008);
+  // a postmark built from CONTENT.person.place (e.g. "White Mountains · N.H.")
+  const pm=L.mark; if(pm){ const font=s=>Math.round(s)+'px "Bebas Neue",Impact,sans-serif';
+    c.save(); c.globalAlpha=.78; c.strokeStyle=K.mark; c.fillStyle=K.mark; c.lineWidth=1.6; c.beginPath(); c.arc(pm.x,pm.y,pm.r,0,TAU); c.stroke(); c.lineWidth=1; c.beginPath(); c.arc(pm.x,pm.y,pm.r*.8,0,TAU); c.stroke();
+    if(pm.top) arcLine(c,pm.top,pm.x,pm.y,pm.r*.56,font(pm.r*.25),pm.r*.03); c.beginPath(); star4(c,pm.x,pm.y+pm.r*.05,pm.r*.16); c.fill();
+    if(pm.mid) letterLine(c,pm.mid,pm.x,pm.y+pm.r*.45,font(pm.r*.24),pm.r*.03);
+    c.lineWidth=1.4; for(let k=0;k<3;k++){ c.beginPath(); for(let x=pm.x+pm.r*1.12;x<P(.995);x+=2){ const y=pm.y+(k-1)*pm.r*.36+Math.sin((x-pm.x)*.09)*pm.r*.08; if(x===pm.x+pm.r*1.12) c.moveTo(x,y); else c.lineTo(x,y); } c.stroke(); }
+    c.restore(); }
+  c.restore();
+  // key line + outer rule
+  c.strokeStyle=K.ink; c.lineWidth=2; c.beginPath(); rrPath(c,ax+1,ay+1,aw-2,ah+L.band.h-2,L.rr); c.stroke();
+  c.lineWidth=1; c.beginPath(); rrPath(c,m*.45,m*.45,w-m*.9,h-m*.9,L.rr+m*.5); c.stroke(); }
+
+/* =====================================================================
+   the stop
+   ===================================================================== */
+const card=$('#card'), st=$('.stage'), cv=$('canvas',st), ctx=cv.getContext('2d'), head=$('.head',st), band=$('.band',st),
+  sCue=$('.sign.cue',st), sClassic=$('.sign.classic',st), secret=$('.secret',st), toastEl=$('.toast',st), bearEl=$('.bear',st);
+bearEl.innerHTML=BEAR;
+/* every word comes from CONTENT.person */
+const NAME=PER.name||'', PLACE=PER.place||'', parts=PLACE.split('·').map(s=>s.trim()).filter(Boolean);
+$('.name',head).textContent=NAME; $('.cap',head).textContent=PLACE?'Greetings from '+PLACE:'';
+$('.one',head).textContent=PER.oneLiner||''; $('.why',head).textContent=PER.why||'';
+band.textContent=[PER.tagline,PLACE].filter(Boolean).join(' ★ ');
+if(!band.textContent) band.style.visibility='hidden';
+
+const S={w:0,h:0,L:null,lay:null,road:null,ready:false,dirty:true,t:0,p:0,night:false,nt:0,e:0,found:false,hover:false,inside:false,mx:0,my:0,
+  car:{on:false,t:0,done:false},carU:0,visible:true,paused:false,stars:[],clouds:[]};
+
+function fit(){ const w=st.clientWidth, h=st.clientHeight; if(w<60||h<60) return;
+  S.w=w; S.h=h; cv.width=Math.round(w*DPR); cv.height=Math.round(h*DPR); ctx.setTransform(DPR,0,0,DPR,0,0);
+  const m=Math.round(Math.min(w,h)*.04), bh=clamp(h*.075,36,66), ax=m, ay=m, aw=w-2*m, ah=h-2*m-bh, P=f=>ax+f*aw, Q=f=>ay+f*ah, portrait=aw/ah<.95;
+  // lettering first: its height decides how far down the mountains sit
+  const fam='"Bebas Neue",Impact,"Arial Narrow",sans-serif', UP=NAME.toUpperCase(), longest=UP.split(/\s+/).reduce((a,b)=>b.length>a.length?b:a,'');
+  const fs=portrait?Math.min(ah*.085,aw*.86/(textW('100px '+fam,longest,3)/100)):Math.min(ah*.15,aw*.56/(textW('100px '+fam,UP,3)/100));
+  Object.assign(head.style,{left:ax+'px',top:(ay+ah*.035)+'px',width:aw+'px'});
+  $('.cap',head).style.fontSize=Math.max(11,Math.round(fs*(portrait?.3:.22)))+'px';
+  $('h1',head).style.fontSize=Math.round(fs)+'px'; $('h1',head).style.whiteSpace=portrait?'normal':'nowrap';
+  head.style.fontSize=Math.round(clamp(fs*(portrait?.25:.18),13,20))+'px';
+  const hb=head.offsetTop+head.offsetHeight, dy=Math.max(.03,(hb+ah*.075-ay)/ah-.28);
+  const prof=[[-.04,.62],[.06,.55],[.14,.5],[.22,.44],[.28,.38],[.33,.32],[.36,.29],[.38,.28],[.40,.29],[.45,.34],[.5,.4],[.56,.43],[.6,.42],[.66,.46],[.72,.44],[.78,.48],[.86,.52],[.94,.55],[1.04,.6]].map(([a,b])=>[P(a),Q(b+dy)]), ai=7;
+  const sunY=Q(.25+dy), mr=ah*(portrait?.055:.075);
+  const L=S.L={w,h,m,ax,ay,aw,ah,P,Q,dy,prof,ai,portrait,rr:Math.round(clamp(Math.min(w,h)*.018,8,18)),rw:[Math.min(ah,aw*.6)*.046,Math.min(ah,aw*.6)*.008],band:{x:ax,y:ay+ah,w:aw,h:bh},
+    sun:{x:P(portrait?.14:.1),y:sunY,r:ah*(portrait?.05:.07)},
+    mark:{x:P(portrait?.84:.905),y:portrait?sunY:Q(.15),r:mr,top:(parts[0]||'').toUpperCase(),mid:(parts[1]||'').toUpperCase()},
+    hotel:portrait?{cx:P(.72),base:Q(.735),W:aw*.5,Hh:ah*.06}:{cx:P(.665),base:Q(.735),W:aw*.36,Hh:ah*.085},
+    road:{prof:[[.26,.62+dy],[.38,.28+dy],[.5,.62+dy]].map(([a,b])=>[P(a),Q(b)]),base:Q(.57+dy*.4),top:Q(.32+dy),apex:[prof[ai][0],prof[ai][1]+2],start:[P(.3),ay+ah+10],n:6,inset:.16,inset2:.08,r:.16},
+    signs:portrait?{classic:{x:P(.27),y:Q(.985)},cue:{x:P(.74),y:Q(.975)}}:{classic:{x:P(.16),y:Q(.985)},cue:{x:P(.855),y:Q(.975)}},
+    bear:{x:P(portrait?.52:.405),y:Q(.955)}};
+  S.road=makeRoad(L.road);
+  S.lay=[DI,NI].map(K=>{ const [c2,x]=off(w,h); paint(x,K,L,S.road); return c2; });
+  S.grain=ctx.createPattern(grainTile(24),'repeat');
+  const r=rng(21); S.stars=Array.from({length:60},()=>[P(r()),Q(r()*.48),r()*1.3+.5,r()*TAU]);
+  S.clouds=[{x:.2,y:.4+dy*.6,wd:.16,v:.004,s:4},{x:.75,y:.36+dy*.6,wd:.13,v:.003,s:5},{x:1.15,y:.43+dy*.6,wd:.2,v:.005,s:6}];
+  place(); S.ready=true; S.dirty=true; }
+
+function place(){ const L=S.L, put=(el,x,y)=>{ el.style.left=x+'px'; el.style.top=y+'px'; };
+  Object.assign(band.style,{left:L.band.x+'px',top:L.band.y+'px',width:L.band.w+'px',height:L.band.h+'px'}); const bt=textW('100px "Bebas Neue",Impact,sans-serif',band.textContent.toUpperCase(),22)/100; band.style.setProperty('--bfs',Math.round(Math.min(L.band.h*.5,L.band.w*.9/(bt||1)))+'px');
+  toastEl.style.bottom=(S.h-L.band.y+16)+'px';
+  const d=Math.max(36,L.sun.r*2.1); secret.style.width=secret.style.height=d+'px'; put(secret,L.sun.x,L.sun.y);
+  // keep each sign board fully inside the picture
+  for(const [el,pos] of[[sClassic,L.signs.classic],[sCue,L.signs.cue]]){ const bw=$('.board',el).offsetWidth||0; put(el,clamp(pos.x,L.ax+bw/2+10,L.ax+L.aw-bw/2-10),pos.y); }
+  put(bearEl,L.bear.x,L.bear.y); }
+
+/* ---- the car up the Auto Road → classic portfolio ---- */
+function drawCar(c,u,K){ const p=S.road.at(u), s=clamp(S.w*.016,11,24)*lerp(1,.62,u), dir=p.dx>=0?1:-1, sl=clamp(Math.atan2(p.dy,Math.abs(p.dx)),-.6,.6);
+  c.save(); c.translate(p.x,p.y-s*.35); c.scale(dir,1); c.rotate(sl); c.lineWidth=Math.max(1,s*.12); c.strokeStyle=K.line; c.lineJoin='round';
+  c.fillStyle=K.body; c.beginPath(); c.moveTo(-1.15*s,.1*s); c.lineTo(-1.15*s,-.45*s); c.lineTo(-.55*s,-.5*s); c.lineTo(-.3*s,-1.0*s); c.lineTo(.5*s,-1.0*s); c.lineTo(.85*s,-.5*s); c.lineTo(1.15*s,-.4*s); c.lineTo(1.15*s,.1*s); c.closePath(); c.fill(); c.stroke();
+  c.fillStyle=K.cab; c.beginPath(); c.moveTo(-.2*s,-.55*s); c.lineTo(-.02*s,-.9*s); c.lineTo(.42*s,-.9*s); c.lineTo(.62*s,-.55*s); c.closePath(); c.fill();
+  c.fillStyle=K.wheel; for(const x of[-.68,.68]){ c.beginPath(); c.arc(x*s,.12*s,.3*s,0,TAU); c.fill(); c.stroke(); } c.restore(); }
+function goClassic(){ st.classList.remove('driving'); S.car={on:false,t:0,done:false}; S.dirty=true; if(CL) CL.classic(); }
+function startCar(){ if(S.car.on) return; if(RM.matches||!S.ready){ goClassic(); return; } st.classList.add('driving'); S.car={on:true,t:0,done:false}; S.dirty=true; schedule(); }
+
+/* ---- the secret: the sun is a light switch ---- */
+function toast(msg){ toastEl.textContent=msg; toastEl.classList.add('on'); clearTimeout(toast._t); toast._t=setTimeout(()=>toastEl.classList.remove('on'),2800); }
+function toggleNight(){ S.night=!S.night; st.classList.toggle('night',S.night); secret.setAttribute('aria-pressed',String(S.night));
+  if(RM.matches){ S.nt=S.night?1:0; S.e=S.nt; }
+  if(!S.found){ S.found=true; toast(S.night?'★ Found it! The sun is a light switch: night print unlocked':'★ Found it!'); }
+  else toast(S.night?'☾ Night print':'☀ Day print');
+  if(CL) CL.patch(); S.dirty=true; schedule(); }
+
+/* ---- frame ---- */
+function render(){ const L=S.L, c=ctx, e=S.e, t=S.t, p=S.p, {w,h,ax,ay,aw,ah}=L, K=k=>mix(DI[k],NI[k],e);
+  c.fillStyle=K('paper'); c.fillRect(0,0,w,h);
+  c.save(); c.beginPath(); rrPath(c,ax,ay,aw,ah+L.band.h,L.rr); c.clip(); c.fillStyle=K('sky'); c.fillRect(ax,ay,aw,ah+L.band.h);
+  const R=L.sun.r, sx=L.sun.x, sy=L.sun.y+dip(S.nt)*R*2.6-smooth(p)*ah*.03;   /* parallax: the sun climbs a little as you scroll */
+  c.save(); c.translate(sx,sy); c.rotate(t*.04); c.fillStyle=K('ray'); c.beginPath();
+  for(let k=0;k<20;k+=2){ c.moveTo(0,0); c.arc(0,0,w*1.4,k/20*TAU,(k+1)/20*TAU); c.closePath(); } c.fill(); c.restore();
+  if(e>.01) for(const [x,y,r,ph] of S.stars){ c.fillStyle='rgba(236,228,207,'+(e*(.6+.4*Math.sin(t*2+ph)))+')'; c.beginPath(); c.arc(x,y,r,0,TAU); c.fill(); }
+  for(const cl of S.clouds){ const f=((cl.x+t*cl.v+p*.05)%1.5+1.5)%1.5-.25; eCloud(c,L.P(f),L.Q(cl.y),aw*cl.wd,cl.s,K('cloud'),K('cloudS')); }
+  sunBody(c,S,sx,sy,R*(S.hover?1.12:1),SUN);
+  c.restore();
+  c.drawImage(S.lay[0],0,0,w,h); if(e>.002){ c.globalAlpha=e; c.drawImage(S.lay[1],0,0,w,h); c.globalAlpha=1; }
+  if(S.car.on) drawCar(c,S.carU,{body:K('roof'),cab:K('hotel'),wheel:K('ink'),line:K('ink')});
+  c.fillStyle=S.grain; c.fillRect(0,0,w,h); }
+function frame(dt){ if(!S.ready) return; const rm=RM.matches; if(rm&&!S.dirty&&!S.car.on) return;
+  if(!rm) S.t+=dt;
+  const tg=S.night?1:0; S.nt=rm?tg:S.nt+clamp(tg-S.nt,-dt/.8,dt/.8); S.e=smooth(S.nt);
+  if(S.car.on&&!S.car.done){ S.car.t=Math.min(1,S.car.t+dt/3.2); if(S.car.t>=1){ S.car.done=true; setTimeout(goClassic,380); } }
+  S.carU=S.car.t<.5?2*S.car.t*S.car.t:1-2*(1-S.car.t)*(1-S.car.t);
+  render(); S.dirty=false; }
+let raf=0, last=performance.now();
+function loop(now){ raf=0; const dt=Math.min(.05,(now-last)/1000); last=now; frame(dt); schedule(); }
+function schedule(){ if(raf||!S.visible||S.paused) return; raf=requestAnimationFrame(loop); }
+function resume(){ if(!raf){ last=performance.now(); schedule(); } }
+
+/* ---- scroll progress: gentle drift; by p=1 the postcard sits flat and centred, lifted for the flip ---- */
+let cueOut=1;
+function applyProgress(){ const p=S.p, k=smooth(p), sc=1-.05*k;
+  card.style.transform=k>0?'scale('+sc.toFixed(4)+')':'';
+  st.style.borderRadius=(k*10).toFixed(1)+'px';
+  st.style.boxShadow=k>0?'0 '+(18*k).toFixed(1)+'px '+(50*k).toFixed(1)+'px rgba(0,0,0,'+(.42*k).toFixed(3)+')':'';
+  head.style.transform='translateY('+(-k*S.h*.012).toFixed(1)+'px)';
+  const o=clamp(1-p*2.4,0,1)*cueOut; sCue.style.opacity=o.toFixed(3); sCue.style.pointerEvents=o<.15?'none':''; sCue.tabIndex=o<.15?-1:0; }
+
+/* ---- wiring ---- */
+st.addEventListener('pointermove',e=>{ const r=st.getBoundingClientRect(); S.mx=(e.clientX-r.left)*S.w/(r.width||1); S.my=(e.clientY-r.top)*S.h/(r.height||1); S.inside=true; });
+st.addEventListener('pointerleave',()=>{ S.inside=false; });
+const hv=v=>()=>{ S.hover=v; S.dirty=true; };
+secret.addEventListener('mouseenter',hv(true)); secret.addEventListener('mouseleave',hv(false)); secret.addEventListener('focus',hv(true)); secret.addEventListener('blur',hv(false));
+secret.addEventListener('click',toggleNight);
+sClassic.addEventListener('click',startCar);
+sCue.addEventListener('click',()=>{ if(CL) CL.goto('journey'); });
+if(window.ResizeObserver) new ResizeObserver(()=>{ if(Math.abs(st.clientWidth-S.w)>2||Math.abs(st.clientHeight-S.h)>2){ fit(); frame(0); } }).observe(st);
+else addEventListener('resize',()=>{ fit(); frame(0); });
+if(CL){
+  CL.onProgress(p=>{ S.p=p; applyProgress(); S.dirty=true; schedule(); });
+  CL.onVisible(v=>{ S.visible=v; if(v) resume(); });
+  /* leaving (the shell flips the postcard): fade the cue and freeze the frame; resume if the visitor scrolls back */
+  CL.onTransition(({dir,t})=>{ if(dir==='out'){ cueOut=clamp(1-t*4,0,1); S.paused=t>.02; } else { cueOut=1; S.paused=false; } applyProgress(); if(!S.paused){ S.dirty=true; resume(); } });
+}
+fit(); applyProgress(); frame(0); schedule();
+/* the display font arrives from Google Fonts: re-measure the lettering and refit */
+if(document.fonts&&document.fonts.load){ Promise.race([Promise.all(['48px "Bebas Neue"','600 16px "Josefin Sans"'].map(f=>document.fonts.load(f,NAME||'A'))),new Promise(r=>setTimeout(r,4000))])
+  .then(()=>{ fit(); place(); S.dirty=true; frame(0); }).catch(()=>{}); }
+})();
+</script>
+</body>
+</html>

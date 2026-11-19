@@ -1,0 +1,506 @@
+<!doctype html>
+<html lang="en" data-stop="gear" data-span="2.5">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Gear Check</title>
+<link rel="icon" href="data:,">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Caveat:wght@500;700&family=Inter:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+/* =====================================================================
+   ③ GEAR CHECK  (from mockup 03 · variant G "Patched gear")
+   A knolled flat-lay on a canvas mat. Each CONTENT.skills group is one piece of
+   gear, embroidered as a merrow-edged patch; its skills are woven name tapes
+   with a 3-knot "miles carried" gauge. Soft skills are tapes sewn on the pack.
+   Progress: 0–.15 gear settles · middle readable · .8–1 everything packs, pack zips.
+   Secret: the headlamp is a blacklight (UV scheme) → Climb.patch().
+   ===================================================================== */
+:root{
+  --p1:#2f6b45;--p2:#cf5a3c;--p3:#eaaa2f;--p4:#f6e9c8;--p5:#46708f;--p6:#92b58b;--p7:#4f4a45;--p8:#a8c7d3;--p9:#8c5b3b;
+  --ink:#2a2f2b;--hi:#fff8e6;--ol:rgba(35,22,10,.32);--olw:1.1;--lnw:2;--glow:#e8ff4f;
+  --cap:#3b2a14;--tape:#f4ecd8;--tapeink:#22324c;--knot:#b8322b;--wl:#22324c;--wlink:#f3e7c9;--noteink:#d9ff3f;--thread:#f3e6c4;
+  --paper:#e9e1cc;--contour:#8aa37a;--contour2:#a0764a;--trail:#c0392b;--water:#7fb2c9;
+  --wood:#946339;--focus:#fff8e6;--hintc:#ff5a3c;
+}
+html.uv{
+  --p1:#5a34c9;--p2:#ff3fa3;--p3:#d9ff3f;--p4:#2b2150;--p5:#3b74ff;--p6:#37e3c3;--p7:#241d3d;--p8:#6a55ff;--p9:#7b45b8;
+  --ink:#e6d8ff;--hi:#fff;--ol:rgba(200,160,255,.5);--cap:#e6d8ff;--tape:#d9ddff;--tapeink:#3b1785;--knot:#d9ff3f;--wl:#140e2c;--wlink:#7dffe9;--thread:#d9ff3f;
+  --paper:#241a44;--contour:#37e3c3;--contour2:#d9ff3f;--trail:#ff3fa3;--water:#3b74ff;--focus:#d9ff3f;--hintc:#d9ff3f;
+}
+*{box-sizing:border-box}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--wood)}
+body{font:14px/1.4 Inter,system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--cap);-webkit-tap-highlight-color:transparent}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+button{font:inherit;color:inherit}
+button:focus-visible{outline:3px solid var(--focus);outline-offset:4px;border-radius:8px}
+
+/* ---- table + layout ---- */
+.wood{position:fixed;inset:0;z-index:0;background:
+  url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='500' height='260'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.008 .42' numOctaves='3' seed='4'/><feColorMatrix values='0 0 0 0 .22  0 0 0 0 .11  0 0 0 0 .04  0 0 0 .62 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>"),
+  repeating-linear-gradient(180deg,transparent 0 196px,rgba(30,14,4,.55) 196px 199px,rgba(255,220,170,.12) 199px 201px),
+  linear-gradient(180deg,#b3814f,#9a6a3c 60%,#8d5f34)}
+.wood::after{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at 38% 46%,rgba(120,55,210,.55),rgba(16,5,34,.96) 72%);opacity:0;transition:opacity .8s}
+html.uv .wood::after{opacity:1}
+#view{position:fixed;inset:0;z-index:1;overflow:hidden}
+#scroller{position:relative;min-height:100%;display:grid;grid-template-columns:minmax(0,1fr) clamp(220px,20vw,300px);grid-template-rows:auto minmax(0,1fr);column-gap:22px;row-gap:8px;padding:14px 26px 14px;will-change:transform}
+.ahead{grid-column:1;grid-row:1;display:flex;align-items:flex-end;gap:10px 18px;flex-wrap:wrap;position:relative;padding:2px 4px 0}
+.eb{width:100%;font:700 12px/1 'Space Mono',monospace;letter-spacing:.2em;text-transform:uppercase;color:#f0d9a8;opacity:.85;transition:color .8s}
+.ahead h1{margin:0;font:400 clamp(46px,6vw,84px)/.85 'Bebas Neue',Impact,sans-serif;letter-spacing:.05em;color:#f7ead0;text-shadow:0 3px 0 rgba(60,28,8,.55),0 10px 24px rgba(0,0,0,.35);transition:color .8s,text-shadow .8s}
+html.uv .ahead h1{color:#f0e3ff;text-shadow:0 0 14px #b078ff,0 0 38px #7a3cff}
+.ahead .sub{margin:0 0 6px;font:500 clamp(19px,1.8vw,26px)/1 Caveat,cursive;color:#f7ead0;transform:rotate(-1.5deg)}
+.legend{margin:0 0 4px auto;display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:7px 16px 6px;background-color:var(--wl);background-image:repeating-linear-gradient(90deg,rgba(255,255,255,.07) 0 1px,transparent 1px 2px);color:var(--wlink);font:600 10px/1.2 'Space Mono',monospace;letter-spacing:.1em;text-transform:uppercase;box-shadow:0 3px 6px rgba(40,18,4,.35);position:relative;transition:background-color .8s,color .8s}
+.legend::before,.legend::after{content:"";position:absolute;top:3px;bottom:3px;border-left:1.5px dashed var(--wlink);opacity:.55}
+.legend::before{left:5px}.legend::after{right:5px}
+.legend b{font:400 14px/1 'Bebas Neue',Impact,sans-serif;letter-spacing:.18em;font-weight:400}
+.legend span{display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+.legend .gz i{border-color:var(--wlink)}.legend .gz i.on{background:var(--wlink)}
+.hint{margin:0 0 6px;font:700 19px/1 Caveat,cursive;color:#3b2a14;background:#f1dfb5;border:2px dashed #7a5a2c;border-radius:8px;padding:5px 14px 6px;box-shadow:0 3px 0 rgba(60,30,8,.45);cursor:pointer;transform:rotate(-1deg);transition:transform .15s,background .8s,color .8s}
+.hint:hover{transform:translateY(-2px) rotate(-2deg)}
+html.uv .hint{background:#2b2150;color:#e6d8ff;border-color:#8a5cff}
+
+/* ---- canvas mat ---- */
+.mat{grid-column:1;grid-row:2;position:relative;border-radius:12px;background-color:#d6c296;background-image:var(--tx-duck,none),radial-gradient(ellipse at 50% 40%,rgba(255,255,255,.22),transparent 70%),linear-gradient(104deg,transparent 30%,rgba(255,255,255,.1) 38%,transparent 45%,transparent 62%,rgba(0,0,0,.08) 70%,transparent 78%);background-blend-mode:overlay,normal,normal;box-shadow:0 18px 40px rgba(30,12,2,.5),0 0 0 1px rgba(60,35,10,.35),inset 0 1px 0 rgba(255,255,255,.35)}
+.mat::before{content:"";position:absolute;inset:10px;border:2px dashed rgba(90,60,25,.5);border-radius:7px;pointer-events:none;z-index:3}
+.mat::after{content:"";position:absolute;inset:0;border-radius:12px;background:radial-gradient(ellipse at 50% 40%,#3b1d78 0%,#160a31 80%);opacity:0;transition:opacity .8s;z-index:1;pointer-events:none}
+html.uv .mat::after{opacity:.96}
+.grid{position:relative;z-index:2;height:100%;display:grid;grid-template-columns:1.12fr repeat(3,minmax(0,1fr));grid-template-rows:repeat(2,auto);align-content:space-evenly;gap:6px 10px;padding:20px 20px 14px}
+
+/* ---- one piece of gear ---- */
+.gi{position:relative;display:flex;flex-direction:column;align-items:center;gap:5px;min-width:0;padding:4px 2px;transform-origin:50% 40%;will-change:transform,opacity}
+.gi.map{grid-row:1/3;justify-content:center}
+.gp{all:unset;box-sizing:border-box;position:relative;display:block;width:clamp(78px,15vh,138px);aspect-ratio:1;cursor:pointer;transition:transform .38s cubic-bezier(.2,.9,.3,1.35)}
+.gp:hover,.gp:focus-visible,.gp[aria-pressed=true]{transform:translateY(-7px) scale(1.07) rotate(-2deg)}
+.gp:focus-visible{outline:3px solid var(--focus);outline-offset:6px;border-radius:50%}
+.gp svg{width:100%;height:100%;display:block;overflow:visible;filter:drop-shadow(2px 4px 2px rgba(60,32,8,.45)) drop-shadow(0 8px 10px rgba(60,32,8,.18));transition:filter .6s}
+.gp:hover svg,.gp[aria-pressed=true] svg{filter:drop-shadow(4px 14px 10px rgba(60,32,8,.38))}
+html.uv .gp svg{filter:drop-shadow(0 0 7px rgba(176,120,255,.6))}
+.gp.hinting::after{content:"";position:absolute;inset:-12%;border-radius:50%;border:3px solid var(--hintc);opacity:0;animation:hintring .85s ease-out 3;pointer-events:none}
+@keyframes hintring{0%{opacity:.95;transform:scale(.6)}100%{opacity:0;transform:scale(1.25)}}
+.mapbox{position:relative;width:94%;aspect-ratio:var(--va,1.6);transform:rotate(var(--mrot,-6deg));filter:drop-shadow(3px 8px 7px rgba(60,32,8,.4))}
+.mapbox svg{width:100%;height:100%;display:block}
+.wlab{display:inline-block;margin-top:4px;padding:4px 15px 3px;font:400 15px/1 'Bebas Neue',Impact,sans-serif;letter-spacing:.22em;color:var(--wlink);background-color:var(--wl);background-image:repeating-linear-gradient(90deg,rgba(255,255,255,.07) 0 1px,transparent 1px 2px);box-shadow:0 1px 0 rgba(0,0,0,.3),0 3px 5px rgba(40,18,4,.3);position:relative;white-space:nowrap;transition:background-color .8s,color .8s}
+.wlab::before,.wlab::after{content:"";position:absolute;top:3px;bottom:3px;border-left:1.5px dashed var(--wlink);opacity:.55}
+.wlab::before{left:5px}.wlab::after{right:5px}
+html.uv .wlab{text-shadow:0 0 6px var(--wlink)}
+.gname{margin:-1px 0 0;font:700 clamp(17px,1.45vw,22px)/1 Caveat,cursive;color:var(--cap);transition:color .8s}
+.tapes{list-style:none;margin:2px 0 0;padding:0;display:flex;flex-wrap:wrap;justify-content:center;gap:4px 5px;max-width:100%}
+.tapes li{position:relative;display:inline-flex;align-items:center;gap:5px;padding:3px 7px 2px;font:400 13px/1.1 'Bebas Neue',Impact,sans-serif;letter-spacing:.07em;color:var(--tapeink);background-color:var(--tape);background-image:repeating-linear-gradient(45deg,rgba(0,0,0,.06) 0 1px,transparent 1px 2.6px);border-left:1.5px dashed rgba(34,50,76,.4);border-right:1.5px dashed rgba(34,50,76,.4);box-shadow:0 1px 2px rgba(40,18,4,.35);transition:background-color .8s,color .8s,box-shadow .8s}
+html.uv .tapes li{box-shadow:0 0 8px rgba(190,200,255,.6)}
+.gz{display:inline-flex;gap:2px}
+.gz i{width:6px;height:6px;border-radius:50%;border:1.3px solid var(--knot);opacity:.85;transition:border-color .8s,background .8s}
+.gz i.on{background:var(--knot);box-shadow:inset -1px -1px 0 rgba(0,0,0,.25)}
+html.uv .gz i.on{box-shadow:0 0 4px var(--knot)}
+.used{margin:1px 0 0;font:700 15px/1.15 Caveat,cursive;color:var(--cap);text-align:center;transition:color .8s}
+.used button{all:unset;cursor:pointer;font:700 15px/1.15 Caveat,cursive;color:#7a2a22;border-bottom:1.5px dashed currentColor;margin:0 2px;transition:color .8s}
+.used button:hover{color:#b8322b}
+.used button:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+html.uv .used button{color:#ff8af0}
+
+/* ---- patch rendering (from variant F/G) ---- */
+.pat .fab{transition:fill .8s}
+.pat .mer{fill:none;stroke:var(--bd);stroke-width:7.5;stroke-linejoin:round;transition:stroke .8s}
+.pat .mer2{fill:none;stroke:rgba(0,0,0,.34);stroke-width:7.5;stroke-dasharray:.6 1.1;stroke-linejoin:round}
+.pat .tw{fill:url(#x-twl)}
+.pat .emb,.pat .mrw{filter:url(#x-emb)}
+html.uv .pat .fab{fill:color-mix(in srgb,var(--fabc) 28%,#0d0820)!important}
+html.uv .pat .mer{stroke:color-mix(in srgb,var(--bd) 32%,#0d0820)}
+/* gear art roles (from the mockup) */
+.art .c1{fill:var(--p1)}.art .c2{fill:var(--p2)}.art .c3{fill:var(--p3)}.art .c4{fill:var(--p4)}.art .c5{fill:var(--p5)}.art .c6{fill:var(--p6)}.art .c7{fill:var(--p7)}.art .c8{fill:var(--p8)}.art .c9{fill:var(--p9)}
+.art .s1,.art .s2,.art .s3,.art .s4,.art .s5,.art .s6,.art .s7,.art .s8,.art .s9{fill:none;stroke-linecap:round;stroke-linejoin:round}
+.art .s1{stroke:var(--p1)}.art .s2{stroke:var(--p2)}.art .s3{stroke:var(--p3)}.art .s4{stroke:var(--p4)}.art .s5{stroke:var(--p5)}.art .s6{stroke:var(--p6)}.art .s7{stroke:var(--p7)}.art .s8{stroke:var(--p8)}.art .s9{stroke:var(--p9)}
+.art .o{stroke:var(--ol);stroke-width:var(--olw,0);stroke-linejoin:round;stroke-linecap:round}
+.art .ln{fill:none;stroke:var(--ink);stroke-width:var(--lnw,2);stroke-linecap:round;stroke-linejoin:round}
+.art .thin{stroke-width:calc(var(--lnw,2)*.6)}
+.art .k{fill:var(--ink)}.art .w{fill:var(--hi)}
+.art .t{fill:var(--ink);font-family:'Bebas Neue',Impact,sans-serif;font-weight:700;text-anchor:middle}
+.art .tw2{fill:var(--hi);font-family:'Bebas Neue',Impact,sans-serif;text-anchor:middle}
+.art .braid{stroke-linecap:butt}
+.art *{transition:fill .8s,stroke .8s,filter .8s,opacity .8s}
+.art .beam{opacity:0;pointer-events:none}
+html.uv .art .beam{opacity:1}
+html.uv .art .fl{fill:var(--glow);filter:drop-shadow(0 0 3px var(--glow))}
+html.uv .art .fls{stroke:var(--glow);filter:drop-shadow(0 0 3px var(--glow))}
+html.uv .art .lens{fill:#fff;filter:drop-shadow(0 0 6px var(--glow))}
+@media (prefers-reduced-motion:no-preference){
+  html:not(.paused) .art .flame{animation:flick .55s ease-in-out infinite alternate;transform-box:fill-box;transform-origin:50% 100%}
+  html:not(.paused) .art .wave{animation:wv 1.8s ease-in-out infinite}
+  html:not(.paused) .art .w2{animation-delay:.25s}html:not(.paused) .art .w3{animation-delay:.5s}
+}
+@keyframes flick{from{transform:scale(1,1)}to{transform:scale(.88,1.1) rotate(2deg)}}
+@keyframes wv{0%,100%{opacity:.25}50%{opacity:1}}
+/* fabric texture overlays inside SVG (pack) */
+.gtx{mix-blend-mode:overlay;pointer-events:none;opacity:.8}
+.gseam{fill:none;stroke:var(--thread);stroke-width:1.2;stroke-dasharray:3 2.4;opacity:.7;pointer-events:none}
+
+/* ---- the pack ---- */
+.packbox{grid-column:2;grid-row:1/3;position:relative;display:grid;grid-template-rows:minmax(0,1fr) auto;justify-items:center;align-self:start;height:calc(100vh - 28px);padding-top:10px}
+.packslot{width:100%;height:100%;container-type:size;display:grid;place-items:center;min-height:0;position:relative}
+.packart{position:relative;aspect-ratio:160/232;height:min(100cqh,calc(100cqw*1.45));filter:drop-shadow(10px 16px 12px rgba(50,25,5,.42));transition:filter .8s}
+html.uv .packart{filter:drop-shadow(0 0 14px rgba(176,120,255,.75))}
+.packart svg{width:100%;height:100%;display:block;overflow:visible}
+.packart .flap{transform-box:view-box;transform-origin:80px 20px}
+.softs{position:absolute;left:21%;right:21%;top:47%;bottom:18%;list-style:none;margin:0;padding:0;display:grid;grid-auto-rows:minmax(0,1fr);gap:4px;z-index:3}
+.softs li{position:relative;display:grid;place-items:center;padding:3px 6px 2px;text-align:center;font:400 clamp(10px,.85vw,13px)/1 'Bebas Neue',Impact,sans-serif;letter-spacing:.09em;color:#191a12;background-color:#5c5f36;background-image:repeating-linear-gradient(45deg,rgba(255,255,255,.08) 0 1px,transparent 1px 2.5px),repeating-linear-gradient(-45deg,rgba(0,0,0,.1) 0 1px,transparent 1px 3px);box-shadow:inset 0 0 0 2px #4b4d2b,0 2px 3px rgba(0,0,0,.4);transition:background-color .8s,color .8s}
+.softs li::before{content:"";position:absolute;inset:3px;border:1.2px dashed rgba(0,0,0,.45)}
+html.uv .softs li{background-color:#25213f;color:#d9ff3f;text-shadow:0 0 6px #d9ff3f}
+.packcap{text-align:center;font:700 clamp(19px,1.8vw,26px)/1 Caveat,cursive;color:#f7ead0;padding:6px 0 0}
+.packcap b{display:inline-block;background:#f0dfb4;color:#3b2a14;border-radius:3px;padding:3px 10px 4px;transform:rotate(-2deg);box-shadow:0 3px 0 rgba(0,0,0,.25);transition:background .8s,color .8s}
+html.uv .packcap b{background:#2b2150;color:#d9ff3f;box-shadow:0 0 12px #8a5cff}
+.packcap small{display:block;font:700 12px/1.25 'Space Mono',monospace;letter-spacing:.06em;color:#f0d9a8;margin-top:6px}
+
+/* ---- UV-only glow stitching (decoration, no facts) ---- */
+.uvonly{position:absolute;opacity:0;pointer-events:none;transition:opacity .8s;z-index:6}
+html.uv .uvonly{opacity:1}
+.glowtxt{font:700 21px/1 Caveat,cursive;color:var(--noteink);text-shadow:0 0 8px #b6ff00,0 0 18px #7f5cff;white-space:nowrap}
+.packart svg.bear{width:64px;height:48px;overflow:visible;filter:drop-shadow(0 0 4px var(--glow))}
+.bear g{fill:none;stroke:var(--glow);stroke-width:1.8;stroke-linecap:round;stroke-dasharray:3 2.3}
+.bear .k2{fill:var(--glow)}
+.bear text{fill:var(--glow);font:700 13px Caveat,cursive}
+.toast{position:fixed;left:50%;bottom:16px;z-index:30;transform:translate(-50%,16px);opacity:0;pointer-events:none;transition:opacity .35s,transform .35s;display:flex;align-items:center;gap:10px;max-width:94%;font:700 21px/1.05 Caveat,cursive;color:#e6ffa0;background:#1c0f3b;border:2px dashed #b078ff;border-radius:99px;padding:8px 20px 9px 12px;box-shadow:0 0 28px rgba(150,90,255,.7)}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+
+/* ---- phone: one column, progress pans it ---- */
+@media (max-width:760px){
+  #scroller{grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto auto;padding:12px 12px 18px;row-gap:14px}
+  .ahead h1{font-size:52px}
+  .legend{margin-left:0}
+  .grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:none;gap:16px 8px;padding:22px 12px 18px}
+  .gi.map{grid-row:auto;grid-column:1/-1}
+  .mapbox{width:46%}
+  .gp{width:96px}
+  .packbox{grid-column:1;grid-row:3;height:420px}
+}
+@media (prefers-reduced-motion:reduce){.gp,.hint{transition:none}.gp.hinting::after{animation:none;opacity:.9}}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <linearGradient id="x-cyl" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#000" stop-opacity=".38"/><stop offset=".3" stop-color="#fff" stop-opacity=".3"/><stop offset=".52" stop-color="#fff" stop-opacity=".04"/><stop offset="1" stop-color="#000" stop-opacity=".45"/></linearGradient>
+  <pattern id="x-twl" width="3" height="3" patternUnits="userSpaceOnUse" patternTransform="rotate(35)"><rect width="3" height="1.1" fill="#fff" fill-opacity=".11"/><rect y="1.6" width="3" height=".8" fill="#000" fill-opacity=".2"/></pattern>
+  <filter id="x-emb" x="-8%" y="-8%" width="116%" height="116%" color-interpolation-filters="sRGB">
+    <feTurbulence type="fractalNoise" baseFrequency="1.15 .06" numOctaves="2" seed="5" result="n"/>
+    <feColorMatrix in="n" type="matrix" values="1.7 0 0 0 -.35  1.7 0 0 0 -.35  1.7 0 0 0 -.35  0 0 0 0 1" result="g"/>
+    <feBlend in="g" in2="SourceGraphic" mode="overlay" result="tex"/>
+    <feComposite in="tex" in2="SourceAlpha" operator="in" result="tex2"/>
+    <feGaussianBlur in="SourceAlpha" stdDeviation="1.1" result="b"/>
+    <feSpecularLighting in="b" surfaceScale="2.2" specularConstant=".6" specularExponent="16" lighting-color="#ffffff" result="sp"><feDistantLight azimuth="235" elevation="48"/></feSpecularLighting>
+    <feComposite in="sp" in2="SourceAlpha" operator="in" result="sp2"/>
+    <feComposite in="tex2" in2="sp2" operator="arithmetic" k1="0" k2="1" k3=".5" k4="0"/>
+  </filter>
+  <filter id="x-paper" x="0" y="0" width="100%" height="100%">
+    <feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="2" seed="8" result="n"/>
+    <feColorMatrix in="n" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 .14 0" result="g"/>
+    <feComposite in="g" in2="SourceGraphic" operator="in" result="g2"/>
+    <feMerge><feMergeNode in="SourceGraphic"/><feMergeNode in="g2"/></feMerge>
+  </filter>
+</svg>
+<div class="wood" aria-hidden="true"></div>
+<main id="view" aria-labelledby="gear-title">
+  <div id="scroller">
+    <header class="ahead">
+      <span class="eb" aria-hidden="true">Stop ③ · the pack, knolled</span>
+      <h1 id="gear-title">Gear Check</h1>
+      <p class="sub">every skill I carry, sewn on. tap a project to find it on the trail.</p>
+      <div class="legend" id="legend"><b>miles carried</b></div>
+      <button class="hint" type="button" id="hint">Hint</button>
+    </header>
+    <section class="mat" aria-label="Skills, grouped as gear">
+      <div class="grid" id="grid"></div>
+      <span class="uvonly glowtxt" style="right:26px;bottom:12px;transform:rotate(-3deg)">psst: you found the switch</span>
+    </section>
+    <aside class="packbox" aria-labelledby="pack-title">
+      <div class="packslot"><span class="packart" id="packart"></span></div>
+      <div class="packcap"><b id="pack-title">the pack · <span id="cnt">0</span> / <span id="tot">0</span></b><small>soft skills, sewn on</small></div>
+    </aside>
+  </div>
+</main>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="../content.js"></script>
+<script src="../bridge.js"></script>
+<script>
+(() => {
+'use strict';
+const C = window.CONTENT || {}, CL = window.Climb;
+const SK = Array.isArray(C.skills) ? C.skills : [];
+const PROJ = Object.fromEntries((C.projects || []).map(p => [p.id, p]));
+const RM = matchMedia('(prefers-reduced-motion: reduce)');
+const $ = s => document.querySelector(s);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
+const ss = (a, b, v) => { const t = clamp((v - a) / (b - a)); return t * t * (3 - 2 * t); };
+const LEVEL = { 3: 'every day', 2: 'comfortable', 1: 'have used' };   /* the scale from content.js */
+
+/* ---------------- procedural fabric (canvas tiles, grey ~50% for overlay blending) ---------------- */
+function prng(seed) { let s = (seed | 0) || 1; return () => { s = (Math.imul(s, 1664525) + 1013904223) | 0; return ((s >>> 8) & 0xffffff) / 0x1000000; }; }
+function mkTile(S, draw) { const c = document.createElement('canvas'); c.width = c.height = S; const g = c.getContext('2d'); draw(g, S); return c.toDataURL('image/png'); }
+function weaveTile(o) {
+  const n = o.n, p = o.p, S = n * p, R = prng(o.seed), wv = [], hv = [];
+  for (let i = 0; i < n; i++) { wv.push((R() - .5) * o.v); hv.push((R() - .5) * o.v); }
+  return mkTile(S, g => {
+    g.fillStyle = 'rgb(70,70,70)'; g.fillRect(0, 0, S, S);
+    const pill = (x, y, w, h, vert, c) => {
+      const gr = vert ? g.createLinearGradient(x, 0, x + w, 0) : g.createLinearGradient(0, y, 0, y + h);
+      gr.addColorStop(0, `rgb(${c - 52},${c - 52},${c - 52})`); gr.addColorStop(.42, `rgb(${c + 26},${c + 26},${c + 26})`); gr.addColorStop(1, `rgb(${c - 58},${c - 58},${c - 58})`);
+      g.fillStyle = gr; g.beginPath(); g.roundRect ? g.roundRect(x, y, w, h, Math.min(w, h) * .45) : g.rect(x, y, w, h); g.fill();
+    };
+    const tw = p * .86, off = (p - tw) / 2;
+    for (let j = 0; j < n; j++) for (let i = 0; i < n; i++) {
+      const vert = (i + j) % 2 === 0, c = Math.round(150 + (vert ? wv[i] : hv[j]) + (R() - .5) * 14);
+      if (vert) pill(i * p + off, j * p - .6, tw, p + 1.2, true, c); else pill(i * p - .6, j * p + off, p + 1.2, tw, false, c);
+    }
+    if (o.rip) {
+      g.lineWidth = p * .95;
+      for (let i = 0; i < n; i += o.rip) {
+        const x = i * p + p / 2;
+        g.strokeStyle = 'rgba(0,0,0,.3)'; g.beginPath(); g.moveTo(x + p * .9, 0); g.lineTo(x + p * .9, S); g.moveTo(0, x + p * .9); g.lineTo(S, x + p * .9); g.stroke();
+        g.strokeStyle = 'rgba(235,235,235,.45)'; g.beginPath(); g.moveTo(x, 0); g.lineTo(x, S); g.moveTo(0, x); g.lineTo(S, x); g.stroke();
+      }
+    }
+  });
+}
+const TX = {};
+try { TX.duck = weaveTile({ n: 16, p: 4, v: 42, seed: 3 }); TX.rip = weaveTile({ n: 24, p: 3, v: 20, seed: 5, rip: 8 }); } catch (e) {}
+if (TX.duck) document.documentElement.style.setProperty('--tx-duck', `url("${TX.duck}")`);
+
+/* ---------------- gear art (geometry from the mockup; colours via --p vars) ---------------- */
+const ART = {
+compass: () => `
+<rect class="c8 o" x="24" y="6" width="72" height="108" rx="9"/>
+<path class="ln thin" d="M24 86h6M24 92h10M24 98h6M24 104h10M96 86h-6M96 92h-10M96 98h-6M96 104h-10"/>
+<circle class="c2 o" cx="60" cy="46" r="32"/><circle class="c4 o" cx="60" cy="46" r="26"/>
+<path class="ln thin" d="M60 21v6M60 65v6M35 46h6M79 46h6M42 28l3 3M78 28l-3 3M42 64l3-3M78 64l-3-3"/>
+<path class="c2 o fl" d="M60 25 L67 46 H53Z"/><path class="c5 o" d="M60 67 L67 46 H53Z"/>
+<circle class="k" cx="60" cy="46" r="2.4"/><text class="t" x="60" y="19.4" font-size="7">N</text>
+<path class="c2 o" d="M60 80 l11 15 h-6.5 v12 h-9 v-12 h-6.5z"/>`,
+headlamp: u => `
+<defs><linearGradient id="bm${u}" x1="0" y1="1" x2="0" y2="0"><stop offset="0" style="stop-color:var(--glow);stop-opacity:.85"/><stop offset="1" style="stop-color:var(--glow);stop-opacity:0"/></linearGradient></defs>
+<path class="beam" d="M60 30 L6 -38 L114 -38Z" fill="url(#bm${u})"/>
+<ellipse class="s2" cx="60" cy="72" rx="47" ry="35" stroke-width="7"/>
+<ellipse class="s4" cx="60" cy="72" rx="47" ry="35" stroke-width="1.6" stroke-dasharray="3 4"/>
+<rect class="c7 o" x="42" y="98" width="36" height="16" rx="5"/><path class="ln thin" d="M50 104h20M50 108h20"/>
+<rect class="c7 o" x="33" y="12" width="54" height="40" rx="12"/>
+<circle class="c3 o fl" cx="60" cy="32" r="14"/><circle class="c4 o lens" cx="60" cy="32" r="8.5"/>
+<circle class="c2 o" cx="78" cy="19" r="3.6"/><path class="ln thin" d="M40 20h8"/>`,
+multitool: () => `
+<g transform="rotate(-25 52 112)"><rect class="c3 o" x="45" y="18" width="14" height="96" rx="7"/><path class="ln thin" d="M52 28v58"/></g>
+<g transform="rotate(25 68 112)"><rect class="c2 o" x="62" y="26" width="11" height="88" rx="5.5"/></g>
+<path class="c8 o" d="M44 46 L47 15 Q60 7 73 15 L76 46Z"/>
+<path class="ln thin" d="M60 11V46M51 22h5M64 22h5M51 28h5M64 28h5M51 34h5M64 34h5"/>
+<rect class="c8 o" x="40" y="44" width="40" height="72" rx="9"/><path class="ln" d="M60 52V110"/>
+<rect class="c4 o" x="46" y="60" width="9" height="34" rx="4.5"/><rect class="c4 o" x="65" y="60" width="9" height="34" rx="4.5"/>
+<circle class="k" cx="60" cy="48" r="2.6"/><path class="c1 o" d="M40 100h40v10a6 6 0 0 1-6 6H46a6 6 0 0 1-6-6z"/>`,
+stove: () => `
+<rect class="c2 o" x="84" y="51" width="30" height="13" rx="6.5"/>
+<circle class="c7 o" cx="54" cy="57" r="38"/><circle class="c8 o" cx="54" cy="57" r="32"/><circle class="c4 o" cx="54" cy="57" r="25"/>
+<path class="ln thin" d="M38 50a17 17 0 0 1 14-12M70 64a17 17 0 0 1-14 12"/><circle class="k" cx="54" cy="57" r="4.2"/>
+<path class="s7" d="M40 99 Q60 116 76 106" stroke-width="3"/>
+<circle class="c2 o" cx="24" cy="98" r="17"/><circle class="c3 o fl" cx="24" cy="98" r="9"/><circle class="k" cx="24" cy="98" r="3"/>
+<g class="flame"><path class="c3 o fl" d="M94 80 C106 92 108 104 94 115 C80 104 82 92 94 80Z"/><path class="c2 o" d="M94 95 C100 102 100 108 94 113 C88 108 88 102 94 95Z"/></g>`,
+radio: () => `
+<rect class="c7 o" x="66" y="2" width="9" height="30" rx="4.5"/>
+<path class="s3 wave w1" d="M84 8 q5 6 0 12" stroke-width="2.4"/><path class="s3 wave w2" d="M91 4 q9 10 0 20" stroke-width="2.4"/><path class="s3 wave w3" d="M98 0 q13 14 0 28" stroke-width="2.4"/>
+<rect class="c1 o" x="30" y="24" width="58" height="92" rx="11"/><rect class="c2 o" x="23" y="48" width="9" height="22" rx="3"/>
+<rect class="c6 o fl" x="38" y="34" width="42" height="22" rx="3"/>
+<circle class="c3 o" cx="47" cy="68" r="5.5"/><circle class="c3 o" cx="71" cy="68" r="5.5"/>
+<path class="ln thin" d="M38 82h42M38 88h42M38 94h42M38 100h42M38 106h42"/>`,
+/* "Repair kit": pouch with a thread spool, tape roll and needle */
+firstaid: () => `
+<path class="s7" d="M42 26 V17 Q42 11 48 11 H68 Q74 11 74 17 V26" stroke-width="6"/>
+<rect class="c2 o" x="8" y="24" width="104" height="86" rx="12"/>
+<rect class="c9 o" x="18" y="38" width="38" height="7" rx="2"/><rect class="c4 o" x="22" y="44" width="30" height="40" rx="3"/><rect class="c9 o" x="18" y="83" width="38" height="7" rx="2"/>
+<path class="s5" d="M24 51h26M24 57h26M24 63h26M24 69h26M24 75h26" stroke-width="2.4"/>
+<circle class="c8 o" cx="84" cy="66" r="21"/><circle class="c2 o" cx="84" cy="66" r="9"/>
+<path class="s4" d="M64 100 L106 36" stroke-width="2.6"/>
+<path class="s3 fls" d="M106 36 q9 10 -3 20 q-12 10 -2 22" stroke-width="1.7"/>`
+};
+const SH = {
+  circle: 'M60 7a53 53 0 1 1 0 106a53 53 0 1 1 0-106z',
+  hex: 'M60 6 L107 33 L107 87 L60 114 L13 87 L13 33Z',
+  shield: 'M12 12 H108 V58 C108 86 88 102 60 114 C32 102 12 86 12 58Z',
+  rrect: 'M28 8 H92 Q112 8 112 28 V92 Q112 112 92 112 H28 Q8 112 8 92 V28 Q8 8 28 8Z'
+};
+const LOOK = {   /* per gear id: patch shape, twill colour, merrow colour, art scale/offset */
+  headlamp: ['circle', '#2d5a3d', '#d9a93a', .7, 4], stove: ['hex', '#7b2d2a', '#efe3c8', .68, 2], radio: ['rrect', '#efe3c8', '#2f6b45', .72, 0],
+  compass: ['circle', '#233a5e', '#efe3c8', .7, 0], multitool: ['shield', '#3b5b6e', '#d9a93a', .62, -6], firstaid: ['rrect', '#efe3c8', '#b8322b', .7, 0]
+};
+const FALL = [['circle', '#233a5e', '#d9a93a'], ['hex', '#2d5a3d', '#efe3c8'], ['shield', '#7b2d2a', '#d9a93a'], ['rrect', '#3b5b6e', '#efe3c8']];
+function gearPatch(g, i) {
+  const L = LOOK[g.id] || FALL[i % FALL.length].concat([.7, 0]);
+  const [shape, fab, bd, k, dy] = L, d = SH[shape];
+  const art = ART[g.id] ? ART[g.id]('u' + g.id)
+    : `<text class="t" x="60" y="72" font-size="34" style="fill:var(--p4)">${esc((g.group || g.gear || '?').slice(0, 2).toUpperCase())}</text>`;
+  return `<svg class="pat art" viewBox="0 0 120 120" aria-hidden="true" focusable="false" style="--fabc:${fab};--bd:${bd}">
+<path class="fab" d="${d}" style="fill:${fab}"/><path class="tw" d="${d}"/>
+<g class="emb" transform="translate(60 ${60 + dy}) scale(${k}) translate(-60 -60)">${art}</g>
+<g class="mrw"><path class="mer" d="${d}"/><path class="mer2" d="${d}"/></g></svg>`;
+}
+/* the folded topo map: 3 × 2 panels, drawn at the viewport's aspect so the Journey map lands on it exactly */
+function mapSVG() {
+  const W = 300, H = 300;   /* stretched to the box with preserveAspectRatio=none */
+  const fold = [0, 1, 2].map(c => `<rect x="${c * 100}" y="0" width="100" height="300" fill="${c % 2 ? 'rgba(0,0,0,.07)' : 'rgba(255,255,255,.1)'}"/>`).join('');
+  const cont = [
+    'M-10 230 C40 200 70 240 120 210 S210 170 310 190', 'M-10 255 C50 230 90 262 140 236 S230 205 310 222',
+    'M-10 200 C30 170 80 196 120 172 S200 128 310 150', 'M150 120 C170 80 230 76 246 110 C262 144 214 170 186 158 C166 150 140 148 150 120Z',
+    'M170 122 C182 98 222 96 230 116 C238 138 206 150 190 144 C178 140 164 138 170 122Z', 'M196 122 C202 112 216 112 218 122 C220 132 204 136 196 122Z',
+    'M20 60 C60 30 110 70 90 110 C70 150 10 130 20 60Z', 'M38 74 C60 56 88 80 76 102 C64 124 30 112 38 74Z'
+  ].map((p, i) => `<path d="${p}" fill="none" stroke="var(${i % 3 === 2 ? '--contour2' : '--contour'})" stroke-width="${i % 3 === 2 ? 2.2 : 1.4}" vector-effect="non-scaling-stroke"/>`).join('');
+  return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+<rect x="0" y="0" width="300" height="300" rx="4" style="fill:var(--paper)" filter="url(#x-paper)"/>
+${cont}
+<path d="M110 240 C120 220 60 200 90 180" fill="none" stroke="var(--water)" stroke-width="6" stroke-linecap="round" vector-effect="non-scaling-stroke" opacity=".8"/>
+<path d="M20 280 C70 250 90 200 140 190 S200 150 208 124" fill="none" stroke="var(--trail)" stroke-width="2.6" stroke-dasharray="6 5" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
+<circle cx="20" cy="280" r="5" style="fill:var(--trail)"/><path d="M208 112 l9 14 h-18z" style="fill:var(--trail)"/>
+${fold}
+<path d="M0 150 H300" stroke="rgba(0,0,0,.22)" stroke-width="1.5" vector-effect="non-scaling-stroke"/><path d="M0 152 H300" stroke="rgba(255,255,255,.3)" stroke-width="1" vector-effect="non-scaling-stroke"/>
+<path d="M100 0 V300 M200 0 V300" stroke="rgba(0,0,0,.2)" stroke-width="1.2" vector-effect="non-scaling-stroke"/>
+<rect x="0" y="0" width="300" height="300" rx="4" fill="none" stroke="rgba(60,40,15,.35)" stroke-width="1" vector-effect="non-scaling-stroke"/></svg>`;
+}
+const gauge = l => `<span class="gz" aria-hidden="true">${[1, 2, 3].map(k => `<i class="${k <= l ? 'on' : ''}"></i>`).join('')}</span>`;
+
+/* ---------------- build ---------------- */
+$('#legend').insertAdjacentHTML('beforeend', [3, 2, 1].map(l => `<span>${gauge(l)}${LEVEL[l]}</span>`).join(''));
+const grid = $('#grid');
+/* the map item (Frontend / "Trail map") goes first so it sits in the tall left column, where the Journey map lands */
+const order = SK.slice().sort((a, b) => (b.id === 'map') - (a.id === 'map'));
+grid.innerHTML = order.map((g, i) => {
+  const isMap = g.id === 'map', gid = 'g-' + esc(g.id);
+  const items = (g.items || []).filter(x => x && x[0]);
+  const tapes = items.length ? `<ul class="tapes" aria-label="${esc(g.group)} skills">${items.map(([n, l]) =>
+    `<li>${esc(n)}${gauge(l)}<span class="sr"> (${LEVEL[l] || ''})</span></li>`).join('')}</ul>` : '';
+  const used = (g.used || []).map(id => PROJ[id]).filter(p => p && p.title);
+  const usedHTML = used.length ? `<p class="used">used on: ${used.map(p => `<button type="button" data-go="${esc(p.id)}">${esc(p.title)}</button>`).join(', ')}</p>` : '';
+  const head = isMap
+    ? `<div class="mapbox" id="mapbox">${mapSVG()}</div>`
+    : `<button class="gp" type="button" aria-pressed="false" data-id="${esc(g.id)}" aria-label="${esc(g.gear || g.group)}"${g.id === 'headlamp' ? ' data-secret="1"' : ''}>${gearPatch(g, i)}</button>`;
+  return `<article class="gi${isMap ? ' map' : ''}" id="${gid}" aria-labelledby="${gid}-h">${head}
+    <h2 class="wlab" id="${gid}-h">${esc(g.group)}</h2>${g.gear ? `<p class="gname">${esc(g.gear)}</p>` : ''}${tapes}${usedHTML}</article>`;
+}).join('');
+const ITEMS = [...grid.querySelectorAll('.gi')];
+$('#tot').textContent = ITEMS.length;
+
+/* the pack (mockup art) + soft skills sewn on */
+const SOFT = (C.softSkills || []).filter(Boolean);
+$('#packart').innerHTML = `<svg class="art pack" viewBox="0 0 160 232" role="img" aria-label="Backpack">
+<rect class="c5 o" x="22" y="190" width="116" height="34" rx="17"/><path class="ln thin" d="M52 191v32M108 191v32"/>
+<rect class="c8 o" x="15" y="88" width="20" height="30" rx="6"/><rect class="c3 o" x="127" y="93" width="18" height="24" rx="5"/>
+<path class="c2 o" d="M30 46 Q30 22 80 20 Q130 22 130 46 V186 Q130 196 120 196 H40 Q30 196 30 186Z"/>
+<rect class="c1 o" x="10" y="108" width="28" height="78" rx="12"/><rect class="c1 o" x="122" y="108" width="28" height="78" rx="12"/>
+<rect class="c1 o" x="46" y="124" width="68" height="62" rx="11"/>
+<ellipse class="k mouth" cx="80" cy="37" rx="40" ry="12"/>
+<path class="s7" d="M62 19 Q80 -3 98 19" stroke-width="5"/>
+<g class="flap"><path class="c1 o" d="M28 48 Q28 18 80 15 Q132 18 132 48 V78 Q80 92 28 78Z"/><path class="ln thin" d="M40 40 Q80 30 120 40"/>
+ <path id="zipline" d="M34 80 Q80 92 126 80" fill="none" stroke="#1b1c1f" stroke-width="3.2"/><path d="M34 80 Q80 92 126 80" fill="none" stroke="#b7bcc2" stroke-width="1.6" stroke-dasharray="1.2 1.2"/>
+ <path class="c7 o" d="M68 84 v20 h24 v-20z"/><rect class="c3 o fl" x="70" y="96" width="20" height="12" rx="3"/>
+ <g id="slider"><rect x="-4" y="-4" width="8" height="8" rx="2" fill="#c9ced3" stroke="#555" stroke-width=".6"/><rect x="-1.6" y="3" width="3.2" height="9" rx="1.4" fill="#2b2d31"/></g></g>
+</svg>${SOFT.length ? `<ul class="softs" aria-label="Soft skills">${SOFT.map(s => `<li>${esc(s)}</li>`).join('')}</ul>` : ''}
+<svg class="uvonly bear" viewBox="0 0 78 56" style="left:-24%;top:66%" aria-hidden="true"><g><circle cx="20" cy="13" r="6"/><circle cx="46" cy="13" r="6"/><ellipse cx="33" cy="29" rx="18" ry="16"/><ellipse cx="33" cy="35" rx="8" ry="6"/></g><circle class="k2" cx="27" cy="25" r="1.9"/><circle class="k2" cx="39" cy="25" r="1.9"/><ellipse class="k2" cx="33" cy="32" rx="2.8" ry="1.9"/><text x="52" y="52">nom</text></svg>`;
+/* ripstop the pack: texture-clone every fabric panel + an inset seam */
+(function () {
+  const svg = $('#packart svg'); if (!TX.rip) return;
+  const NS = 'http://www.w3.org/2000/svg', defs = document.createElementNS(NS, 'defs');
+  defs.innerHTML = `<pattern id="gt-rip" patternUnits="userSpaceOnUse" width="30" height="30"><image href="${TX.rip}" width="30" height="30"/></pattern>`;
+  svg.prepend(defs);
+  svg.querySelectorAll('rect,path').forEach(el => {
+    const c = el.getAttribute('class') || ''; if (!/\bc[1-9]\b/.test(c) || /\bfl\b/.test(c) || el.closest('#slider')) return;
+    const k = el.cloneNode(false); k.setAttribute('class', 'gtx'); k.removeAttribute('id'); k.setAttribute('fill', 'url(#gt-rip)'); el.after(k);
+    try { const b = el.getBBox(); if (b.width > 14 && b.height > 14) {
+      const s = el.cloneNode(false), cx = b.x + b.width / 2, cy = b.y + b.height / 2, sc = 1 - 6 / Math.min(b.width, b.height);
+      s.setAttribute('class', 'gseam'); s.removeAttribute('id'); s.setAttribute('transform', `translate(${cx} ${cy}) scale(${sc.toFixed(3)}) translate(${-cx} ${-cy})`); k.after(s); } } catch (e) {}
+  });
+})();
+
+/* ---------------- interactions ---------------- */
+let uv = false, toastT = 0;
+function toast(msg) { if (CL.embedded) return; const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 3600); }
+grid.addEventListener('click', e => {
+  const go = e.target.closest('[data-go]'); if (go) { CL.goto('trail', go.dataset.go); return; }
+  const b = e.target.closest('.gp'); if (!b) return;
+  const on = b.getAttribute('aria-pressed') !== 'true';
+  grid.querySelectorAll('.gp[aria-pressed=true]').forEach(x => x !== b && x.setAttribute('aria-pressed', 'false'));
+  b.setAttribute('aria-pressed', on ? 'true' : 'false');
+  if (b.dataset.secret) {
+    uv = !uv; document.documentElement.classList.toggle('uv', uv);
+    if (uv) { CL.patch('blacklight'); toast('Found it! The headlamp is a blacklight.'); }
+  }
+});
+$('#hint').addEventListener('click', () => {
+  const h = grid.querySelector('.gp[data-secret]'); if (!h) return;
+  h.classList.remove('hinting'); void h.offsetWidth; h.classList.add('hinting');
+  clearTimeout(h._t); h._t = setTimeout(() => h.classList.remove('hinting'), 2700);
+});
+addEventListener('keydown', e => { if (e.key === 'Escape') grid.querySelectorAll('.gp[aria-pressed=true]').forEach(x => x.setAttribute('aria-pressed', 'false')); });
+CL.onVisible(v => document.documentElement.classList.toggle('paused', !v));
+
+/* ---------------- scroll choreography ---------------- */
+const view = $('#view'), scroller = $('#scroller'), flap = $('#packart .flap'), slider = $('#slider'), zipline = $('#zipline');
+const ROT_IN = [0, -9, 7, -5, 8, -7, 6, -8], ROT_OUT = [-40, 30, -26, 36, -32, 28, -24, 34];
+let geo = null;
+function measure() {
+  const de = document.documentElement;
+  de.style.setProperty('--va', (innerWidth / innerHeight).toFixed(4));
+  ITEMS.forEach(el => { el.style.transform = 'none'; el.style.opacity = ''; el.style.visibility = ''; });
+  scroller.style.transform = 'none';
+  const m = $('#packart .mouth').getBoundingClientRect();
+  geo = {
+    mx: m.left + m.width / 2, my: m.top + m.height / 2,
+    it: ITEMS.map(el => { const r = el.getBoundingClientRect(); return { cx: r.left + r.width / 2, cy: r.top + r.height / 2 }; }),
+    over: Math.max(0, scroller.scrollHeight - view.clientHeight)
+  };
+  postMapLand();
+  render(CL.progress);
+}
+/* tell the shell where the folded Journey map should land (centre in viewport fractions, width fraction, rotation) */
+function postMapLand() {
+  const mb = $('#mapbox'); if (!mb) return;
+  const r = mb.getBoundingClientRect(), w = mb.offsetWidth, rot = parseFloat(getComputedStyle(mb).getPropertyValue('--mrot')) || -6;
+  const land = { x: +((r.left + r.width / 2) / innerWidth).toFixed(3), y: +((r.top + r.height / 2) / innerHeight).toFixed(3), w: +(w / innerWidth).toFixed(3), rot };
+  window.__mapLand = land;
+  if (CL.embedded) parent.postMessage({ climb: 1, type: 'mapLand', land }, '*');
+}
+const easeOut = t => 1 - Math.pow(1 - t, 3);
+const easeBack = t => { const c = 1.5; return 1 + (c + 1) * Math.pow(t - 1, 3) + c * Math.pow(t - 1, 2); };
+const easeIO = t => t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+function render(p) {
+  if (!geo) return;
+  const rm = RM.matches;
+  const pan = geo.over * ss(.15, .75, p);           /* only when the layout is taller than the screen (phones) */
+  scroller.style.transform = pan ? `translateY(${-pan}px)` : '';
+  let packed = 0;
+  ITEMS.forEach((el, i) => {
+    let tf = '', op = 1;
+    /* 0 – .15: settle onto the mat (the map is already there: it just arrived from the Journey) */
+    if (i > 0) {
+      const s = clamp((p - (.005 + (i - 1) * .017)) / .06);
+      if (rm) op = s;
+      else { const e = easeBack(s); tf = `translate(0,${(1 - e) * -70}px) rotate(${(1 - e) * ROT_IN[i % 8]}deg) scale(${1 + (1 - s) * .1})`; op = clamp(s * 1.8); }
+    }
+    /* .8 – .97: into the pack, one by one */
+    const k = clamp((p - (.8 + i * .016)) / .07);
+    if (k > 0) {
+      const e = easeIO(k), g = geo.it[i], dx = geo.mx - g.cx, dy = geo.my - g.cy;
+      if (rm) op *= 1 - k;
+      else { tf = `translate(${dx * e}px,${dy * e - Math.sin(Math.PI * e) * 90}px) rotate(${ROT_OUT[i % 8] * e}deg) scale(${1 - .9 * e})`; if (e > .82) op *= (1 - e) / .18; }
+      if (k >= .9) packed++;
+    }
+    el.style.transform = tf; el.style.opacity = op; el.style.visibility = op <= .01 ? 'hidden' : '';
+  });
+  $('#cnt').textContent = packed;
+  /* pack: unzip + lid up as packing starts, lid down + zip at the end */
+  const open = rm ? (p > .78 && p < .97 ? 1 : 0) : ss(.77, .8, p) * (1 - ss(.955, .975, p));
+  flap.style.transform = open ? `translate(0px,${-20 * open}px) rotate(${-7 * open}deg)` : '';
+  const zp = p < .88 ? 1 - ss(.74, .78, p) : ss(.972, 1, p);
+  try { const L = zipline.getTotalLength(), pt = zipline.getPointAtLength(L * (.04 + .92 * zp)); slider.setAttribute('transform', `translate(${pt.x} ${pt.y})`); } catch (e) {}
+}
+CL.onProgress(p => render(p));
+let rz = 0; addEventListener('resize', () => { cancelAnimationFrame(rz); rz = requestAnimationFrame(measure); });
+const anchorsFor = () => { const a = { skills: .3, pack: 1 }; order.forEach(g => { a[g.id] = .3; }); return a; };
+function start() { measure(); CL.anchors(anchorsFor()); }
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(start); else addEventListener('load', start);
+addEventListener('load', () => measure());
+})();
+</script>
+</body>
+</html>
