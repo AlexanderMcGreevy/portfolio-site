@@ -613,7 +613,7 @@ let titleRect={right:0,bottom:0},avoid=[];
 function resize(){W=innerWidth;Hh=innerHeight;fit(skyc);const r=$('.title').getBoundingClientRect();titleRect={right:r.right,bottom:r.bottom};
   /* map labels never sit on top of the UI */
   avoid=['.goals','.rose','.face','.bear'].map(q=>$(q)).filter(e=>e&&e.offsetParent!==null).map(e=>e.getBoundingClientRect()).filter(b=>b.width>0);
-  if(Climb.embedded)avoid.push({left:W-340,right:W,top:0,bottom:parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--nav-h'))||54});if(!R3)return;const a=W/Math.max(1,Hh),vf=a<.8?66:a<1.4?54:44;R3.camera.fov=vf;R3.camera.aspect=a;R3.camera.updateProjectionMatrix();hfov=2*Math.atan(Math.tan(vf*D2R/2)*a)*R2D;
+  if(Climb.embedded)avoid.push({left:W-470,right:W,top:0,bottom:parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--nav-h'))||54});if(!R3)return;const a=W/Math.max(1,Hh),vf=a<.8?66:a<1.4?54:44;R3.camera.fov=vf;R3.camera.aspect=a;R3.camera.updateProjectionMatrix();hfov=2*Math.atan(Math.tan(vf*D2R/2)*a)*R2D;
   R3.renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,quality));R3.renderer.setSize(W,Hh,false);dirty=true}
 addEventListener('resize',resize);
 let quality=1.5,slowT=0,fogWarm=0;

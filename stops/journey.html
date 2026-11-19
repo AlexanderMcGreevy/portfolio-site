@@ -415,7 +415,7 @@ class Quad{
    Words come only from CONTENT.journey. Terrain/mileage/elevation are illustrative.
    ===================================================================== */
 (function(){
-const J=(window.CONTENT&&CONTENT.journey)||[], N=J.length, Climb=window.Climb;
+const J=((window.CONTENT&&CONTENT.journey)||[]).filter(j=>j.hike!==false), N=J.length, Climb=window.Climb;
 const $=(s,r)=>(r||document).querySelector(s), $$=(s,r)=>Array.from((r||document).querySelectorAll(s));
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let REDUCE=false; try{ const mq=matchMedia('(prefers-reduced-motion: reduce)'); REDUCE=mq.matches; if(mq.addEventListener) mq.addEventListener('change',e=>{ REDUCE=e.matches; dirty=true; }); }catch(_){}
