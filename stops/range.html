@@ -748,7 +748,7 @@ ctx.goto=id=>Climb.goto(id);
 try{renderer=new THREE.WebGLRenderer({canvas:canvas,antialias:false,powerPreference:'high-performance'});if(!renderer.getContext())renderer=null}catch(e){renderer=null}
 if(renderer){
   ctx.pr=Math.min(window.devicePixelRatio||1,1.5);
-  renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.shadowMap.autoUpdate=false;renderer.setClearColor(0x9ec3e6);renderer.setPixelRatio(ctx.pr);
+  renderer.debug.checkShaderErrors=false;/* no sync error query after each compile: lets the browser compile shaders in parallel */renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.shadowMap.autoUpdate=false;renderer.setClearColor(0x9ec3e6);renderer.setPixelRatio(ctx.pr);
   post=new Post(renderer);
 }else{$('#nogl').hidden=false;$('#tools').hidden=true}
 function resize(){if(!renderer)return;W=stage.clientWidth||1;H=stage.clientHeight||1;renderer.setPixelRatio(ctx.pr);renderer.setSize(W,H,false);post.resize(Math.max(2,Math.floor(W*ctx.pr)),Math.max(2,Math.floor(H*ctx.pr)));dirty=3}

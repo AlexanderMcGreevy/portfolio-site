@@ -319,45 +319,67 @@ function drawCar(c,u,K){ const p=S.road.at(u); if(p.al<=.01) return; const s=cla
 function goClassic(){ st.classList.remove('driving'); S.car={on:false,t:0,done:false}; S.dirty=true; if(CL) CL.classic(); }
 function startCar(){ if(S.car.on) return; if(RM.matches||!S.ready){ goClassic(); return; } st.classList.add('driving'); S.car={on:true,t:0,done:false}; S.dirty=true; schedule(); }
 
-/* ---- the flock: a few dozen birds with depth (z: 0 far, 1 near). Far ones are small, pale with distance and fly behind
-   the peaks; near ones are big and dark. They wheel in loose circles over the range, and when the pointer is on the card
-   they stream after it, swirl around it and come closer, as if flying toward you ---- */
-const FL={b:[]};
-function initFlock(){ const L=S.L, r=rng(77), n=L.portrait?22:34, old=FL.b; FL.b=[];
-  for(let i=0;i<n;i++){ const o=old[i]; FL.b.push(o&&!S._refit?o:{x:L.P(.42+r()*.45),y:L.Q(.1+r()*.22),z:.15+r()*.5,vx:(r()-.5)*60,vy:(r()-.5)*30,ph:r()*TAU,fr:9+r()*4,orb:.6+r()*.8,zo:(r()-.5)*.3,gl:0});
-    FL.b[i].i=i; }
-  S._refit=false; }
-function flockUpdate(dt){ const L=S.L, B=FL.b, n=B.length, t=S.t, sc=clamp(L.aw/1400,.45,1.2);
-  const chase=S.inside&&(t-S.moveT)<5, cx=chase?S.mx:L.P(.66+.12*Math.sin(t*.11)), cy=chase?S.my:L.Q(.27+L.dy+.04*Math.sin(t*.19));
-  for(const b of B){ const k=lerp(.4,1.3,b.z); let ax=0, ay=0;
-    /* the flock's rules: keep a little space, match neighbours' heading, drift toward the group */
-    let sx=0,sy=0,axv=0,ayv=0,mx=0,my=0,cn=0;
-    for(const o of B){ if(o===b) continue; const dx=o.x-b.x, dy=o.y-b.y, d2=dx*dx+dy*dy, dz=Math.abs(o.z-b.z);
-      if(d2<900*sc*sc&&dz<.25){ const d=Math.sqrt(d2)||1; sx-=dx/d*(30*sc-d); sy-=dy/d*(30*sc-d); }
-      if(d2<12000*sc*sc){ axv+=o.vx; ayv+=o.vy; mx+=o.x; my+=o.y; cn++; } }
-    ax+=sx*2.2; ay+=sy*2.2;
-    if(cn){ ax+=(axv/cn-b.vx)*.9+(mx/cn-b.x)*.25; ay+=(ayv/cn-b.vy)*.9+(my/cn-b.y)*.25; }
-    /* each bird circles its own orbit around the target: the pointer, or a lazy roost over the range */
-    const R=(chase?46:120)*sc*b.orb, an=t*(chase?1.6:.45)*(b.i%2?1:-1)+b.i*2.4, tx=cx+Math.cos(an)*R, ty=cy+Math.sin(an)*R*.55;
-    ax+=(tx-b.x)*(chase?2.4:.9); ay+=(ty-b.y)*(chase?2.4:.9);
-    /* stay on the card, mostly in the sky */
-    if(b.x<L.ax+30) ax+=(L.ax+30-b.x)*4; if(b.x>L.ax+L.aw-30) ax-=(b.x-L.ax-L.aw+30)*4;
-    if(b.y<L.ay+20) ay+=(L.ay+20-b.y)*4; if(b.y>L.Q(.9)) ay-=(b.y-L.Q(.9))*4;
-    b.vx+=ax*dt; b.vy+=ay*dt; const sp=Math.hypot(b.vx,b.vy), hi=(chase?260:120)*sc, lo=40*sc;
-    if(sp>hi){ b.vx*=hi/sp; b.vy*=hi/sp; } else if(sp<lo&&sp>0){ b.vx*=lo/sp; b.vy*=lo/sp; }
-    /* far birds cross the screen slower: that is what makes the depth read */
-    b.x+=b.vx*dt*k; b.y+=b.vy*dt*k;
-    const zt=clamp((chase?.78:.32)+b.zo,0,1); b.z+=(zt-b.z)*dt*(chase?.9:.25);
-    /* flap, with the odd glide */
-    if(b.gl>0) b.gl-=dt; else if(Math.random()<dt*.25) b.gl=.6+Math.random()*.9;
-    b.ph+=dt*(b.gl>0?0:b.fr); } }
-function drawFlock(c,near,e){ const L=S.L, s0=clamp(L.aw*.0068,4.5,10), D=rgb(DI.ink), Nn=rgb(NI.ink), Sd=rgb(DI.sky), Sn=rgb(NI.sky);
-  c.save(); c.lineCap='round'; c.lineJoin='round';
-  for(const b of FL.b){ if((b.z>=.45)!==near) continue; const k=lerp(.4,1.3,b.z), s=s0*k, fog=(1-b.z)*.62;
+/* ---- the flock: birds flying in real 3D (X right, Y up, Z depth away from you), projected with a simple camera, so a
+   bird circling toward you grows and one flying off shrinks. They wheel in loose orbits over the range; with the pointer
+   on the card they stream after it and circle it, closer. Organic: smooth wander, limited turning, flap on the climb,
+   glide on the descent, bank into turns. They stay inside the picture (soft steering, then a hard clip) ---- */
+const FL={b:[],ck:0};
+const ZN=1.3, ZF=5.2;
+function proj3(X,Y,Z){ const L=S.L, f=L.aw*.55; return [L.ax+L.aw/2+X*f/Z, L.Q(.62+L.dy)-Y*f/Z]; }
+function unproj(sx,sy,Z){ const L=S.L, f=L.aw*.55; return [(sx-L.ax-L.aw/2)*Z/f, (L.Q(.62+L.dy)-sy)*Z/f]; }
+function skyline(x){ const P=S.L.prof; for(let i=0;i<P.length-1;i++){ const a=P[i],b=P[i+1]; if(x>=a[0]&&x<=b[0]) return a[1]+(b[1]-a[1])*(x-a[0])/((b[0]-a[0])||1); } return S.L.ay+S.L.ah; }
+function initFlock(){ const L=S.L, r=rng(77), n=L.portrait?20:30;
+  if(FL.b.length===n) return; FL.b=[];
+  for(let i=0;i<n;i++){ const Z=2.4+r()*1.8, [X,Y]=unproj(L.P(.5+r()*.35),L.Q(.12+r()*.2+L.dy),Z);
+    FL.b.push({i,X,Y,Z,vX:(r()-.5)*.3,vY:(r()-.5)*.1,vZ:(r()-.5)*.2,ph:r()*TAU,fr:8+r()*3,gl:0,orb:.55+r()*.6,dir:r()<.8?1:-1,
+      w:[r()*TAU,r()*TAU,r()*TAU],ws:.25+r()*.25,bank:0,front:Z<3,sx:0,sy:0,lx:0});
+    const q=FL.b[i]; [q.sx,q.sy]=proj3(q.X,q.Y,q.Z); } }
+function flockUpdate(dt){ const L=S.L, B=FL.b, t=S.t; if(!B.length) return;
+  const chase=S.inside&&(t-S.moveT)<4; FL.ck+=((chase?1:0)-FL.ck)*Math.min(1,dt*1.5); const ck=FL.ck;
+  /* targets: a roost over the range (far), or the pointer (nearer) */
+  const rz=3.4, [rX,rY]=unproj(L.P(.64+.1*Math.sin(t*.07)),L.Q(.22+L.dy+.03*Math.sin(t*.13)),rz);
+  const pz=1.85, [pX,pY]=chase||ck>.02?unproj(S.mx,S.my,pz):[rX,rY];
+  const m=26, x0=L.ax+m, x1=L.ax+L.aw-m, y0=L.ay+m, y1=L.Q(.8);
+  for(const b of B){ let aX=0,aY=0,aZ=0;
+    /* neighbours: separation, alignment, cohesion */
+    let sX=0,sY=0,sZ=0,vX=0,vY=0,vZ=0,cX=0,cY=0,cZ=0,n=0;
+    for(const o of B){ if(o===b) continue; const dX=o.X-b.X,dY=o.Y-b.Y,dZ=(o.Z-b.Z)*.6,d2=dX*dX+dY*dY+dZ*dZ;
+      if(d2<.018){ const d=Math.sqrt(d2)||.01,k=(.134-d)/d; sX-=dX*k; sY-=dY*k; sZ-=dZ*k; }
+      if(d2<.25){ vX+=o.vX; vY+=o.vY; vZ+=o.vZ; cX+=o.X; cY+=o.Y; cZ+=o.Z; n++; } }
+    aX+=sX*6; aY+=sY*6; aZ+=sZ*6;
+    if(n){ aX+=(vX/n-b.vX)*.8+(cX/n-b.X)*.35; aY+=(vY/n-b.vY)*.8+(cY/n-b.Y)*.35; aZ+=(vZ/n-b.vZ)*.8+(cZ/n-b.Z)*.35; }
+    /* each bird follows its own orbit (in the X-Z plane, so the circle carries it toward you and away) */
+    const R=lerp(.85,.32,ck)*b.orb, w=lerp(.32,1.1,ck)*b.dir, th=t*w+b.i*2.39;
+    const tX=lerp(rX,pX,ck)+Math.cos(th)*R, tY=lerp(rY,pY,ck)+Math.sin(th*1.7)*R*.18, tZ=lerp(rz,pz,ck)+Math.sin(th)*R*lerp(.9,.7,ck);
+    const kS=lerp(.9,2.2,ck); aX+=(tX-b.X)*kS; aY+=(tY-b.Y)*kS; aZ+=(tZ-b.Z)*kS;
+    /* smooth wander so no two loops are the same */
+    aX+=(Math.sin(t*b.ws+b.w[0])+.5*Math.sin(t*b.ws*2.3+b.w[1]))*.22; aY+=Math.sin(t*b.ws*1.7+b.w[2])*.12; aZ+=Math.sin(t*b.ws*1.3+b.w[1])*.18;
+    /* stay inside the picture: steer back before the edge (measured on screen, applied at this bird's depth) */
+    const [sx,sy]=proj3(b.X,b.Y,b.Z), f=L.aw*.55, kz=b.Z/f*6;
+    if(sx<x0) aX+=(x0-sx)*kz; else if(sx>x1) aX-=(sx-x1)*kz;
+    if(sy<y0) aY-=(y0-sy)*kz; else if(sy>y1) aY+=(sy-y1)*kz;
+    if(b.Z<ZN) aZ+=(ZN-b.Z)*6; else if(b.Z>ZF) aZ-=(b.Z-ZF)*6;
+    /* limited turning, then speed limits */
+    const am=Math.hypot(aX,aY,aZ), amax=lerp(1.1,2.6,ck); if(am>amax){ aX*=amax/am; aY*=amax/am; aZ*=amax/am; }
+    b.vX+=aX*dt; b.vY+=aY*dt; b.vZ+=aZ*dt;
+    const sp=Math.hypot(b.vX,b.vY,b.vZ), hi=lerp(.5,.9,ck), lo=.2; if(sp>hi){ const k=hi/sp; b.vX*=k; b.vY*=k; b.vZ*=k; } else if(sp<lo&&sp>0){ const k=lo/sp; b.vX*=k; b.vY*=k; b.vZ*=k; }
+    b.X+=b.vX*dt; b.Y+=b.vY*dt; b.Z+=b.vZ*dt;
+    /* flap on the climb, glide on the descent (and now and then for no reason, as birds do) */
+    if(b.gl>0) b.gl-=dt; else if(b.vY<-.12||Math.random()<dt*.12) b.gl=.5+Math.random()*.8;
+    b.ph+=dt*(b.gl>0?0:b.fr*(1+clamp(b.vY*2,0,.6)));
+    const [nx,ny]=proj3(b.X,b.Y,b.Z), lat=(nx-b.sx)/Math.max(dt,1e-3); b.bank+=(clamp((lat-b.lx)/Math.max(dt,1e-3)*.0018,-.32,.32)-b.bank)*Math.min(1,dt*3); b.lx=lat; b.sx=nx; b.sy=ny;
+    /* behind or in front of the mountains: decided by depth, but only switched while the bird is over open sky */
+    const want=b.Z<3.1; if(want!==b.front&&ny<skyline(nx)-10) b.front=want; } }
+function drawFlock(c,front,e){ const L=S.L, s0=clamp(L.aw*.0092,5,13.5), D=rgb(DI.ink), Nn=rgb(NI.ink), Sd=rgb(DI.sky), Sn=rgb(NI.sky);
+  c.save(); c.beginPath(); rrPath(c,L.ax,L.ay,L.aw,L.ah,L.rr); c.clip(); c.lineCap='round'; c.lineJoin='round';
+  const list=FL.b.filter(b=>b.front===front).sort((a,b)=>b.Z-a.Z);
+  for(const b of list){ const k=2.4/b.Z, s=s0*k, fog=clamp((b.Z-1.3)/4,0,1)*.7;
     const col=[0,1,2].map(j=>{ const ink=D[j]+(Nn[j]-D[j])*e, sky=Sd[j]+(Sn[j]-Sd[j])*e; return Math.round(ink+(sky-ink)*fog); });
-    const fl=b.gl>0?.15:Math.sin(b.ph), bank=clamp(b.vy/180,-.35,.35)*(b.vx>=0?1:-1);
-    c.save(); c.translate(b.x,b.y); c.rotate(bank); c.strokeStyle='rgb('+col+')'; c.lineWidth=Math.max(.9,1.7*k);
-    c.beginPath(); c.moveTo(-s,-s*.38*fl-s*.12); c.quadraticCurveTo(-s*.45,-s*.6*fl-s*.28,0,0); c.quadraticCurveTo(s*.45,-s*.6*fl-s*.28,s,-s*.38*fl-s*.12); c.stroke(); c.restore(); }
+    const fl=b.gl>0?.55+.08*Math.sin(S.t*3+b.i):Math.sin(b.ph);   /* glide: wings held in a shallow gull-wing V */
+    c.save(); c.translate(b.sx,b.sy); c.rotate(b.bank); c.strokeStyle='rgb('+col+')'; c.lineWidth=Math.max(.8,1.5*k);
+    c.beginPath(); c.moveTo(-s,-s*.42*fl-s*.1); c.quadraticCurveTo(-s*.42,-s*.62*fl-s*.3,0,0); c.quadraticCurveTo(s*.42,-s*.62*fl-s*.3,s,-s*.42*fl-s*.1); c.stroke();
+    if(k>1.2){ c.fillStyle=c.strokeStyle; c.beginPath(); c.ellipse(0,s*.04,s*.09,s*.06,0,0,TAU); c.fill(); }
+    c.restore(); }
   c.restore(); }
 
 /* ---- the secret: the sun is a light switch ---- */

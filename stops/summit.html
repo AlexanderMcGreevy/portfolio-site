@@ -53,6 +53,13 @@ body.grabbing canvas.gl{cursor:grabbing}
 .rose .rg{position:absolute;width:22px;height:22px;margin:-11px 0 0 -11px;border-radius:50%;border:1.5px solid #16121a;background:var(--accent);color:#16121a;font:800 11px/1 Archivo,sans-serif;cursor:pointer;padding:0}
 .rose .rg:hover,.rose .rg.on{background:#fff}
 .face{position:absolute;left:calc(clamp(12px,2.2vw,32px) + clamp(120px,11vw,156px) + 14px);bottom:clamp(14px,2.8vh,30px);z-index:7;pointer-events:none;margin:0;background:rgba(14,10,18,.42);padding:7px 11px;border-radius:10px;font:400 10.5px/1.5 'Space Mono',monospace;letter-spacing:.05em;text-shadow:0 1px 6px rgba(0,0,0,.8);max-width:min(320px,30%);font-variant-numeric:tabular-nums}
+.sketch{position:absolute;left:calc(clamp(12px,2.2vw,32px) + clamp(120px,11vw,156px) + 14px);bottom:calc(clamp(14px,2.8vh,30px) + 64px);z-index:8;display:flex;align-items:center;gap:7px;
+  background:rgba(14,10,18,.42);color:#f4ecdc;border:1px solid rgba(244,236,220,.35);border-radius:99px;padding:5px 12px 5px 9px;font:700 10.5px/1 'Space Mono',monospace;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;text-shadow:0 1px 6px rgba(0,0,0,.8)}
+.sketch:hover{background:rgba(14,10,18,.6)}
+.sketch:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.sketch i{font-style:normal;font-size:14px}
+.sketch[aria-pressed=true]{background:#f4ecdc;color:#2b2620;text-shadow:none;border-color:#2b2620}
+body.sk canvas.sky{filter:saturate(.45) sepia(.22) brightness(1.06)}
 .face b{display:block;font:800 21px/1.05 Archivo,sans-serif;letter-spacing:-.01em;color:var(--accent)}
 #toast{position:fixed;left:50%;bottom:22px;transform:translate(-50%,16px);z-index:30;background:rgba(10,12,18,.9);color:#fff;border:1px solid var(--accent);border-radius:12px;padding:10px 16px;font:500 13px/1.4 Archivo,sans-serif;opacity:0;pointer-events:none;transition:opacity .35s,transform .35s;max-width:min(520px,92vw);text-align:center}
 #toast.on{opacity:1;transform:translate(-50%,0)}
@@ -91,6 +98,7 @@ body.grabbing canvas.gl{cursor:grabbing}
   .rose{width:96px;bottom:auto;top:auto;left:12px;bottom:calc(12px + 0px)}
   .card.open~.rose,.card.open~.face{opacity:0}
   .face{display:none}
+  .sketch{left:120px;bottom:16px}
   .tags span.st,.tags span.ft{display:none}
   .bear{display:none}
 }
@@ -116,6 +124,7 @@ body.grabbing canvas.gl{cursor:grabbing}
   <aside class="card" id="card" aria-live="polite"><p class="k" id="cardK"></p><h2 id="cardT"></h2><p class="where" id="cardW"></p><p class="t" id="cardX"></p></aside>
   <div class="rose" id="rose"></div>
   <p class="face" id="face"></p>
+  <button class="sketch" id="sketch" type="button" aria-pressed="true" title="Switch between the pencil sketch and full colour"><i aria-hidden="true">✎</i><span>Pencil</span></button>
   <div id="anemHost"></div>
   <div id="bearHost"></div>
 </div>
@@ -323,7 +332,7 @@ const ryOf=ang=>-ang; // three.js rotation.y for a local +x axis pointing along 
 function* buildGen(){
   if(typeof THREE==='undefined'||!GEO){failed=true;$('#nogl').hidden=false;return}
   let renderer;try{renderer=new THREE.WebGLRenderer({canvas:glc,antialias:true,alpha:true,logarithmicDepthBuffer:true,powerPreference:'high-performance'})}catch(e){failed=true;$('#nogl').hidden=false;return}
-  renderer.setClearColor(0,0);renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.shadowMap.autoUpdate=false;renderer.shadowMap.needsUpdate=true;const tBuild=performance.now();
+  renderer.debug.checkShaderErrors=false;/* no sync error query after each compile: lets the browser compile shaders in parallel */renderer.setClearColor(0,0);renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.shadowMap.autoUpdate=false;renderer.shadowMap.needsUpdate=true;const tBuild=performance.now();
   GBOX=new THREE.BoxGeometry(1,1,1);
   yield;
   const scene=new THREE.Scene(),camera=new THREE.PerspectiveCamera(48,1,.25,60000);scene.fog=new THREE.FogExp2(0xffffff,6e-5);
@@ -625,6 +634,56 @@ function resize(){W=innerWidth;Hh=innerHeight;fit(skyc);const r=$('.title').getB
 addEventListener('resize',resize);
 let quality=1.5,slowT=0,fogWarm=0;
 
+/* ---------------- pencil sketch (post-processing) ----------------
+   The scene renders into a texture (colour + depth); one full-screen pass then draws it as a pencil sketch:
+   outlines from edges in depth and brightness, cross-hatching that gets denser in the shadows (three layers),
+   a light wash of the real colour on paper, and lines that wobble a little and "boil" about six times a second,
+   like hand-drawn animation. Toggle with the Pencil button (remembered). */
+let SK=null,sketchOn=true;try{sketchOn=localStorage.getItem('climb.sketch')!=='0'}catch(_){}
+const SK_FS=`precision highp float;
+uniform sampler2D tC,tD;uniform vec2 res;uniform float time,dpr,wash;uniform vec3 paper,ink;varying vec2 vUv;
+float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
+float noise(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(hash(i),hash(i+vec2(1.,0.)),f.x),mix(hash(i+vec2(0.,1.)),hash(i+vec2(1.,1.)),f.x),f.y);}
+float lum(vec3 c){return dot(c,vec3(.299,.587,.114));}
+float hatch(float x,float al,float sp,float th){float v=abs(fract(x/sp)-.5)*2.;float ln=1.-smoothstep(th,th+.3,v);
+  return ln*smoothstep(.32,.5,noise(vec2(al*.045,floor(x/sp)*3.17)));}
+void main(){
+  vec2 px=1./res;float tq=floor(time*6.)/6.;vec2 s=gl_FragCoord.xy/dpr;
+  vec2 wob=(vec2(noise(s*.035+tq*1.7),noise(s*.035+vec2(19.1,7.3)+tq*1.3))-.5)*px*2.6*dpr;
+  vec2 uv=vUv+wob;vec4 c=texture2D(tC,uv);float d0=texture2D(tD,uv).r;
+  float gx=0.,gy=0.,lx=0.,ly=0.;
+  for(int i=-1;i<=1;i++){for(int j=-1;j<=1;j++){
+    vec2 o=vec2(float(i),float(j))*px*dpr*.9;float d=texture2D(tD,uv+o).r;vec4 q=texture2D(tC,uv+o);float l=lum(q.rgb);
+    float wx=float(i)*(j==0?2.:1.),wy=float(j)*(i==0?2.:1.);gx+=d*wx;gy+=d*wy;lx+=l*wx;ly+=l*wy;}}
+  float ed=smoothstep(.008,.03,length(vec2(gx,gy)));
+  float el=smoothstep(.1,.32,length(vec2(lx,ly)))*.75*(1.-smoothstep(.62,.8,d0));
+  float edge=max(ed,el)*(.72+.28*noise(s*.9+tq*5.));
+  float a=c.a;vec3 col=a>.001?c.rgb/a:vec3(1.);float L=smoothstep(.04,.7,lum(col));float n=noise(s*.08)*2.;
+  float u=(s.x+s.y)*.7071,w=(s.x-s.y)*.7071;
+  float h1=hatch(u+n,w,6.,.16)*smoothstep(.66,.42,L);
+  float h2=hatch(w+n,u,6.5,.16)*smoothstep(.36,.2,L);
+  float h3=hatch(s.x*.95+s.y*.3+n,s.y,4.,.2)*smoothstep(.16,.04,L);
+  float ht=max(h1,max(h2,h3))*(.55+.45*noise(s*1.3+tq));
+  el*=mix(.45,1.,step(.5,a));
+  vec3 base=mix(paper,col,wash)*(.9+.1*L);
+  vec3 sk=mix(base,ink,ht*.55)*(.97+.03*noise(s*.6));
+  float A=max(a,edge*.85);vec3 o=mix(sk*a,ink*A,edge*.85);
+  gl_FragColor=vec4(o,A);}`;
+function makeSketch(renderer){const v=new THREE.Vector2();let rt=null,dt=null;
+  const mat=new THREE.ShaderMaterial({uniforms:{tC:{value:null},tD:{value:null},res:{value:new THREE.Vector2()},dpr:{value:1},time:{value:0},wash:{value:.5},
+      paper:{value:new THREE.Color('#f4ecdc')},ink:{value:new THREE.Color('#2b2620')}},
+    vertexShader:'varying vec2 vUv;void main(){vUv=uv;gl_Position=vec4(position.xy,0.,1.);}',fragmentShader:SK_FS,depthTest:false,depthWrite:false});
+  const quad=new THREE.Mesh(new THREE.PlaneGeometry(2,2),mat);quad.frustumCulled=false;const qs=new THREE.Scene();qs.add(quad);const qc=new THREE.OrthographicCamera(-1,1,1,-1,0,1);
+  const fit=()=>{renderer.getDrawingBufferSize(v);if(rt&&rt.width===v.x&&rt.height===v.y)return;if(rt){rt.dispose();dt.dispose()}
+    dt=new THREE.DepthTexture(v.x,v.y);dt.type=THREE.UnsignedIntType;
+    rt=new THREE.WebGLRenderTarget(v.x,v.y,{depthTexture:dt,depthBuffer:true,minFilter:THREE.LinearFilter,magFilter:THREE.LinearFilter});
+    mat.uniforms.tC.value=rt.texture;mat.uniforms.tD.value=dt;mat.uniforms.res.value.set(v.x,v.y);mat.uniforms.dpr.value=renderer.getPixelRatio()};
+  return {render(scene,camera,t){fit();renderer.setRenderTarget(rt);renderer.render(scene,camera);renderer.setRenderTarget(null);mat.uniforms.time.value=t;renderer.render(qs,qc)}};}
+const skBtn=$('#sketch');
+function setSketch(on){sketchOn=on;skBtn.setAttribute('aria-pressed',String(on));document.body.classList.toggle('sk',on);try{localStorage.setItem('climb.sketch',on?'1':'0')}catch(_){}dirty=true;kick()}
+skBtn.addEventListener('click',()=>setSketch(!sketchOn));
+skBtn.setAttribute('aria-pressed',String(sketchOn));document.body.classList.toggle('sk',sketchOn);
+
 /* ---------------- frame ---------------- */
 const ui=$('#ui'),fogEl=$('#fog'),faceEl=$('#face');let faceTx='',time=0;
 function frame(dt){
@@ -662,7 +721,8 @@ function frame(dt){
   if(!RM)R3.placeHikers(time);
   const sp=(az,alt)=>{const a=az*D2R,e=alt*D2R;v3.set(Math.cos(e)*Math.sin(a),Math.sin(e),-Math.cos(e)*Math.cos(a));if(v3.dot(fw)<.1)return null;v3.multiplyScalar(5000).add(camera.position).project(camera);if(Math.abs(v3.x)>1.8)return null;return [(v3.x+1)/2*W,(1-v3.y)/2*Hh]};
   const hz=sp(yaw,0);paintSky(sctx,W,Hh,time,dt,sp,hz?hz[1]:Hh*.5,W/hfov);
-  renderer.render(scene,camera);
+  if(sketchOn){try{if(!SK)SK=makeSketch(renderer);SK.render(scene,camera,time)}catch(e){console.error(e);sketchOn=false;skBtn.hidden=true;renderer.render(scene,camera)}}
+  else renderer.render(scene,camera);
   // DOM overlays (flags, tags, anemometer)
   const o2=[0,0],pp=v3,proj=(p)=>{pp.copy(p).sub(camera.position);if(pp.dot(fw)<=0)return false;pp.copy(p).project(camera);o2[0]=(pp.x+1)/2*W;o2[1]=(1-pp.y)/2*Hh;return o2[0]>-40&&o2[0]<W+40&&o2[1]>-40&&o2[1]<Hh+40};
   const tb=titleRect,q3=new THREE.Vector3();
@@ -685,7 +745,16 @@ function kick(){if(!raf)raf=requestAnimationFrame(loop)}
 let BG=null;
 function buildStep(budget){if(R3||failed)return;if(!BG)BG=buildGen();const t=performance.now();
   try{while(performance.now()-t<budget){const t1=performance.now(),d=BG.next().done;const sd=Math.round(performance.now()-t1);R3m.maxSlice=Math.max(R3m.maxSlice||0,sd);(R3m.slices=R3m.slices||[]).push(sd);if(d)break}}catch(e){console.error(e);failed=true;$('#nogl').hidden=false}
-  if(R3){R3m.buildWall=Math.round(performance.now()-tBuild0);dirty=true;kick()}}
+  if(R3){R3m.buildWall=Math.round(performance.now()-tBuild0);dirty=true;kick();if(!visible)warm()}}
+/* built while hidden (preloaded from the hut): upload each object's buffers in its own small task, then draw one full
+   frame with the shadow map, so arriving doesn't stall the GPU for a second mid-transition */
+function warm(){const {renderer,scene}=R3,objs=[];scene.traverse(o=>{if(o.isMesh||o.isPoints||o.isLine||o.isSprite)objs.push(o)});
+  const vis=objs.map(o=>o.visible);let i=0;
+  const step=()=>{if(visible||!R3){objs.forEach((o,k)=>o.visible=vis[k]);return}
+    if(i<objs.length){const t0=performance.now();while(i<objs.length&&performance.now()-t0<8){objs.forEach((o,k)=>o.visible=k===i&&vis[k]);const sm=renderer.shadowMap.enabled;renderer.shadowMap.enabled=false;try{renderer.render(scene,R3.camera)}catch(_){}renderer.shadowMap.enabled=sm;i++}
+      setTimeout(step,16);return}
+    objs.forEach((o,k)=>o.visible=vis[k]);try{frame(0)}catch(_){}};
+  setTimeout(step,30)}
 const tBuild0=performance.now();
 (function idle(){if(R3||failed)return;if(!visible||!raf)buildStep(10);setTimeout(idle,24)})();
 if(window.__SUMMIT_DEBUG!==false)window.__summit={get R3(){return R3},frame,setYaw:y=>{off=wrap180(y-baseYaw(PROG))+0},get yaw(){return norm360(yawNow())},KEYS,PEAKS,scheme:n=>{setScheme(n);tw=1;cur=cl(P[n]);applyVars();dirty=true}};

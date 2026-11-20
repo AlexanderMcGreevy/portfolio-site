@@ -37,6 +37,7 @@ body::-webkit-scrollbar{display:none}
   background:
    linear-gradient(90deg,transparent 32.8%,rgba(0,0,0,.28) 33.3%,rgba(255,255,255,.18) 33.8%,transparent 34.4%,transparent 65.6%,rgba(0,0,0,.28) 66.2%,rgba(255,255,255,.18) 66.7%,transparent 67.2%),
    linear-gradient(0deg,transparent 49.4%,rgba(0,0,0,.32) 50%,rgba(255,255,255,.2) 50.5%,transparent 51.2%)}
+#fshadow{position:absolute;inset:-8%;pointer-events:none;opacity:0;z-index:1;background-size:100% 100%;transform-origin:50% 50%;will-change:transform,opacity}
 #fx{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:20;opacity:0}
 #treeline{position:fixed;left:0;right:0;top:46%;z-index:21;text-align:center;pointer-events:none;opacity:0;
   font:600 clamp(26px,5vw,56px)/1 'Cormorant SC',serif;letter-spacing:.12em;color:#5b6b74}
@@ -335,13 +336,19 @@ function earn(id) {
 const fx = document.getElementById('fx'), fctx = fx.getContext('2d');
 const doors = document.getElementById('doors'), dl = doors.children[0], dr = doors.children[1], glow = document.getElementById('glow');
 const treeline = document.getElementById('treeline');
+const fsh = document.createElement('div'); fsh.id = 'fshadow'; fsh.setAttribute('aria-hidden', 'true'); stage.appendChild(fsh);
+{ const c = document.createElement('canvas'); c.width = 232; c.height = 145; const g = c.getContext('2d'), mx = 232 * .08 / 1.16, my = 145 * .08 / 1.16;
+  g.shadowColor = 'rgba(0,0,0,.5)'; g.shadowBlur = 7; g.fillStyle = 'rgba(0,0,0,.42)'; g.fillRect(mx, my, 232 - 2 * mx, 145 - 2 * my);
+  fsh.style.backgroundImage = 'url(' + c.toDataURL() + ')'; }
 const clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
 const ss = (a, b, v) => { const t = clamp((v - a) / (b - a)); return t * t * (3 - 2 * t); };
 const ease = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
 function resetLayer(s) { const e = s.el.style; e.transform = e.opacity = e.filter = e.zIndex = e.transformOrigin = e.clipPath = e.boxShadow = e.maskImage = e.webkitMaskImage = ''; const c = s.el.querySelector('.crease'); if (c) c.style.opacity = 0; }
-function resetFx() { fx.style.opacity = 0; doors.style.display = 'none'; glow.style.opacity = 0; treeline.style.opacity = 0; }
+function resetFx() { fsh.style.opacity = 0; fx.style.opacity = 0; doors.style.display = 'none'; glow.style.opacity = 0; treeline.style.opacity = 0; }
 
-/* fog banks */
+/* fog banks: one soft blob drawn once, then stamped (a fresh gradient per blob per frame was the fog's main cost) */
+const FOG_BLOB = (() => { const c = document.createElement('canvas'); c.width = c.height = 128; const g = c.getContext('2d'), gr = g.createRadialGradient(64, 64, 0, 64, 64, 64);
+  gr.addColorStop(0, 'rgba(244,247,249,.6)'); gr.addColorStop(1, 'rgba(244,247,249,0)'); g.fillStyle = gr; g.fillRect(0, 0, 128, 128); return c; })();
 const FOGB = (() => { let s = 7; const r = () => (s = (s * 16807) % 2147483647) / 2147483647;
   return Array.from({ length: 34 }, () => ({ x: r() * 1.4, y: r(), r: .12 + r() * .22, v: (r() < .5 ? -1 : 1) * (.3 + r() * .5) })); })();
 function spruceLine(g, w, h, yb, t, col, amp, seed) {
@@ -366,8 +373,10 @@ const FX = {
     const k = 1 + (L.w - 1) * e, tx = (L.x - .5) * W * e, ty = (L.y - .5) * H * e;
     A.el.style.zIndex = 2;
     A.el.style.transform = `translate(${tx}px,${ty}px) rotate(${L.rot * e}deg) scale(${k})`;
-    A.el.style.boxShadow = '0 30px 60px rgba(0,0,0,.45)';   /* fixed: an animated blur radius re-rasterises a full-screen shadow every frame */
+    /* the map's drop shadow is a tiny pre-blurred bitmap that follows it (a CSS box-shadow on a shrinking full-screen
+       layer cost ~10 fps on laptop GPUs) */
     A.el.style.opacity = 1 - ss(.82, 1, t);
+    fsh.style.opacity = A.el.style.opacity; fsh.style.transform = `translate(${tx}px,${ty + 26 * Math.max(k, .35)}px) rotate(${L.rot * e}deg) scale(${k})`;
     const c = A.el.querySelector('.crease'); if (c) c.style.opacity = ss(.05, .5, t);
     B.el.style.opacity = ss(0, .35, t); B.el.style.transform = `scale(${1.06 - .06 * e})`;
   },
@@ -391,7 +400,8 @@ const FX = {
     if (RM) { doors.style.display = 'none'; A.el.style.opacity = 1 - t; B.el.style.opacity = t; A.el.style.transform = B.el.style.transform = ''; }
   },
   fog(A, B, t) {
-    const W = fx.width = Math.ceil(innerWidth / 2), H = fx.height = Math.ceil(innerHeight / 2);
+    const W = Math.ceil(innerWidth / 2), H = Math.ceil(innerHeight / 2);
+    if (fx.width !== W || fx.height !== H) { fx.width = W; fx.height = H; }   /* resizing a canvas reallocates it: only when needed */
     fx.style.opacity = 1;
     const white = ss(.12, .48, t) * (1 - ss(.56, .92, t));
     const swap = t >= .5;
@@ -411,10 +421,9 @@ const FX = {
     const tex = Math.min(1, white * 1.6 + .25 * Math.sin(Math.PI * t));
     for (const b of FOGB) {
       const bx = ((b.x + t * b.v) % 1.4 + 1.4) % 1.4 - .2, x = bx * W, yy = b.y * H, rad = b.r * Math.max(W, H);
-      const gr = fctx.createRadialGradient(x, yy, 0, x, yy, rad);
-      gr.addColorStop(0, `rgba(244,247,249,${.6 * tex})`); gr.addColorStop(1, 'rgba(244,247,249,0)');
-      fctx.fillStyle = gr; fctx.fillRect(x - rad, yy - rad, rad * 2, rad * 2);
+      fctx.globalAlpha = tex; fctx.drawImage(FOG_BLOB, x - rad, yy - rad, rad * 2, rad * 2);
     }
+    fctx.globalAlpha = 1;
     treeline.style.opacity = ss(.3, .45, t) * (1 - ss(.58, .72, t));
     if (RM) { fx.style.opacity = 0; treeline.style.opacity = 0; A.el.style.opacity = 1 - t; B.el.style.opacity = t; A.el.style.transform = B.el.style.transform = ''; }
   },
@@ -452,19 +461,23 @@ function frame(force) {
   STOPS.forEach(s => {
     const d = Math.abs(s.i - idx);
     const near = s.i > idx ? s.start - g < .9 + (TRANS[s.i - 1] ? TRANS[s.i - 1].len : 0) : s.i < idx ? g - s.end < .9 + (TRANS[s.i] ? TRANS[s.i].len : 0) : true;
-    if (active.includes(s) || (d === 1 && (idle || near))) mount(s);
+    if (active.includes(s) || (d === 1 && ((idle && trans == null) || near))) mount(s);   /* never start a preload mid-blend */
     else if (d >= 2) unmount(s);
   });
   if (!idle && !idleT) idleT = setTimeout(() => { idleT = 0; frame(); }, 420);
 
-  /* visibility + base styles */
+  /* visibility + base styles. During a blend a stop is often completely invisible for part of it (faded out, behind the
+     doors or fog, or turned away in the flip): tell it it's hidden so it stops rendering until it's actually seen */
+  /* [outgoing hidden after t, incoming hidden before t] for each blend, from when its opacity / backface makes it invisible */
+  const HIDE = { flip: [.5, .5], fold: [1, 0], tilt: [.8, .3], doors: [.5, .5], fog: [.5, .5], pullback: [.6, 0] };
+  const hz = trans != null && !RM ? HIDE[TRANS[trans].fx] : null;
   STOPS.forEach(s => {
-    const on = active.includes(s);
+    const on = active.includes(s), seen = on && !(hz && ((s === STOPS[trans] && tt >= hz[0]) || (s === STOPS[trans + 1] && tt < hz[1])));
     s.el.classList.toggle('on', on);
     if (!on || trans == null) resetLayer(s);
     const p = g < s.start ? 0 : g >= s.end ? 1 : (g - s.start) / s.len;
     if (s.ready && (force || Math.abs(p - s.lastP) > 1e-4)) { s.lastP = p; send(s, { type: 'progress', p }); }
-    if (s.ready && (force || s.lastVis !== on)) { s.lastVis = on; send(s, { type: 'visible', v: on }); }
+    if (s.ready && (force || s.lastVis !== seen)) { s.lastVis = seen; send(s, { type: 'visible', v: seen }); }
   });
 
   if (trans !== lastTrans) {

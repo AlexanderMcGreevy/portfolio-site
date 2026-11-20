@@ -751,8 +751,39 @@ const $ = s => document.querySelector(s);
 const cv = $('#cv'), ctx = cv.getContext('2d'), frameEl = $('#frame'), card = $('#card'), note = $('#note'), keyList = $('#keyList');
 ctx.imageSmoothingEnabled = false;
 const off = document.createElement('canvas'); off.width = W; off.height = H0;
-const octx = off.getContext('2d', { willReadFrequently: true });
+/* the palette + Bayer dither runs as a tiny WebGL shader (same LUT, same thresholds, pixel-identical), so the room is
+   drawn on the GPU and never read back to the CPU: that readback cost ~13 ms a frame and stuttered the page around it.
+   Falls back to the CPU path if WebGL is missing */
+let GLQ = null;
+const octx = off.getContext('2d');
 const outImg = ctx.createImageData(W, H0);
+function makeGLQ() {
+  const c = document.createElement('canvas'); c.width = W; c.height = H0; c.setAttribute('aria-hidden', 'true');
+  const gl = c.getContext('webgl', { alpha: false, antialias: false, depth: false, stencil: false });
+  if (!gl) return null;
+  const sh = (t, src) => { const o = gl.createShader(t); gl.shaderSource(o, src); gl.compileShader(o); if (!gl.getShaderParameter(o, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(o)); return o; };
+  const pr = gl.createProgram();
+  gl.attachShader(pr, sh(gl.VERTEX_SHADER, 'attribute vec2 p;varying vec2 uv;void main(){uv=p*.5+.5;gl_Position=vec4(p,0.,1.);}'));
+  gl.attachShader(pr, sh(gl.FRAGMENT_SHADER, 'precision highp float;varying vec2 uv;uniform sampler2D src,lut,bay;uniform float H;' +
+    'void main(){vec2 px=floor(gl_FragCoord.xy);vec2 b=mod(vec2(px.x,H-1.-px.y),4.);float t=floor(texture2D(bay,(b+.5)/4.).r*255.+.5)-128.;' +
+    'vec3 c=floor(texture2D(src,uv).rgb*255.+.5);vec3 q=floor(clamp(c+t,0.,255.)/8.);' +
+    'gl_FragColor=vec4(texture2D(lut,vec2((q.g*32.+q.b+.5)/1024.,(q.r+.5)/32.)).rgb,1.);}'));
+  gl.linkProgram(pr); if (!gl.getProgramParameter(pr, gl.LINK_STATUS)) return null; gl.useProgram(pr);
+  const bf = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, bf); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
+  const loc = gl.getAttribLocation(pr, 'p'); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+  const tex = (unit, w, h, fmt, data) => { const t = gl.createTexture(); gl.activeTexture(gl.TEXTURE0 + unit); gl.bindTexture(gl.TEXTURE_2D, t);
+    for (const k of [gl.TEXTURE_MIN_FILTER, gl.TEXTURE_MAG_FILTER]) gl.texParameteri(gl.TEXTURE_2D, k, gl.NEAREST);
+    for (const k of [gl.TEXTURE_WRAP_S, gl.TEXTURE_WRAP_T]) gl.texParameteri(gl.TEXTURE_2D, k, gl.CLAMP_TO_EDGE);
+    gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1); if (data) gl.texImage2D(gl.TEXTURE_2D, 0, fmt, w, h, 0, fmt, gl.UNSIGNED_BYTE, data); return t; };
+  const L3 = new Uint8Array(32768 * 3); for (let i = 0; i < 32768; i++) { const p = FP[LUT[i]]; L3[i * 3] = p[0]; L3[i * 3 + 1] = p[1]; L3[i * 3 + 2] = p[2]; }
+  tex(1, 1024, 32, gl.RGB, L3); tex(2, 4, 4, gl.LUMINANCE, new Uint8Array(TH));
+  tex(0, 0, 0, 0, null);
+  gl.uniform1i(gl.getUniformLocation(pr, 'src'), 0); gl.uniform1i(gl.getUniformLocation(pr, 'lut'), 1); gl.uniform1i(gl.getUniformLocation(pr, 'bay'), 2); gl.uniform1f(gl.getUniformLocation(pr, 'H'), H0);
+  gl.viewport(0, 0, W, H0);
+  cv.after(c); cv.style.visibility = 'hidden';
+  let lost = false; c.addEventListener('webglcontextlost', e => { e.preventDefault(); lost = true; GLQ = null; c.remove(); cv.style.visibility = ''; });
+  return src => { if (lost) return; gl.activeTexture(gl.TEXTURE0); gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, src); gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false); gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4); };
+}
 const btns = {}, items = {};
 
 let cardT = 0, noteT = 0;
@@ -828,7 +859,8 @@ function place() {
 }
 function render(rt) {
   octx.setTransform(1, 0, 0, 1, 0, 0); H.draw(octx, rt);
-  quantize(octx.getImageData(0, 0, W, H0), outImg); ctx.putImageData(outImg, 0, 0); place();
+  if (GLQ) GLQ(off); else { quantize(octx.getImageData(0, 0, W, H0), outImg); ctx.putImageData(outImg, 0, 0); }
+  place();
 }
 function update(dt, ts) {
   S.flare = Math.max(0, S.flare - dt * .55); S.fire += (S.fireTarget - S.fire) * Math.min(1, dt * 1.4);
@@ -855,7 +887,7 @@ function loop(ts) {
 }
 function start() {
   if (running) return;
-  if (!ready) { buildLUT(); H.lit(true, true); ready = true; update(0, performance.now()); render(performance.now() / 1000); }
+  if (!ready) { buildLUT(); try { GLQ = makeGLQ(); } catch (e) { console.warn(e); GLQ = null; } H.lit(true, true); ready = true; update(0, performance.now()); render(performance.now() / 1000); }
   running = true; last = performance.now(); raf = requestAnimationFrame(loop);
 }
 function stop() { running = false; cancelAnimationFrame(raf); }
