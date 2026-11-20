@@ -432,7 +432,7 @@ function makeTrainGeo(){return merge([box(0x1f2024,[0,.14,-.55],[.5,.1,1.0]),par
    Pierce to Madison (14 x 9.6 km, 150 m per unit) on real terrain with mapped land cover. Vertical x1.6;
    trees, people, vehicles and the Cog train are 4x life size; building footprints are real.
    ===================================================================== */
-function sceneA3(ctx){
+function* sceneA3(ctx){   /* a generator: yields between the big steps so the build runs in short slices */
   const S={id:'E',title:'The Range · in between'},scene=new THREE.Scene();
   const sky=makeSky();scene.add(sky);
   const G=GEO3,W=G.W,D=G.D,MPU=G.mpu,U=m=>m/MPU,X=4.8,UV=m=>m/MPU*G.exag;   /* X: size exaggeration for trees, people, vehicles; UV: vertical metres -> units */
@@ -479,6 +479,7 @@ function sceneA3(ctx){
   scene.add(T.group);T.mesh.geometry.attributes.colorB.array.set(T.cols[0]);
   SEA.targets.push({a:T.geo.attributes.color,b:T.geo.attributes.colorB,arr:T.cols});
   const hAt=T.hAt;S.ground=hAt;S.extent=[T.W,T.D];
+  yield;
   /* --- peaks, paths --- */
   const mask=newMask(W,D,.1);
   const pk={};G.peaks.forEach(p=>{let best=-1,bx=p[2],bz=p[3];for(let a=-.4;a<=.4;a+=.2)for(let b=-.4;b<=.4;b+=.2){const hh=hAt(p[2]+a,p[3]+b);if(hh>best){best=hh;bx=p[2]+a;bz=p[3]+b}}pk[p[0]]=[bx,best,bz]});
@@ -492,8 +493,11 @@ function sceneA3(ctx){
     const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(new Float32Array(pos),3));g.setIndex(idx);g.computeVertexNormals();
     const m=new THREE.Mesh(g,lamb(col,{polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-2}));m.receiveShadow=true;return m}
   scene.add(ribbonMulti(G.streams,.06,0x4c93cf,.02,.12,0));
+  yield;
   scene.add(ribbonMulti(G.roads,.13,0x77777b,.03,.12,.12));
+  yield;
   scene.add(ribbonMulti(G.trails,.07,0xe3cf9a,.05,.12,.06));
+  yield;
   scene.add(ribbon(cog,.27,0xc2b394,.035,hAt));scene.add(ribbon(cog,.18,0x3b342f,.04,hAt));
   scene.add(ribbon(cog,.028,0xc9cdd3,.08,hAt,.06));scene.add(ribbon(cog,.028,0xc9cdd3,.08,hAt,-.06));
   scene.add(ribbon(road,.2,0xd8d0bf,.05,hAt));scene.add(ribbon(road,.015,0xf6d94a,.065,hAt));
@@ -506,6 +510,7 @@ function sceneA3(ctx){
   G.lakes.forEach(L=>{const ring=L[1];let sy=0;ring.forEach(p=>sy+=hAt(p[0],p[1]));sy/=ring.length;ring.forEach(p=>mask.markPt(p[0],p[1],.2));
     const m=new THREE.Mesh(new THREE.ShapeGeometry(new THREE.Shape(ring.map(p=>new THREE.Vector2(p[0],-p[1])))),lamb(0x3f86c8,{emissive:0x0b2d4d,side:THREE.DoubleSide,polygonOffset:true,polygonOffsetFactor:-3,polygonOffsetUnits:-3}));
     m.rotation.x=-Math.PI/2;m.position.y=sy+.03;m.receiveShadow=true;scene.add(m)});
+  yield;
   /* --- real building footprints, extruded --- */
   const BH={'Sherman Adams Summit Building':9,'Tip Top House':6,'Yankee Building':6,'Lakes of the Clouds Hut':7,'Hermit Lake Shelter':4,'Summit Stage Office':5,'Mount Washington Avalanche Center':5};
   G.blds.forEach(B=>{let r=B[1].slice();if(r.length>2&&r[0][0]===r[r.length-1][0]&&r[0][1]===r[r.length-1][1])r.pop();if(r.length<3)return;
@@ -519,6 +524,7 @@ function sceneA3(ctx){
     else if(nd[0]==='observatory'){const m=mesh(new THREE.BoxGeometry(U(9),UV(22),U(9)),lamb(0xb9b2a2));m.position.set(x,y+UV(9),z);scene.add(m);
       const c=mesh(new THREE.BoxGeometry(U(10),UV(1.2),U(10)),lamb(0x3a4452));c.position.set(x,y+UV(20.5),z);scene.add(c)}
     else{const m=mesh(new THREE.BoxGeometry(U(8),UV(3),U(8)),lamb(nd[0]==='shelter'?0x8a5a35:0xd9531e));m.position.set(x,y+UV(1),z);scene.add(m);mask.markPt(x,z,.1)}});
+  yield;
   /* compass: true north in scene space */
   const NORTH=new V3(.848,0,-.53),COMP=new V3(-42,0,26);
   {let top=0;for(let a=-3;a<=3;a++)for(let b=-3;b<=3;b++)top=Math.max(top,hAt(COMP.x+a,COMP.z+b));COMP.y=top+.5;
@@ -528,6 +534,7 @@ function sceneA3(ctx){
     const ar=mesh(new THREE.ConeGeometry(.6,2.2,4),lamb(0xc0392b));ar.quaternion.setFromUnitVectors(new V3(0,1,0),NORTH);ar.position.set(NORTH.x*1.4,.35,NORTH.z*1.4);g.add(ar);
     const ar2=mesh(new THREE.ConeGeometry(.6,2.2,4),lamb(0x2a2f36));ar2.quaternion.setFromUnitVectors(new V3(0,1,0),NORTH.clone().negate());ar2.position.set(-NORTH.x*1.4,.35,-NORTH.z*1.4);g.add(ar2);
     scene.add(g)}
+  yield;
   /* --- trees at true size: spruce-fir 13-21 m (shrinking to krummholz near treeline), northern hardwoods 17-25 m --- */
   const rr=rngMaker(42),conif=[],decid=[],STEP=.22;
   for(let x=-W/2+.3;x<W/2-.3;x+=STEP)for(let z=-D/2+.3;z<D/2-.3;z+=STEP){
@@ -539,6 +546,7 @@ function sceneA3(ctx){
     const dec=(el<760&&fbm(px*.2,pz*.2,2,57)>.42)||(el<840&&rr()<.12);
     const hm=dec?(17+rr()*8):(13+rr()*8)*(1-.78*sstep(1000,1340,el));
     (dec?decid:conif).push([px,h,pz,U(hm*X)/(dec?1.25:1.75),rr()*6.28,rr()])}
+  yield;
   function treeMesh(list,geo,cols){
     const mat=lamb(0xffffff,{vertexColors:true});patchMat(mat,{inst:true,season:true,cloud:true,mix:SEA.mix});
     const im=new THREE.InstancedMesh(geo,mat,list.length);im.castShadow=true;im.receiveShadow=true;im.frustumCulled=false;
@@ -551,7 +559,9 @@ function sceneA3(ctx){
   const decidGeo=merge([part(ICO0,0xc8c8c8,{p:[0,.78,0],s:[.55,.5,.55],tint:1}),part(ICO0,0xffffff,{p:[.1,1.05,.02],s:[.36,.32,.36],tint:1})]);
   const GG=(a,b,t)=>mixc(a,b,t);
   treeMesh(conif,coniferGeo,[(r)=>GG([.09,.34,.15],[.17,.46,.2],r),(r)=>GG([.12,.34,.14],[.28,.44,.14],r),(r)=>GG([.82,.9,.9],[.95,.98,1],r)]);
+  yield;
   treeMesh(decid,decidGeo,[(r)=>GG([.25,.58,.16],[.36,.68,.2],r),(r)=>r<.3?[.86,.5,.1]:r<.58?[.9,.72,.16]:r<.8?[.72,.24,.08]:[.5,.42,.1],(r)=>GG([.72,.68,.66],[.9,.92,.95],r)]);
+  yield;
   /* --- fire tower with the ranger bear (the one invented thing), on Low's Bald Spot; tower is a real-size 15 m --- */
   const LB=pk["Low's Bald Spot"]||[30,0,20],FT={x:LB[0],z:LB[2]};FT.y=hAt(FT.x,FT.z);const TS=X*4.41/MPU,legsTop=3.4,bear=makeBear();
   {const g=new THREE.Group(),w=.6;g.position.set(FT.x,FT.y,FT.z);g.scale.setScalar(TS);
@@ -564,6 +574,7 @@ function sceneA3(ctx){
     const deck=mesh(new THREE.BoxGeometry(2,.07,2),dk);deck.position.set(0,legsTop,0);g.add(deck);
     bear.group.position.set(.55,legsTop+.03,1.2);bear.group.scale.setScalar(.35);bear.mode='wave';g.add(bear.group);
     scene.add(g);mask.markPt(FT.x,FT.z,.12)}
+  yield;
   /* --- Cog train: ~22 m engine + coach --- */
   const TRS=X*10/MPU,trainGeo=makeTrainGeo(),train=new THREE.Group();
   {const tm=new THREE.Mesh(trainGeo,lamb(0xffffff,{vertexColors:true}));tm.castShadow=tm.receiveShadow=true;tm.scale.setScalar(TRS);train.add(tm);scene.add(train)}
@@ -590,6 +601,7 @@ function sceneA3(ctx){
     spots.forEach(sp=>{let placed=0;for(let k=0;k<200&&placed<sp[3]&&HK.length<NP;k++){const a=r2()*6.28,rd=(.25+.75*Math.sqrt(r2()))*sp[2],x=sp[0]+Math.cos(a)*rd,z=sp[1]+Math.sin(a)*rd;
       if(!far(x,z,.09))continue;taken.push([x,z]);placed++;HK.push({bx:x,bz:z,wr:.005+r2()*.02,sp:.05+r2()*.15,ph:r2()*6.28})}});
     hikers.count=HK.length}
+  yield;
   /* --- winter only: roped ice-climbing teams working up Huntington and Tuckerman Ravines --- */
   const climbers=crowd(8,true,1,{cloud:true});climbers.visible=false;scene.add(climbers);   /* hidden until winter (setM treats scale 0 as 1, so visibility does the hiding) */
   const CLB=[];{const PL2=G.places,r5=rngMaker(11);
@@ -601,6 +613,7 @@ function sceneA3(ctx){
     const team=(F,steps,n,v,o0)=>{if(!F)return;const P=makePath(gully(F,steps),.08,hAt,.012);for(let k=0;k<n;k++)CLB.push({P:P,v:v,o:o0-k*.075,ph:r5()*6})};
     team(PL2['Huntington Ravine'],46,3,.045,1.2);team(PL2['Huntington Ravine'],46,2,.04,3.4);team(PL2['Tuckerman Ravine'],42,3,.04,.6)}
   climbers.count=CLB.length;
+  yield;
   const carsM=cars(10,{cloud:true});scene.add(carsM);const CS=X*4.5/MPU/.84;
   const CK=[];{const r3=rngMaker(8);for(let i=0;i<10;i++)CK.push({s:r3()*road.len,v:(.8+r3()*.6)*(i%2?1:-1)})}
   const _o={};
@@ -612,6 +625,7 @@ function sceneA3(ctx){
     for(let b=0;b<nb;b++){const m=mesh(ICO1,cloudMat,false);m.castShadow=false;const rd=1.3+r4()*1.5;m.scale.set(rd*1.3,rd*.72,rd);m.position.set((b-nb/2)*2.1+(r4()-.5),r4()*.4,(r4()-.5)*2.6);g.add(m);
       if(b>0&&b<nb-1){const t=mesh(ICO1,cloudMat,false);t.castShadow=false;const rt=rd*(.6+r4()*.25);t.scale.set(rt*1.2,rt*.8,rt);t.position.set(m.position.x+(r4()-.5),m.position.y+rd*.55,m.position.z+(r4()-.5)*.8);g.add(t)}}
     g.position.set(-90+i*34+r4()*10,30+r4()*6,[-30,-20,-12,-34,-26,36][i]+r4()*5);g.userData={sp:1.3+r4()*.9,rx:nb*2.2+3,rz:4.2};scene.add(g);clouds.push(g)}}
+  yield;
   const SNN=900,sp=new Float32Array(SNN*3),snowGeo=new THREE.BufferGeometry();
   for(let i=0;i<SNN;i++){sp[i*3]=(Math.random()-.5)*100;sp[i*3+1]=Math.random()*30;sp[i*3+2]=(Math.random()-.5)*70}
   snowGeo.setAttribute('position',new THREE.BufferAttribute(sp,3));
@@ -620,6 +634,7 @@ function sceneA3(ctx){
   const sun=new THREE.DirectionalLight(0xfff2d0,1.15);sun.position.set(-58,78,44);sun.castShadow=true;
   sun.shadow.mapSize.set(4096,4096);const sc=sun.shadow.camera;sc.left=-66;sc.right=66;sc.top=60;sc.bottom=-60;sc.near=20;sc.far=230;sun.shadow.bias=-.0004;sun.shadow.normalBias=.03;
   scene.add(sun,sun.target);const hemi=new THREE.HemisphereLight(0xc8e0ff,0x806f55,.55);scene.add(hemi);
+  yield;
   const sunDir=sun.position.clone().normalize();
   const ENV=[{top:[.28,.56,.92],bot:[.80,.91,.98],sun:[1,.95,.82],sunI:.95,hs:[.8,.9,1],hg:[.5,.46,.34],hI:.55,tint:[1.04,1,.94],sat:1.36,snow:0,cl:[.5,.52,.58]},
     {top:[.40,.58,.86],bot:[.99,.84,.62],sun:[1,.8,.55],sunI:.98,hs:[1,.88,.75],hg:[.5,.38,.25],hI:.55,tint:[1.05,1,.92],sat:1.32,snow:0,cl:[.55,.5,.5]},
@@ -648,6 +663,7 @@ function sceneA3(ctx){
       else toast('Toot toot!','Season: '+NAMES[SEA.cur]);
       try{Climb.patch()}catch(e){}}
     else if(name==='bear'){toast('A ranger bear waves from the fire tower','Original character in a campaign hat. Still needs a name.')}};
+  yield;
   /* --- DOM overlay --- */
   S.ui=ctx.mkUI();S.hits=[];S.labels=[];
   const th=ctx.mkHit(S.ui,'Cog railway train (secret: toots and changes the season)',()=>S.pick('train'));const trainWorld=new V3();S.hits.push({el:th,v:trainWorld});
@@ -663,6 +679,7 @@ function sceneA3(ctx){
    {const o=mid(road,.55);lp('Mt. Washington Auto Road',o.x,o.y+1,o.z,'pl')}
    {const o=mid(cog,.22);lp('Cog Railway',o.x,o.y+1,o.z,'pl')}
    lp('N ↗',COMP.x+NORTH.x*3.4,COMP.y+1.2,COMP.z+NORTH.z*3.4,'pl')}
+  yield;
   S.fpos=.5;S.rigCfg={target:[SP[0]*.4,SP[1]-2,SP[2]*.2+4],fov:22,dist:228,yaw:.2,yawR:.85,pitch:.86,pMin:.22,pMax:1.2,drift:.07,fitAsp:1.55,zMin:.1};
   S.summitPt=SP;
   /* --- THE WHOLE TRIP: the route the visitor just climbed, traced over the OSM trails, one flag per earlier stop ---
@@ -685,6 +702,7 @@ function sceneA3(ctx){
   S.setTrip=function(f){trip=f;const c=Math.floor(f*(RT.n-1))*6;casing.geometry.setDrawRange(0,c);line.geometry.setDrawRange(0,c);
     S.flags.forEach(fl=>{const on=f>0&&f*RT.len>=fl.s-.01;if(on!==fl.on){fl.on=on;fl.el.tabIndex=on?0:-1;if(on)fl.el.removeAttribute('data-off');else fl.el.setAttribute('data-off','')}});ctx.dirty()};
   S.busy=()=>SEA.t<1||S.flags.some(fl=>Math.abs(fl.k-(fl.on?1:0))>.001);
+  yield;
   /* --- per-frame --- */
   S.update=function(dt,t,rdt){
     S.flags.forEach(fl=>{const g=fl.on?1:0;if(fl.k===g)return;fl.k=reduced?g:clamp(fl.k+(g?1:-1)*rdt/.35,0,1);const e=fl.k*fl.k*(3-2*fl.k);fl.g.visible=fl.k>.01;fl.g.scale.set(1,Math.max(e,.01),1);ctx.dirty()});
@@ -866,18 +884,26 @@ function frame(now){if(!running)return;raf=requestAnimationFrame(frame);
 }
 function start(){if(running||!S)return;running=true;last=performance.now();dirty=3;raf=requestAnimationFrame(frame)}
 function stop(){running=false;cancelAnimationFrame(raf)}
-function build(){if(S||!renderer)return;
-  try{S=sceneA3(ctx)}catch(e){console.error(e&&e.stack||e);$('#nogl').hidden=false;$('#tools').hidden=true;return}
+/* the scene builds in ~12 ms slices (so a preloaded Range never freezes the page), then renders once while still hidden
+   so its shaders and shadow map are ready before you arrive */
+let building=false;
+function build(){if(S||building||!renderer)return;building=true;const g=sceneA3(ctx);
+  const fail=e=>{building=false;console.error(e&&e.stack||e);$('#nogl').hidden=false;$('#tools').hidden=true};
+  const step=()=>{const t0=performance.now();let r;try{do{r=g.next()}while(!r.done&&performance.now()-t0<12)}catch(e){fail(e);return}
+    if(!r.done){setTimeout(step,0);return}
+    building=false;S=r.value;finish()};
+  step()}
+function finish(){
   resize();setupCam();applyProgress(P);
   if(Q.get('t'))simT=+Q.get('t');
   if(Q.get('jump'))S.jump(+Q.get('jump'));
   if(Q.get('act'))setTimeout(()=>Q.get('act').split(',').forEach((a,i)=>setTimeout(()=>S&&S.pick(a),i*60)),400);
   if(Q.get('blur')==='off')F.on=false;
   window.__dio={pick:n=>S&&S.pick(n),F:F,U:U,S:()=>S};
-  if(Climb.visible!==false)start()}
+  if(Climb.visible!==false)start();else setTimeout(()=>{if(!running&&S){renderer.shadowMap.needsUpdate=true;post.render(S.scene,cam,F,S.grade)}},0)}
 Climb.onVisible(v=>{if(v){if(!S)build();else start()}else stop()});
 /* defer the heavy build a tick so a shell that preloads us hidden can say so first */
-setTimeout(()=>{if(Climb.visible!==false)build()},30);
+setTimeout(build,30);
 /* dev hook for screenshots: ?p=0.5 sets progress as the shell would */
 if(Q.get('p'))window.postMessage({climb:1,type:'progress',p:+Q.get('p')},'*');
 </script>

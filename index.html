@@ -155,6 +155,9 @@ body::-webkit-scrollbar{display:none}
 
 <script src="content.js"></script>
 <script>
+/* dual-GPU laptops: the 3D stops ask for the fast GPU, and the switch freezes the page for about a second. Ask once, now, while the
+   first screen is loading, and keep the context so the whole climb (every canvas, not just the 3D) renders on the faster chip */
+try { window.__gpu = document.createElement('canvas').getContext('webgl', { powerPreference: 'high-performance' }); } catch (e) {}
 (() => {
 const C = window.CONTENT;
 if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
@@ -363,7 +366,7 @@ const FX = {
     const k = 1 + (L.w - 1) * e, tx = (L.x - .5) * W * e, ty = (L.y - .5) * H * e;
     A.el.style.zIndex = 2;
     A.el.style.transform = `translate(${tx}px,${ty}px) rotate(${L.rot * e}deg) scale(${k})`;
-    A.el.style.boxShadow = `0 ${10 + 30 * e}px ${30 + 40 * e}px rgba(0,0,0,${.25 + .25 * e})`;
+    A.el.style.boxShadow = '0 30px 60px rgba(0,0,0,.45)';   /* fixed: an animated blur radius re-rasterises a full-screen shadow every frame */
     A.el.style.opacity = 1 - ss(.82, 1, t);
     const c = A.el.querySelector('.crease'); if (c) c.style.opacity = ss(.05, .5, t);
     B.el.style.opacity = ss(0, .35, t); B.el.style.transform = `scale(${1.06 - .06 * e})`;
@@ -419,12 +422,11 @@ const FX = {
     const e = ease(t);
     A.el.style.zIndex = 2;
     A.el.style.transform = `scale(${1 - .45 * e})`; A.el.style.opacity = 1 - ss(.15, .6, t);
-    A.el.style.filter = `blur(${8 * ss(.1, .6, t)}px)`;
-    /* soften the shrinking frame's edges so it reads as distance, not a picture */
+    /* soften the shrinking frame's edges so it reads as distance, not a picture (no CSS blur: blurring two full-screen
+       3D layers halved the frame rate on laptop GPUs) */
     const fe = 70 - 30 * ss(0, .4, t);
     A.el.style.webkitMaskImage = A.el.style.maskImage = `radial-gradient(ellipse at 50% 50%, #000 ${fe}%, transparent ${fe + 28}%)`;
     B.el.style.transform = `scale(${2.1 - 1.1 * e})`; B.el.style.opacity = ss(0, .4, t);
-    B.el.style.filter = `blur(${10 * (1 - ss(.3, 1, t))}px)`;
     if (RM) { A.el.style.transform = B.el.style.transform = A.el.style.filter = B.el.style.filter = ''; A.el.style.opacity = 1 - t; B.el.style.opacity = t; }
   }
 };

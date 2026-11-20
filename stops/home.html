@@ -131,23 +131,39 @@ function arcLine(c,text,cx,cy,R,font,track){ c.font=font; c.textAlign='center'; 
   chs.forEach((ch,i)=>{ const ac=a+adv[i]/2/R; c.save(); c.translate(cx+Math.cos(ac)*R,cy+Math.sin(ac)*R); c.rotate(ac+Math.PI/2); c.fillText(ch,0,0); c.restore(); a+=(adv[i]+track)/R; }); }
 function rrPath(c,x,y,w,h,r){ c.moveTo(x+r,y); c.arcTo(x+w,y,x+w,y+h,r); c.arcTo(x+w,y+h,x,y+h,r); c.arcTo(x,y+h,x,y,r); c.arcTo(x,y,x+w,y,r); c.closePath(); }
 
-/* ---- the Mt. Washington Auto Road: switchbacks up a mountain profile ---- */
+/* ---- the Mt. Washington Auto Road, in two parts the eye joins up: a road that curves toward you through the meadow
+   (wide in front, narrowing with distance) and vanishes into the treeline, then thin switchbacks that climb the
+   mountain face from the forest to the summit ---- */
 function crossings(prof,y){ let xl=Infinity,xr=-Infinity; for(let i=0;i<prof.length-1;i++){ const a=prof[i],b=prof[i+1]; if((a[1]-y)*(b[1]-y)<=0&&a[1]!==b[1]){ const x=a[0]+(b[0]-a[0])*(y-a[1])/(b[1]-a[1]); xl=Math.min(xl,x); xr=Math.max(xr,x); } } return [xl,xr]; }
-function makeRoad(R){ const V=[R.start.slice()];
-  for(let k=1;k<R.n;k++){ const u=k/R.n, y=lerp(R.base,R.top,1-Math.pow(1-u,1.3)), [xl,xr]=crossings(R.prof,y); if(!isFinite(xl)) continue; const wd=xr-xl; const ins=R.inset+(R.inset2||0)*(1-u); V.push([k%2?xr-wd*ins:xl+wd*ins,y]); }
+function sampleBez(P,n){ const out=[P[0].slice()]; for(let i=0;i+3<P.length;i+=3){ const a=P[i],b=P[i+1],c=P[i+2],d=P[i+3];
+    for(let s=1;s<=n;s++){ const t=s/n,u=1-t,A=u*u*u,B=3*u*u*t,C=3*u*t*t,D=t*t*t; out.push([A*a[0]+B*b[0]+C*c[0]+D*d[0],A*a[1]+B*b[1]+C*c[1]+D*d[1]]); } } return out; }
+function switchbacks(R){ const V=[R.start.slice()];
+  for(let k=1;k<R.n;k++){ const u=k/R.n, y=lerp(R.base,R.top,u), [xl,xr]=crossings(R.prof,y); if(!isFinite(xl)) continue; const wd=xr-xl; V.push([k%2?xr-wd*R.inset:xl+wd*R.inset,y]); }
   V.push(R.apex.slice());
   const mp=(a,b,t)=>[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t], pts=[V[0]];
   for(let i=1;i<V.length-1;i++){ const a=mp(V[i],V[i-1],R.r), b=mp(V[i],V[i+1],R.r); pts.push(a);
     for(let s=1;s<8;s++){ const t=s/8,u=1-t; pts.push([u*u*a[0]+2*u*t*V[i][0]+t*t*b[0],u*u*a[1]+2*u*t*V[i][1]+t*t*b[1]]); } pts.push(b); }
-  pts.push(V[V.length-1]);
-  const len=[0]; for(let i=1;i<pts.length;i++) len.push(len[i-1]+Math.hypot(pts[i][0]-pts[i-1][0],pts[i][1]-pts[i-1][1]));
-  const total=len[len.length-1];
-  return {pts,len,total,yBot:R.start[1],yTop:R.apex[1],
-    at(u){ const d=clamp(u,0,1)*total; let lo=0,hi=len.length-1; while(hi-lo>1){ const m=(lo+hi)>>1; if(len[m]<d) lo=m; else hi=m; }
-      const a=pts[lo],b=pts[hi],t=(d-len[lo])/((len[hi]-len[lo])||1); return {x:lerp(a[0],b[0],t),y:lerp(a[1],b[1],t),dx:b[0]-a[0],dy:b[1]-a[1]}; }}; }
-function strokeRoad(c,road,wBot,wTop,col){ c.lineCap='round'; c.lineJoin='round'; c.strokeStyle=col;
-  for(let i=0;i<road.pts.length-1;i++){ const a=road.pts[i],b=road.pts[i+1], f=clamp((a[1]-road.yTop)/(road.yBot-road.yTop),0,1); c.lineWidth=lerp(wTop,wBot,f); c.beginPath(); c.moveTo(a[0],a[1]); c.lineTo(b[0],b[1]); c.stroke(); } }
-function dashRoad(c,road,col,lw,dash,gap){ c.save(); c.strokeStyle=col; c.lineWidth=lw; c.lineCap='butt'; c.setLineDash([dash,gap]); poly(c,road.pts,false); c.stroke(); c.restore(); }
+  pts.push(V[V.length-1]); return pts; }
+function makeRoad(R){ const low=sampleBez(R.low,18), up=switchbacks(R.up);
+  /* the car's trip: meadow road (shown until it reaches the trees), a hidden stretch through the forest, then the switchbacks */
+  const wY=(pts,w)=>{ const ya=pts[0][1], yb=pts[pts.length-1][1]; return y=>lerp(w[0],w[1],clamp((y-ya)/((yb-ya)||1),0,1)); };
+  const wLow=wY(low,R.wLow), wUp=wY(up,R.wUp);
+  /* alpha: the car fades into the treeline and out of it again onto the switchbacks */
+  const parts=[{pts:low,wf:wLow,u0:0,u1:.42,al:f=>1-smooth(clamp((f-.8)/.1,0,1))},{pts:[low[low.length-1],up[0]],wf:wUp,u0:.42,u1:.52,al:()=>0},{pts:up,wf:wUp,u0:.52,u1:1,al:f=>smooth(clamp((f-.02)/.07,0,1))}];
+  for(const q of parts){ q.len=[0]; for(let i=1;i<q.pts.length;i++) q.len.push(q.len[i-1]+Math.hypot(q.pts[i][0]-q.pts[i-1][0],q.pts[i][1]-q.pts[i-1][1])); q.total=q.len[q.len.length-1]||1; }
+  return {low,up,wLow,wUp,
+    at(u){ u=clamp(u,0,1); const q=parts.find(p=>u<=p.u1)||parts[2], f=(u-q.u0)/(q.u1-q.u0), d=f*q.total; let lo=0,hi=q.len.length-1; while(hi-lo>1){ const m=(lo+hi)>>1; if(q.len[m]<d) lo=m; else hi=m; }
+      const a=q.pts[lo],b=q.pts[hi],t=(d-q.len[lo])/((q.len[hi]-q.len[lo])||1); const y=lerp(a[1],b[1],t); return {x:lerp(a[0],b[0],t),y,dx:b[0]-a[0],dy:b[1]-a[1],w:q.wf(y),al:q.al(f)}; }}; }
+/* a tapered road: each segment its own width (round caps hide the joins) */
+function strokeTaper(c,pts,wf,extra,col){ c.lineCap='round'; c.lineJoin='round'; c.strokeStyle=col; const n=pts.length-1;
+  for(let i=0;i<n;i++){ const a=pts[i],b=pts[i+1]; c.lineWidth=wf((a[1]+b[1])/2)+extra; c.beginPath(); c.moveTo(a[0],a[1]); c.lineTo(b[0],b[1]); c.stroke(); } }
+function roadLow(c,K,road){ const wf=road.wLow, w0=wf(road.low[0][1]); strokeTaper(c,road.low,wf,3,K.redge); strokeTaper(c,road.low,wf,0,K.road);
+  /* centre dashes that shrink with distance */
+  c.save(); c.strokeStyle=K.redge; c.lineCap='butt'; const P=road.low, n=P.length-1; let acc=0, on=true;
+  for(let i=0;i<n;i++){ const a=P[i],b=P[i+1],k=wf((a[1]+b[1])/2)/w0, seg=Math.hypot(b[0]-a[0],b[1]-a[1]); acc+=seg; const len=(on?w0*.42:w0*.36)*k;
+    if(on){ c.lineWidth=Math.max(.8,w0*.06*k); c.beginPath(); c.moveTo(a[0],a[1]); c.lineTo(b[0],b[1]); c.stroke(); } if(acc>len){ acc=0; on=!on; } }
+  c.restore(); }
+function roadUp(c,K,road){ strokeTaper(c,road.up,road.wUp,1.8,K.redge); strokeTaper(c,road.up,road.wUp,0,K.road); }
 function aPine(c,x,base,H,W){ for(let k=0;k<3;k++){ const top=base-H+k*H*.25; c.beginPath(); c.moveTo(x,top); c.lineTo(x+W*(.6+k*.25),top+H*.42); c.lineTo(x-W*(.6+k*.25),top+H*.42); c.closePath(); c.fill(); } c.fillRect(x-W*.08,base-H*.1,W*.16,H*.12); }
 
 /* the ranger bear: an original character in a campaign hat (not named, no slogans) */
@@ -215,18 +231,19 @@ function paint(c,K,L,road){ const {w,h,m,ax,ay,aw,ah,P,Q,dy}=L, wp=L.prof, apex=
   c.fillStyle=K.mtnD; poly(c,[apex,[P(.43),Q(.32+dy)],[P(.7),Q(.9)],[P(.5),Q(.9)]]); c.fill(); poly(c,[[P(.6),Q(.42+dy)],[P(.72),Q(.9)],[P(.8),Q(.9)],[P(.64),Q(.44+dy)]]); c.fill();
   c.fillStyle=K.snow; c.beginPath(); c.moveTo(P(-.1),Q(.1)); c.lineTo(P(1.1),Q(.1));
   for(let i=0;i<=22;i++){ const f=1.1-i/22*1.2, jag=(i%2?-1:1)*ah*.015; c.lineTo(P(f),Q(.355+dy+.22*Math.abs(f-.38)+.04*Math.max(0,f-.5))+jag); } c.closePath(); c.fill();
+  roadUp(c,K,road);
   c.fillStyle=K.forest; c.beginPath(); c.moveTo(P(-.05),Q(1)); for(let i=0;i<=50;i++){ const f=-.05+i/50*1.1; c.lineTo(P(f),Q(.56+dy*.3-.025*Math.abs(Math.sin(f*8))+(i%2?-.01:.01))); } c.lineTo(P(1.05),Q(1)); c.closePath(); c.fill();
   c.restore();
   observatory(c,K,aw,ah,apex);
   const my=f=>Q(.645+.012*Math.sin(f*5+.4)); const mp=[[ax,ay+ah]]; for(let i=0;i<=50;i++){ const f=i/50; mp.push([P(f),my(f)]); } mp.push([ax+aw,ay+ah]);
   c.fillStyle=K.meadow; poly(c,mp); c.fill(); c.save(); poly(c,mp); c.clip(); c.fillStyle=K.meadow2; for(let k=-6;k<14;k+=2){ poly(c,[[P(k*.08),Q(.6)],[P(k*.08+.08),Q(.6)],[P(k*.08-.1),Q(1)],[P(k*.08-.18),Q(1)]]); c.fill(); } c.restore();
+  roadLow(c,K,road);
   const r=rng(61), H0=L.hotel, hx0=(H0.cx-H0.W*.55-ax)/aw, hx1=(H0.cx+H0.W*.6-ax)/aw; c.fillStyle=K.pine;
   for(let f=0;f<1;f+=.008+r()*.012){ if(f>hx0&&f<hx1) continue; const H=ah*(.035+r()*.04); aPine(c,P(f),my(f)+ah*.02,H,H*.32); }
   paintHotel(c,K,H0);
   c.fillStyle=K.pine; for(const [f,H] of[[-.53,.07],[-.45,.05],[.52,.065],[.58,.085]]){ const hh=ah*H; aPine(c,H0.cx+f*H0.W,H0.base+ah*.012,hh,hh*.32); }
-  c.fillStyle=K.hill; c.beginPath(); c.moveTo(ax,ay+ah); for(let i=0;i<=50;i++){ const f=i/50; c.lineTo(P(f),Q(.93+.025*Math.sin(f*4+2)+.008*Math.sin(f*13))); } c.lineTo(ax+aw,ay+ah); c.closePath(); c.fill();
+  c.fillStyle=K.hill; c.beginPath(); c.moveTo(ax,ay+ah); for(let i=0;i<=50;i++){ const f=i/50; c.lineTo(P(f),Q(.93+.025*Math.sin(f*4+2)+.008*Math.sin(f*13))); } c.lineTo(ax+aw,ay+ah); c.closePath(); c.fill(); c.save(); c.clip(); roadLow(c,K,road); c.restore();
   c.fillStyle=K.pine; for(const [f,H] of[[.015,.3],[.055,.22],[.09,.14],[.955,.2],[.99,.28]]){ const hh=Math.min(ah*H,aw*H*1.4); aPine(c,P(f),Q(.99),hh,hh*.34); }
-  strokeRoad(c,road,L.rw[0]+4,L.rw[1]+2.5,K.redge); strokeRoad(c,road,L.rw[0],L.rw[1],K.road); dashRoad(c,road,K.redge,Math.max(1,aw*.0011),aw*.007,aw*.008);
   // a postmark built from CONTENT.person.place (e.g. "White Mountains · N.H.")
   const pm=L.mark; if(pm){ const font=s=>Math.round(s)+'px "Bebas Neue",Impact,sans-serif';
     c.save(); c.globalAlpha=.78; c.strokeStyle=K.mark; c.fillStyle=K.mark; c.lineWidth=1.6; c.beginPath(); c.arc(pm.x,pm.y,pm.r,0,TAU); c.stroke(); c.lineWidth=1; c.beginPath(); c.arc(pm.x,pm.y,pm.r*.8,0,TAU); c.stroke();
@@ -253,7 +270,7 @@ band.textContent=[PER.tagline,PLACE].filter(Boolean).join(' ★ ');
 if(!band.textContent) band.style.visibility='hidden';
 
 const S={w:0,h:0,L:null,lay:null,road:null,ready:false,dirty:true,t:0,p:0,night:false,nt:0,e:0,found:false,hover:false,inside:false,mx:0,my:0,
-  car:{on:false,t:0,done:false},carU:0,visible:true,paused:false,stars:[],clouds:[]};
+  car:{on:false,t:0,done:false},carU:0,moveT:-99,visible:true,paused:false,stars:[],clouds:[]};
 
 function fit(){ const w=st.clientWidth, h=st.clientHeight; if(w<60||h<60) return;
   S.w=w; S.h=h; cv.width=Math.round(w*DPR); cv.height=Math.round(h*DPR); ctx.setTransform(DPR,0,0,DPR,0,0);
@@ -268,12 +285,14 @@ function fit(){ const w=st.clientWidth, h=st.clientHeight; if(w<60||h<60) return
   head.style.fontSize=Math.round(clamp(fs*(portrait?.25:.18),13,20))+'px';
   const hb=head.offsetTop+head.offsetHeight, dy=Math.max(.03,(hb+ah*.075-ay)/ah-.28);
   const prof=[[-.04,.62],[.06,.55],[.14,.5],[.22,.44],[.28,.38],[.33,.32],[.36,.29],[.38,.28],[.40,.29],[.45,.34],[.5,.4],[.56,.43],[.6,.42],[.66,.46],[.72,.44],[.78,.48],[.86,.52],[.94,.55],[1.04,.6]].map(([a,b])=>[P(a),Q(b+dy)]), ai=7;
-  const sunY=Q(.25+dy), mr=ah*(portrait?.055:.075);
-  const L=S.L={w,h,m,ax,ay,aw,ah,P,Q,dy,prof,ai,portrait,rr:Math.round(clamp(Math.min(w,h)*.018,8,18)),rw:[Math.min(ah,aw*.6)*.046,Math.min(ah,aw*.6)*.008],band:{x:ax,y:ay+ah,w:aw,h:bh},
+  const sunY=Q(.25+dy), mr=ah*(portrait?.055:.075), WB=Math.min(ah,aw*.6)*.05;
+  const L=S.L={w,h,m,ax,ay,aw,ah,P,Q,dy,prof,ai,portrait,rr:Math.round(clamp(Math.min(w,h)*.018,8,18)),band:{x:ax,y:ay+ah,w:aw,h:bh},
     sun:{x:P(portrait?.14:.1),y:sunY,r:ah*(portrait?.05:.07)},
     mark:{x:P(portrait?.84:.905),y:portrait?sunY:Q(.15),r:mr,top:(parts[0]||'').toUpperCase(),mid:(parts[1]||'').toUpperCase()},
     hotel:portrait?{cx:P(.72),base:Q(.735),W:aw*.5,Hh:ah*.06}:{cx:P(.665),base:Q(.735),W:aw*.36,Hh:ah*.085},
-    road:{prof:[[.26,.62+dy],[.38,.28+dy],[.5,.62+dy]].map(([a,b])=>[P(a),Q(b)]),base:Q(.57+dy*.4),top:Q(.32+dy),apex:[prof[ai][0],prof[ai][1]+2],start:[P(.3),ay+ah+10],n:6,inset:.16,inset2:.08,r:.16},
+    road:{wLow:[WB,WB*.24],wUp:[Math.max(2.2,WB*.11),Math.max(1.4,WB*.06)],
+      low:(portrait?[[.47,1.03],[.58,.9],[.34,.82],[.42,.755],[.47,.71],[.38,.68],[.405,.66]]:[[.27,1.03],[.4,.9],[.22,.8],[.31,.74],[.37,.70],[.32,.675],[.355,.658]]).map(([a,b])=>[P(a),Q(b)]),
+      up:{prof:(portrait?[[.1,.66+dy],[.38,.28+dy],[.64,.66+dy]]:[[.02,.68+dy],[.38,.28+dy],[.74,.68+dy]]).map(([a,b])=>[P(a),Q(b)]),start:[P(portrait?.39:.33),Q(.585+dy*.3)],base:Q(.53+dy*.3),top:Q(.335+dy),apex:[prof[ai][0],prof[ai][1]+2],n:portrait?4:5,inset:portrait?.17:.15,r:.26}},
     signs:portrait?{classic:{x:P(.27),y:Q(.985)},cue:{x:P(.74),y:Q(.975)}}:{classic:{x:P(.16),y:Q(.985)},cue:{x:P(.855),y:Q(.975)}},
     bear:{x:P(portrait?.52:.405),y:Q(.955)}};
   S.road=makeRoad(L.road);
@@ -281,7 +300,7 @@ function fit(){ const w=st.clientWidth, h=st.clientHeight; if(w<60||h<60) return
   S.grain=ctx.createPattern(grainTile(24),'repeat');
   const r=rng(21); S.stars=Array.from({length:60},()=>[P(r()),Q(r()*.48),r()*1.3+.5,r()*TAU]);
   S.clouds=[{x:.2,y:.4+dy*.6,wd:.16,v:.004,s:4},{x:.75,y:.36+dy*.6,wd:.13,v:.003,s:5},{x:1.15,y:.43+dy*.6,wd:.2,v:.005,s:6}];
-  place(); S.ready=true; S.dirty=true; }
+  initFlock(); place(); S.ready=true; S.dirty=true; }
 
 function place(){ const L=S.L, put=(el,x,y)=>{ el.style.left=x+'px'; el.style.top=y+'px'; };
   Object.assign(band.style,{left:L.band.x+'px',top:L.band.y+'px',width:L.band.w+'px',height:L.band.h+'px'}); const bt=textW('100px "Bebas Neue",Impact,sans-serif',band.textContent.toUpperCase(),22)/100; band.style.setProperty('--bfs',Math.round(Math.min(L.band.h*.5,L.band.w*.9/(bt||1)))+'px');
@@ -292,13 +311,54 @@ function place(){ const L=S.L, put=(el,x,y)=>{ el.style.left=x+'px'; el.style.to
   put(bearEl,L.bear.x,L.bear.y); }
 
 /* ---- the car up the Auto Road → classic portfolio ---- */
-function drawCar(c,u,K){ const p=S.road.at(u), s=clamp(S.w*.016,11,24)*lerp(1,.62,u), dir=p.dx>=0?1:-1, sl=clamp(Math.atan2(p.dy,Math.abs(p.dx)),-.6,.6);
-  c.save(); c.translate(p.x,p.y-s*.35); c.scale(dir,1); c.rotate(sl); c.lineWidth=Math.max(1,s*.12); c.strokeStyle=K.line; c.lineJoin='round';
+function drawCar(c,u,K){ const p=S.road.at(u); if(p.al<=.01) return; const s=clamp(p.w*.4,2.4,24), dir=p.dx>=0?1:-1, sl=clamp(Math.atan2(p.dy,Math.abs(p.dx)),-.6,.6);
+  c.save(); c.globalAlpha=p.al; c.translate(p.x,p.y-s*.35); c.scale(dir,1); c.rotate(sl); c.lineWidth=Math.max(1,s*.12); c.strokeStyle=K.line; c.lineJoin='round';
   c.fillStyle=K.body; c.beginPath(); c.moveTo(-1.15*s,.1*s); c.lineTo(-1.15*s,-.45*s); c.lineTo(-.55*s,-.5*s); c.lineTo(-.3*s,-1.0*s); c.lineTo(.5*s,-1.0*s); c.lineTo(.85*s,-.5*s); c.lineTo(1.15*s,-.4*s); c.lineTo(1.15*s,.1*s); c.closePath(); c.fill(); c.stroke();
   c.fillStyle=K.cab; c.beginPath(); c.moveTo(-.2*s,-.55*s); c.lineTo(-.02*s,-.9*s); c.lineTo(.42*s,-.9*s); c.lineTo(.62*s,-.55*s); c.closePath(); c.fill();
   c.fillStyle=K.wheel; for(const x of[-.68,.68]){ c.beginPath(); c.arc(x*s,.12*s,.3*s,0,TAU); c.fill(); c.stroke(); } c.restore(); }
 function goClassic(){ st.classList.remove('driving'); S.car={on:false,t:0,done:false}; S.dirty=true; if(CL) CL.classic(); }
 function startCar(){ if(S.car.on) return; if(RM.matches||!S.ready){ goClassic(); return; } st.classList.add('driving'); S.car={on:true,t:0,done:false}; S.dirty=true; schedule(); }
+
+/* ---- the flock: a few dozen birds with depth (z: 0 far, 1 near). Far ones are small, pale with distance and fly behind
+   the peaks; near ones are big and dark. They wheel in loose circles over the range, and when the pointer is on the card
+   they stream after it, swirl around it and come closer, as if flying toward you ---- */
+const FL={b:[]};
+function initFlock(){ const L=S.L, r=rng(77), n=L.portrait?22:34, old=FL.b; FL.b=[];
+  for(let i=0;i<n;i++){ const o=old[i]; FL.b.push(o&&!S._refit?o:{x:L.P(.42+r()*.45),y:L.Q(.1+r()*.22),z:.15+r()*.5,vx:(r()-.5)*60,vy:(r()-.5)*30,ph:r()*TAU,fr:9+r()*4,orb:.6+r()*.8,zo:(r()-.5)*.3,gl:0});
+    FL.b[i].i=i; }
+  S._refit=false; }
+function flockUpdate(dt){ const L=S.L, B=FL.b, n=B.length, t=S.t, sc=clamp(L.aw/1400,.45,1.2);
+  const chase=S.inside&&(t-S.moveT)<5, cx=chase?S.mx:L.P(.66+.12*Math.sin(t*.11)), cy=chase?S.my:L.Q(.27+L.dy+.04*Math.sin(t*.19));
+  for(const b of B){ const k=lerp(.4,1.3,b.z); let ax=0, ay=0;
+    /* the flock's rules: keep a little space, match neighbours' heading, drift toward the group */
+    let sx=0,sy=0,axv=0,ayv=0,mx=0,my=0,cn=0;
+    for(const o of B){ if(o===b) continue; const dx=o.x-b.x, dy=o.y-b.y, d2=dx*dx+dy*dy, dz=Math.abs(o.z-b.z);
+      if(d2<900*sc*sc&&dz<.25){ const d=Math.sqrt(d2)||1; sx-=dx/d*(30*sc-d); sy-=dy/d*(30*sc-d); }
+      if(d2<12000*sc*sc){ axv+=o.vx; ayv+=o.vy; mx+=o.x; my+=o.y; cn++; } }
+    ax+=sx*2.2; ay+=sy*2.2;
+    if(cn){ ax+=(axv/cn-b.vx)*.9+(mx/cn-b.x)*.25; ay+=(ayv/cn-b.vy)*.9+(my/cn-b.y)*.25; }
+    /* each bird circles its own orbit around the target: the pointer, or a lazy roost over the range */
+    const R=(chase?46:120)*sc*b.orb, an=t*(chase?1.6:.45)*(b.i%2?1:-1)+b.i*2.4, tx=cx+Math.cos(an)*R, ty=cy+Math.sin(an)*R*.55;
+    ax+=(tx-b.x)*(chase?2.4:.9); ay+=(ty-b.y)*(chase?2.4:.9);
+    /* stay on the card, mostly in the sky */
+    if(b.x<L.ax+30) ax+=(L.ax+30-b.x)*4; if(b.x>L.ax+L.aw-30) ax-=(b.x-L.ax-L.aw+30)*4;
+    if(b.y<L.ay+20) ay+=(L.ay+20-b.y)*4; if(b.y>L.Q(.9)) ay-=(b.y-L.Q(.9))*4;
+    b.vx+=ax*dt; b.vy+=ay*dt; const sp=Math.hypot(b.vx,b.vy), hi=(chase?260:120)*sc, lo=40*sc;
+    if(sp>hi){ b.vx*=hi/sp; b.vy*=hi/sp; } else if(sp<lo&&sp>0){ b.vx*=lo/sp; b.vy*=lo/sp; }
+    /* far birds cross the screen slower: that is what makes the depth read */
+    b.x+=b.vx*dt*k; b.y+=b.vy*dt*k;
+    const zt=clamp((chase?.78:.32)+b.zo,0,1); b.z+=(zt-b.z)*dt*(chase?.9:.25);
+    /* flap, with the odd glide */
+    if(b.gl>0) b.gl-=dt; else if(Math.random()<dt*.25) b.gl=.6+Math.random()*.9;
+    b.ph+=dt*(b.gl>0?0:b.fr); } }
+function drawFlock(c,near,e){ const L=S.L, s0=clamp(L.aw*.0068,4.5,10), D=rgb(DI.ink), Nn=rgb(NI.ink), Sd=rgb(DI.sky), Sn=rgb(NI.sky);
+  c.save(); c.lineCap='round'; c.lineJoin='round';
+  for(const b of FL.b){ if((b.z>=.45)!==near) continue; const k=lerp(.4,1.3,b.z), s=s0*k, fog=(1-b.z)*.62;
+    const col=[0,1,2].map(j=>{ const ink=D[j]+(Nn[j]-D[j])*e, sky=Sd[j]+(Sn[j]-Sd[j])*e; return Math.round(ink+(sky-ink)*fog); });
+    const fl=b.gl>0?.15:Math.sin(b.ph), bank=clamp(b.vy/180,-.35,.35)*(b.vx>=0?1:-1);
+    c.save(); c.translate(b.x,b.y); c.rotate(bank); c.strokeStyle='rgb('+col+')'; c.lineWidth=Math.max(.9,1.7*k);
+    c.beginPath(); c.moveTo(-s,-s*.38*fl-s*.12); c.quadraticCurveTo(-s*.45,-s*.6*fl-s*.28,0,0); c.quadraticCurveTo(s*.45,-s*.6*fl-s*.28,s,-s*.38*fl-s*.12); c.stroke(); c.restore(); }
+  c.restore(); }
 
 /* ---- the secret: the sun is a light switch ---- */
 function toast(msg){ toastEl.textContent=msg; toastEl.classList.add('on'); clearTimeout(toast._t); toast._t=setTimeout(()=>toastEl.classList.remove('on'),2800); }
@@ -318,12 +378,14 @@ function render(){ const L=S.L, c=ctx, e=S.e, t=S.t, p=S.p, {w,h,ax,ay,aw,ah}=L,
   if(e>.01) for(const [x,y,r,ph] of S.stars){ c.fillStyle='rgba(236,228,207,'+(e*(.6+.4*Math.sin(t*2+ph)))+')'; c.beginPath(); c.arc(x,y,r,0,TAU); c.fill(); }
   for(const cl of S.clouds){ const f=((cl.x+t*cl.v+p*.05)%1.5+1.5)%1.5-.25; eCloud(c,L.P(f),L.Q(cl.y),aw*cl.wd,cl.s,K('cloud'),K('cloudS')); }
   sunBody(c,S,sx,sy,R*(S.hover?1.12:1),SUN);
+  drawFlock(c,false,e);
   c.restore();
   c.drawImage(S.lay[0],0,0,w,h); if(e>.002){ c.globalAlpha=e; c.drawImage(S.lay[1],0,0,w,h); c.globalAlpha=1; }
+  drawFlock(c,true,e);
   if(S.car.on) drawCar(c,S.carU,{body:K('roof'),cab:K('hotel'),wheel:K('ink'),line:K('ink')});
   c.fillStyle=S.grain; c.fillRect(0,0,w,h); }
 function frame(dt){ if(!S.ready) return; const rm=RM.matches; if(rm&&!S.dirty&&!S.car.on) return;
-  if(!rm) S.t+=dt;
+  if(!rm){ S.t+=dt; flockUpdate(dt); }
   const tg=S.night?1:0; S.nt=rm?tg:S.nt+clamp(tg-S.nt,-dt/.8,dt/.8); S.e=smooth(S.nt);
   if(S.car.on&&!S.car.done){ S.car.t=Math.min(1,S.car.t+dt/3.2); if(S.car.t>=1){ S.car.done=true; setTimeout(goClassic,380); } }
   S.carU=S.car.t<.5?2*S.car.t*S.car.t:1-2*(1-S.car.t)*(1-S.car.t);
@@ -343,7 +405,7 @@ function applyProgress(){ const p=S.p, k=smooth(p), sc=1-.05*k;
   const o=clamp(1-p*2.4,0,1)*cueOut; sCue.style.opacity=o.toFixed(3); sCue.style.pointerEvents=o<.15?'none':''; sCue.tabIndex=o<.15?-1:0; }
 
 /* ---- wiring ---- */
-st.addEventListener('pointermove',e=>{ const r=st.getBoundingClientRect(); S.mx=(e.clientX-r.left)*S.w/(r.width||1); S.my=(e.clientY-r.top)*S.h/(r.height||1); S.inside=true; });
+st.addEventListener('pointermove',e=>{ const r=st.getBoundingClientRect(); S.mx=(e.clientX-r.left)*S.w/(r.width||1); S.my=(e.clientY-r.top)*S.h/(r.height||1); S.inside=true; S.moveT=S.t; });
 st.addEventListener('pointerleave',()=>{ S.inside=false; });
 const hv=v=>()=>{ S.hover=v; S.dirty=true; };
 secret.addEventListener('mouseenter',hv(true)); secret.addEventListener('mouseleave',hv(false)); secret.addEventListener('focus',hv(true)); secret.addEventListener('blur',hv(false));
