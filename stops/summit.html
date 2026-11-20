@@ -59,7 +59,7 @@ body.grabbing canvas.gl{cursor:grabbing}
 .sketch:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
 .sketch i{font-style:normal;font-size:14px}
 .sketch[aria-pressed=true]{background:#f4ecdc;color:#2b2620;text-shadow:none;border-color:#2b2620}
-body.sk canvas.sky{filter:saturate(.45) sepia(.22) brightness(1.06)}
+body.sk canvas.sky{filter:saturate(.7)}
 .face b{display:block;font:800 21px/1.05 Archivo,sans-serif;letter-spacing:-.01em;color:var(--accent)}
 #toast{position:fixed;left:50%;bottom:22px;transform:translate(-50%,16px);z-index:30;background:rgba(10,12,18,.9);color:#fff;border:1px solid var(--accent);border-radius:12px;padding:10px 16px;font:500 13px/1.4 Archivo,sans-serif;opacity:0;pointer-events:none;transition:opacity .35s,transform .35s;max-width:min(520px,92vw);text-align:center}
 #toast.on{opacity:1;transform:translate(-50%,0)}
@@ -126,7 +126,6 @@ body.sk canvas.sky{filter:saturate(.45) sepia(.22) brightness(1.06)}
   <p class="face" id="face"></p>
   <button class="sketch" id="sketch" type="button" aria-pressed="true" title="Switch between the pencil sketch and full colour"><i aria-hidden="true">✎</i><span>Pencil</span></button>
   <div id="anemHost"></div>
-  <div id="bearHost"></div>
 </div>
 <section class="sr" id="srlist" aria-label="Where I'm headed, full text"></section>
 <div class="fog" id="fog" aria-hidden="true"></div>
@@ -177,9 +176,9 @@ $('#srlist').innerHTML='';{const ul=document.createElement('ul');PEAKS.forEach(p
 
 /* ---------------- palettes + scheme tween (storm / sunset / aurora) ---------------- */
 const P={
- storm:{name:'Storm',skyTop:H('#070b17'),skyMid:H('#222f48'),skyBot:H('#617289'),glow:H('#a9c1e0'),ridge:[H('#74839d'),H('#566681'),H('#3d4b65'),H('#283349'),H('#161d2c')],cloudLit:H('#d6deea'),cloudDark:H('#6c7a91'),accent:H('#86d6ff'),ink:H('#eef4fb'),ground:H('#0e131d'),panel:H('#0a111d'),stars:0,aurora:0,storm:1,sun:0,win:H('#ffd98a'),winA:.9},
- sunset:{name:'Sunset',skyTop:H('#2a1450'),skyMid:H('#c43c6c'),skyBot:H('#ffa24a'),glow:H('#ffd37a'),ridge:[H('#f08aa0'),H('#cc6190'),H('#96447e'),H('#5f2d68'),H('#2e1b46')],cloudLit:H('#ffd2aa'),cloudDark:H('#b4527e'),accent:H('#ffcf5c'),ink:H('#fff3e4'),ground:H('#221033'),panel:H('#2a1236'),stars:.3,aurora:0,storm:0,sun:1,win:H('#ffc27a'),winA:.55},
- aurora:{name:'Aurora',skyTop:H('#01060f'),skyMid:H('#05293b'),skyBot:H('#0f6868'),glow:H('#5cffb0'),ridge:[H('#33808c'),H('#206272'),H('#14485b'),H('#0b3142'),H('#05161f')],cloudLit:H('#a8f2e0'),cloudDark:H('#1d6670'),accent:H('#6dffb8'),ink:H('#e9fff6'),ground:H('#030f19'),panel:H('#031420'),stars:1,aurora:1,storm:0,sun:0,win:H('#ffe2a0'),winA:1}
+ storm:{nite:0,name:'Storm',skyTop:H('#070b17'),skyMid:H('#222f48'),skyBot:H('#617289'),glow:H('#a9c1e0'),ridge:[H('#74839d'),H('#566681'),H('#3d4b65'),H('#283349'),H('#161d2c')],cloudLit:H('#d6deea'),cloudDark:H('#6c7a91'),accent:H('#86d6ff'),ink:H('#eef4fb'),ground:H('#0e131d'),panel:H('#0a111d'),stars:0,aurora:0,storm:1,sun:0,win:H('#ffd98a'),winA:.9},
+ sunset:{nite:0,name:'Sunset',skyTop:H('#2a1450'),skyMid:H('#c43c6c'),skyBot:H('#ffa24a'),glow:H('#ffd37a'),ridge:[H('#f08aa0'),H('#cc6190'),H('#96447e'),H('#5f2d68'),H('#2e1b46')],cloudLit:H('#ffd2aa'),cloudDark:H('#b4527e'),accent:H('#ffcf5c'),ink:H('#fff3e4'),ground:H('#221033'),panel:H('#2a1236'),stars:.3,aurora:0,storm:0,sun:1,win:H('#ffc27a'),winA:.55},
+ aurora:{nite:1,name:'Aurora',skyTop:H('#01060f'),skyMid:H('#05293b'),skyBot:H('#0f6868'),glow:H('#5cffb0'),ridge:[H('#33808c'),H('#206272'),H('#14485b'),H('#0b3142'),H('#05161f')],cloudLit:H('#a8f2e0'),cloudDark:H('#1d6670'),accent:H('#6dffb8'),ink:H('#e9fff6'),ground:H('#030f19'),panel:H('#031420'),stars:1,aurora:1,storm:0,sun:0,win:H('#ffe2a0'),winA:1}
 };
 const SCHEMES=['storm','sunset','aurora'];
 let curName='sunset',cur=cl(P[curName]),tweenFrom=null,tw=1,flash=0,found=false,dirty=true;
@@ -304,7 +303,7 @@ addEventListener('keydown',e=>{if(e.metaKey||e.ctrlKey||e.altKey||e.target.close
    ==================================================================== */
 const skyc=$('canvas.sky'),sctx=skyc.getContext('2d'),glc=$('canvas.gl'),tagsEl=$('.tags');
 let R3=null,failed=false,W=innerWidth,Hh=innerHeight,hfov=70,anem=null,bear=null;
-anem=makeAnem($('#anemHost'));bear=makeBear($('#bearHost'));
+anem=makeAnem($('#anemHost'));bear={tick(){}};   /* no bear on the summit */
 
 /* ---- geometry baking: many small parts -> one mesh with vertex colours (few draw calls) ---- */
 function Bake(){const pos=[],nor=[],col=[];const v=new THREE.Vector3(),nm=new THREE.Matrix3();
@@ -630,57 +629,89 @@ function resize(){W=innerWidth;Hh=innerHeight;fit(skyc);const r=$('.title').getB
   /* map labels never sit on top of the UI */
   avoid=['.goals','.rose','.face','.bear'].map(q=>$(q)).filter(e=>e&&e.offsetParent!==null).map(e=>e.getBoundingClientRect()).filter(b=>b.width>0);
   if(Climb.embedded)avoid.push({left:W-470,right:W,top:0,bottom:parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--nav-h'))||54});if(!R3)return;const a=W/Math.max(1,Hh),vf=a<.8?66:a<1.4?54:44;R3.camera.fov=vf;R3.camera.aspect=a;R3.camera.updateProjectionMatrix();hfov=2*Math.atan(Math.tan(vf*D2R/2)*a)*R2D;
-  R3.renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,quality));R3.renderer.setSize(W,Hh,false);dirty=true}
+  R3.renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,quality,sketchOn?1:9));   /* pencil lines don't need retina pixels */R3.renderer.setSize(W,Hh,false);dirty=true}
 addEventListener('resize',resize);
 let quality=1.5,slowT=0,fogWarm=0;
 
 /* ---------------- pencil sketch (post-processing) ----------------
-   The scene renders into a texture (colour + depth); one full-screen pass then draws it as a pencil sketch:
-   outlines from edges in depth and brightness, cross-hatching that gets denser in the shadows (three layers),
-   a light wash of the real colour on paper, and lines that wobble a little and "boil" about six times a second,
-   like hand-drawn animation. Toggle with the Pencil button (remembered). */
+   The scene renders into a texture (colour + depth); one full-screen pass draws it as a sketchbook page:
+   - outlines from the geometry itself: the second derivative of inverse depth is zero across any flat face and spikes
+     at silhouettes and creases, so rocks and buildings get clean edges (distant facets fade out)
+   - every line is drawn twice through two different wobbles, like a quick hand going over it again, and "boils"
+     about six times a second
+   - hatching follows each surface: its direction comes from the face's screen-space normal (rebuilt from depth), so flat
+     ground is hatched horizontally and rock faces on the slant; up to three layers as the light falls off
+   - a watercolour wash of the real colour with pigment granulation, paper fibres and a soft vignette; over the live
+     sky, a translucent paper wash with light pencil strokes
+   - at night (the aurora) it turns into white pencil on dark paper, hatching the lit areas instead of the shadows
+   Toggle with the Pencil button (remembered). */
 let SK=null,sketchOn=true;try{sketchOn=localStorage.getItem('climb.sketch')!=='0'}catch(_){}
 const SK_FS=`precision highp float;
-uniform sampler2D tC,tD;uniform vec2 res;uniform float time,dpr,wash;uniform vec3 paper,ink;varying vec2 vUv;
+uniform sampler2D tC,tD,tN;uniform vec2 res,proj;uniform float time,dpr,wash,lf,nite;uniform vec3 paperD,inkD,paperN,inkN;varying vec2 vUv;
 float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
-float noise(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(hash(i),hash(i+vec2(1.,0.)),f.x),mix(hash(i+vec2(0.,1.)),hash(i+vec2(1.,1.)),f.x),f.y);}
+float noise(vec2 p){return texture2D(tN,p*(1./256.)).r;}
+float fbm(vec2 p){return texture2D(tN,p*(1./256.)).g;}
 float lum(vec3 c){return dot(c,vec3(.299,.587,.114));}
+float W(vec2 uv){float d=texture2D(tD,uv).r;return d>.99999?1e6:exp2(d*lf)-1.;}
 float hatch(float x,float al,float sp,float th){float v=abs(fract(x/sp)-.5)*2.;float ln=1.-smoothstep(th,th+.3,v);
-  return ln*smoothstep(.32,.5,noise(vec2(al*.045,floor(x/sp)*3.17)));}
+  return ln*smoothstep(.3,.48,noise(vec2(al*.045,floor(x/sp)*3.17)))*(.75+.25*noise(vec2(al*.2,x)));}
+float hatchA(vec2 s,float a,float sp,float th,float sd){vec2 d=vec2(cos(a),sin(a));return hatch(dot(s,vec2(-d.y,d.x))+sd*sp,dot(s,d),sp,th);}
+float edgeAt(vec2 uv,vec2 o){float w=W(uv),iw=1./w;float l=1./W(uv-vec2(o.x,0.)),r=1./W(uv+vec2(o.x,0.)),dn=1./W(uv-vec2(0.,o.y)),up=1./W(uv+vec2(0.,o.y));
+  float lap=(abs(l+r-2.*iw)+abs(up+dn-2.*iw))*min(w,1e5);return smoothstep(.03,.11,lap/(1.+min(w,1e5)/700.));}
+vec3 P(vec2 uv,float w){return vec3((uv*2.-1.)*proj*w,-w);}
 void main(){
+  vec3 paper=mix(paperD,paperN,nite),ink=mix(inkD,inkN,nite);
   vec2 px=1./res;float tq=floor(time*6.)/6.;vec2 s=gl_FragCoord.xy/dpr;
-  vec2 wob=(vec2(noise(s*.035+tq*1.7),noise(s*.035+vec2(19.1,7.3)+tq*1.3))-.5)*px*2.6*dpr;
-  vec2 uv=vUv+wob;vec4 c=texture2D(tC,uv);float d0=texture2D(tD,uv).r;
-  float gx=0.,gy=0.,lx=0.,ly=0.;
-  for(int i=-1;i<=1;i++){for(int j=-1;j<=1;j++){
-    vec2 o=vec2(float(i),float(j))*px*dpr*.9;float d=texture2D(tD,uv+o).r;vec4 q=texture2D(tC,uv+o);float l=lum(q.rgb);
-    float wx=float(i)*(j==0?2.:1.),wy=float(j)*(i==0?2.:1.);gx+=d*wx;gy+=d*wy;lx+=l*wx;ly+=l*wy;}}
-  float ed=smoothstep(.008,.03,length(vec2(gx,gy)));
-  float el=smoothstep(.1,.32,length(vec2(lx,ly)))*.75*(1.-smoothstep(.62,.8,d0));
-  float edge=max(ed,el)*(.72+.28*noise(s*.9+tq*5.));
-  float a=c.a;vec3 col=a>.001?c.rgb/a:vec3(1.);float L=smoothstep(.04,.7,lum(col));float n=noise(s*.08)*2.;
-  float u=(s.x+s.y)*.7071,w=(s.x-s.y)*.7071;
-  float h1=hatch(u+n,w,6.,.16)*smoothstep(.66,.42,L);
-  float h2=hatch(w+n,u,6.5,.16)*smoothstep(.36,.2,L);
-  float h3=hatch(s.x*.95+s.y*.3+n,s.y,4.,.2)*smoothstep(.16,.04,L);
+  vec2 w1=(vec2(noise(s*.03+tq*1.7),noise(s*.03+vec2(19.1,7.3)+tq*1.3))-.5)*px*3.*dpr;
+  vec2 w2=(vec2(noise(s*.05+vec2(5.2,1.1)-tq*1.1),noise(s*.05+vec2(2.7,9.9)+tq*2.1))-.5)*px*4.*dpr;
+  vec2 uv=vUv+w1;vec4 c=texture2D(tC,uv);float a=c.a;
+  vec3 col=a>.001?c.rgb/a:paper;
+  /* outlines: two passes through different wobbles */
+  vec2 o=px*dpr;float e2=edgeAt(vUv+w2,o*1.3);
+  /* surface normal from depth (pick the flatter side so edges don't smear) */
+  float w0=W(uv),wr=W(uv+vec2(px.x,0.)),wl=W(uv-vec2(px.x,0.)),wu=W(uv+vec2(0.,px.y)),wd=W(uv-vec2(0.,px.y));
+  vec3 p0=P(uv,w0),dx=abs(wr-w0)<abs(w0-wl)?P(uv+vec2(px.x,0.),wr)-p0:p0-P(uv-vec2(px.x,0.),wl),dy=abs(wu-w0)<abs(w0-wd)?P(uv+vec2(0.,px.y),wu)-p0:p0-P(uv-vec2(0.,px.y),wd);
+  vec3 n=normalize(cross(dx,dy));
+  float iw=1./w0,lap=(abs(1./wl+1./wr-2.*iw)+abs(1./wu+1./wd-2.*iw))*min(w0,1e5),e1=smoothstep(.03,.11,lap/(1.+min(w0,1e5)/700.));
+  float edge=max(e1,e2*.7)*(.7+.3*noise(s*.7+tq*4.));
+  float ang=length(n.xy)>.25?floor(atan(n.y,n.x)/.7854+.5)*.7854+1.5708:.7854;
+  float sd=hash(vec2(floor(atan(n.y,n.x)/.7854+.5),floor(n.z*3.)));ang+=(sd-.5)*.3;
+  float L=smoothstep(.04,.7,lum(col));L=mix(L,1.-smoothstep(.02,.35,lum(col)),nite);float nz=noise(s*.08)*2.;
+  float h1=hatchA(s+nz,ang,6.,.13,sd)*smoothstep(.56,.3,L);
+  float h2=hatchA(s+nz,ang+1.047,7.,.12,sd*1.7)*smoothstep(.26,.1,L)*.85;
+  float h3=hatchA(s+nz,ang-.6,4.5,.16,sd*2.3)*smoothstep(.1,.02,L)*.8;
   float ht=max(h1,max(h2,h3))*(.55+.45*noise(s*1.3+tq));
-  el*=mix(.45,1.,step(.5,a));
-  vec3 base=mix(paper,col,wash)*(.9+.1*L);
-  vec3 sk=mix(base,ink,ht*.55)*(.97+.03*noise(s*.6));
-  float A=max(a,edge*.85);vec3 o=mix(sk*a,ink*A,edge*.85);
-  gl_FragColor=vec4(o,A);}`;
+  /* watercolour wash with granulation, on paper with fibres */
+  float gran=.93+.12*fbm(s*.22),vig=pow(clamp(length(vUv-.5)*1.45,0.,1.),2.5);
+  vec3 base=mix(paper,col,mix(wash,.62,nite))*gran*mix(.9+.1*L,1.,nite);
+  float pap=.965+.035*fbm(s*.9)-.025*fbm(vec2(s.x*.04,s.y*1.1));
+  vec3 inkc=ink*(.85+.3*noise(s*.35));
+  vec3 geo=mix(mix(base,inkc,ht*.55)*pap,inkc,edge*.82)*(1.-.13*vig);
+  /* the sky is the live sky canvas underneath: lay a translucent paper wash, light horizontal pencil strokes (denser
+     higher up) and the horizon line over it, instead of copying the canvas in every frame (that stalled the GPU) */
+  float hs=hatch(s.y+nz*3.,s.x,5.,.1)*smoothstep(.25,.85,vUv.y)*.3;
+  float ki=max(hs,edge*.82)+.1*vig,wa=(.34+.1*fbm(s*.9))*gran*(1.-.55*nite);
+  vec3 skyP=paper*pap*wa*(1.-ki)+inkc*ki;float skyA=wa*(1.-ki)+ki;
+  gl_FragColor=vec4(mix(skyP,geo,a),mix(skyA,1.,a));}`;
+function noiseTex(){const N=256,lat=(seed,c)=>{const a=new Float32Array((N/c)*(N/c));let x=seed;for(let i=0;i<a.length;i++){x=(x*16807)%2147483647;a[i]=x/2147483647}return a},
+    smp=(a,c,X,Y)=>{const n=N/c,x=X/c,y=Y/c,i=Math.floor(x),j=Math.floor(y),fx=x-i,fy=y-j,u=fx*fx*(3-2*fx),w=fy*fy*(3-2*fy),g=(p,q)=>a[((q%n+n)%n)*n+((p%n+n)%n)];
+      return (g(i,j)*(1-u)+g(i+1,j)*u)*(1-w)+(g(i,j+1)*(1-u)+g(i+1,j+1)*u)*w};
+  const A=lat(7,1),B1=lat(11,2),B2=lat(13,1),d=new Uint8Array(N*N*4);
+  for(let y=0;y<N;y++)for(let x=0;x<N;x++){const k=(y*N+x)*4;d[k]=A[y*N+x]*255;d[k+1]=(smp(B1,2,x,y)*.62+B2[y*N+x]*.38)*255;d[k+2]=d[k];d[k+3]=255}
+  const t=new THREE.DataTexture(d,N,N,THREE.RGBAFormat);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.magFilter=t.minFilter=THREE.LinearFilter;t.needsUpdate=true;return t}
 function makeSketch(renderer){const v=new THREE.Vector2();let rt=null,dt=null;
-  const mat=new THREE.ShaderMaterial({uniforms:{tC:{value:null},tD:{value:null},res:{value:new THREE.Vector2()},dpr:{value:1},time:{value:0},wash:{value:.5},
-      paper:{value:new THREE.Color('#f4ecdc')},ink:{value:new THREE.Color('#2b2620')}},
+  const mat=new THREE.ShaderMaterial({uniforms:{tC:{value:null},tD:{value:null},tN:{value:noiseTex()},res:{value:new THREE.Vector2()},proj:{value:new THREE.Vector2(1,1)},dpr:{value:1},time:{value:0},wash:{value:.5},lf:{value:16},
+      nite:{value:0},paperD:{value:new THREE.Color('#f4ecdc')},inkD:{value:new THREE.Color('#2b2620')},paperN:{value:new THREE.Color('#1c2130')},inkN:{value:new THREE.Color('#e9e4d4')}},
     vertexShader:'varying vec2 vUv;void main(){vUv=uv;gl_Position=vec4(position.xy,0.,1.);}',fragmentShader:SK_FS,depthTest:false,depthWrite:false});
   const quad=new THREE.Mesh(new THREE.PlaneGeometry(2,2),mat);quad.frustumCulled=false;const qs=new THREE.Scene();qs.add(quad);const qc=new THREE.OrthographicCamera(-1,1,1,-1,0,1);
   const fit=()=>{renderer.getDrawingBufferSize(v);if(rt&&rt.width===v.x&&rt.height===v.y)return;if(rt){rt.dispose();dt.dispose()}
     dt=new THREE.DepthTexture(v.x,v.y);dt.type=THREE.UnsignedIntType;
     rt=new THREE.WebGLRenderTarget(v.x,v.y,{depthTexture:dt,depthBuffer:true,minFilter:THREE.LinearFilter,magFilter:THREE.LinearFilter});
     mat.uniforms.tC.value=rt.texture;mat.uniforms.tD.value=dt;mat.uniforms.res.value.set(v.x,v.y);mat.uniforms.dpr.value=renderer.getPixelRatio()};
-  return {render(scene,camera,t){fit();renderer.setRenderTarget(rt);renderer.render(scene,camera);renderer.setRenderTarget(null);mat.uniforms.time.value=t;renderer.render(qs,qc)}};}
+  return {render(scene,camera,t,nite){fit();mat.uniforms.nite.value=nite||0;const U=mat.uniforms,th=Math.tan(camera.fov*Math.PI/360);U.proj.value.set(th*camera.aspect,th);U.lf.value=Math.log2(camera.far+1);
+    renderer.setRenderTarget(rt);renderer.render(scene,camera);renderer.setRenderTarget(null);U.time.value=t;renderer.render(qs,qc)}};}
 const skBtn=$('#sketch');
-function setSketch(on){sketchOn=on;skBtn.setAttribute('aria-pressed',String(on));document.body.classList.toggle('sk',on);try{localStorage.setItem('climb.sketch',on?'1':'0')}catch(_){}dirty=true;kick()}
+function setSketch(on){sketchOn=on;resize();skBtn.setAttribute('aria-pressed',String(on));document.body.classList.toggle('sk',on);try{localStorage.setItem('climb.sketch',on?'1':'0')}catch(_){}dirty=true;kick()}
 skBtn.addEventListener('click',()=>setSketch(!sketchOn));
 skBtn.setAttribute('aria-pressed',String(sketchOn));document.body.classList.toggle('sk',sketchOn);
 
@@ -721,7 +752,7 @@ function frame(dt){
   if(!RM)R3.placeHikers(time);
   const sp=(az,alt)=>{const a=az*D2R,e=alt*D2R;v3.set(Math.cos(e)*Math.sin(a),Math.sin(e),-Math.cos(e)*Math.cos(a));if(v3.dot(fw)<.1)return null;v3.multiplyScalar(5000).add(camera.position).project(camera);if(Math.abs(v3.x)>1.8)return null;return [(v3.x+1)/2*W,(1-v3.y)/2*Hh]};
   const hz=sp(yaw,0);paintSky(sctx,W,Hh,time,dt,sp,hz?hz[1]:Hh*.5,W/hfov);
-  if(sketchOn){try{if(!SK)SK=makeSketch(renderer);SK.render(scene,camera,time)}catch(e){console.error(e);sketchOn=false;skBtn.hidden=true;renderer.render(scene,camera)}}
+  if(sketchOn){try{if(!SK)SK=makeSketch(renderer);SK.render(scene,camera,time,c.nite||0)}catch(e){console.error(e);sketchOn=false;skBtn.hidden=true;renderer.render(scene,camera)}}
   else renderer.render(scene,camera);
   // DOM overlays (flags, tags, anemometer)
   const o2=[0,0],pp=v3,proj=(p)=>{pp.copy(p).sub(camera.position);if(pp.dot(fw)<=0)return false;pp.copy(p).project(camera);o2[0]=(pp.x+1)/2*W;o2[1]=(1-pp.y)/2*Hh;return o2[0]>-40&&o2[0]<W+40&&o2[1]>-40&&o2[1]<Hh+40};

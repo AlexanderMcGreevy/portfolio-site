@@ -26,8 +26,10 @@ html{scrollbar-width:none}
 body::-webkit-scrollbar{display:none}
 #track{width:1px;pointer-events:none}
 #stage{position:fixed;inset:0;overflow:hidden;perspective:1800px;background:var(--table)}
-.layer{position:absolute;inset:0;visibility:hidden;transform-origin:50% 50%;backface-visibility:hidden;-webkit-backface-visibility:hidden;will-change:transform,opacity}
-.layer.on{visibility:visible}
+.layer{position:absolute;inset:0;opacity:0;pointer-events:none;transform-origin:50% 50%;backface-visibility:hidden;-webkit-backface-visibility:hidden;will-change:transform,opacity}
+.layer.on{opacity:1;pointer-events:auto}
+/* preloaded stops sit at opacity 0 (not visibility:hidden) so the browser paints them ahead of time: a stop full of SVG
+   filters (gear) otherwise painted everything in the one frame it appeared */
 .layer iframe{position:absolute;inset:0;width:100%;height:100%;border:0;display:block;background:transparent}
 .layer .load{position:absolute;inset:0;display:grid;place-items:center;font:500 12px/1.4 'IBM Plex Mono',monospace;letter-spacing:.18em;text-transform:uppercase;color:rgba(255,255,255,.75);transition:opacity .5s}
 .layer .load i{display:block;width:44px;height:2px;margin:12px auto 0;background:currentColor;animation:ld 1.1s ease-in-out infinite;transform-origin:left}
@@ -378,7 +380,7 @@ const FX = {
     A.el.style.opacity = 1 - ss(.82, 1, t);
     fsh.style.opacity = A.el.style.opacity; fsh.style.transform = `translate(${tx}px,${ty + 26 * Math.max(k, .35)}px) rotate(${L.rot * e}deg) scale(${k})`;
     const c = A.el.querySelector('.crease'); if (c) c.style.opacity = ss(.05, .5, t);
-    B.el.style.opacity = ss(0, .35, t); B.el.style.transform = `scale(${1.06 - .06 * e})`;
+    B.el.style.opacity = ss(0, .35, t);   /* no zoom on the gear: rescaling its SVG-filtered flat-lay every frame was costly */
   },
   tilt(A, B, t) {
     const e = ease(t);
@@ -469,11 +471,11 @@ function frame(force) {
   /* visibility + base styles. During a blend a stop is often completely invisible for part of it (faded out, behind the
      doors or fog, or turned away in the flip): tell it it's hidden so it stops rendering until it's actually seen */
   /* [outgoing hidden after t, incoming hidden before t] for each blend, from when its opacity / backface makes it invisible */
-  const HIDE = { flip: [.5, .5], fold: [1, 0], tilt: [.8, .3], doors: [.5, .5], fog: [.5, .5], pullback: [.6, 0] };
+  const HIDE = { flip: [.5, .5], fold: [0, 0], tilt: [.8, .3], doors: [.5, .5], fog: [.5, .5], pullback: [.6, 0] };
   const hz = trans != null && !RM ? HIDE[TRANS[trans].fx] : null;
   STOPS.forEach(s => {
     const on = active.includes(s), seen = on && !(hz && ((s === STOPS[trans] && tt >= hz[0]) || (s === STOPS[trans + 1] && tt < hz[1])));
-    s.el.classList.toggle('on', on);
+    s.el.classList.toggle('on', on); s.el.inert = !on;
     if (!on || trans == null) resetLayer(s);
     const p = g < s.start ? 0 : g >= s.end ? 1 : (g - s.start) / s.len;
     if (s.ready && (force || Math.abs(p - s.lastP) > 1e-4)) { s.lastP = p; send(s, { type: 'progress', p }); }
