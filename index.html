@@ -158,9 +158,20 @@ body::-webkit-scrollbar{display:none}
 
 <script src="content.js"></script>
 <script>
-/* dual-GPU laptops: the 3D stops ask for the fast GPU, and the switch freezes the page for about a second. Ask once, now, while the
-   first screen is loading, and keep the context so the whole climb (every canvas, not just the 3D) renders on the faster chip */
-try { window.__gpu = document.createElement('canvas').getContext('webgl', { powerPreference: 'high-performance' }); } catch (e) {}
+/* dual-GPU laptops: the 3D stops ask for the fast GPU, and the switch blocks whatever thread asks for about a second. So a worker
+   asks first (the page never waits), then touches its 1x1 context every 2 s: Chrome drops back to the slow GPU once a fast-GPU
+   context sits idle for ~15 s, and the next 3D stop to load would pay the full second again (the old freeze in the hut) */
+try {
+  if (window.Worker && window.OffscreenCanvas) {
+    const src = "let g=null,iv=0;try{g=new OffscreenCanvas(1,1).getContext('webgl',{powerPreference:'high-performance',antialias:false,depth:false,stencil:false})}catch(e){}" +
+      "const ping=()=>{if(g&&!g.isContextLost()){g.clear(g.COLOR_BUFFER_BIT);g.flush()}};" +
+      "onmessage=e=>{clearInterval(iv);iv=0;if(e.data){ping();iv=setInterval(ping,2000)}};iv=setInterval(ping,2000);";
+    const url = URL.createObjectURL(new Blob([src], { type: 'text/javascript' }));
+    const gw = window.__gpuWorker = new Worker(url);
+    /* hidden tab: let the fast GPU sleep; back in view: wake it from the worker again, off the main thread */
+    document.addEventListener('visibilitychange', () => gw.postMessage(!document.hidden));
+  }
+} catch (e) {}
 (() => {
 const C = window.CONTENT;
 if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
@@ -433,11 +444,10 @@ const FX = {
     const e = ease(t);
     A.el.style.zIndex = 2;
     A.el.style.transform = `scale(${1 - .45 * e})`; A.el.style.opacity = 1 - ss(.15, .6, t);
-    /* soften the shrinking frame's edges so it reads as distance, not a picture (no CSS blur: blurring two full-screen
-       3D layers halved the frame rate on laptop GPUs) */
-    const fe = 70 - 30 * ss(0, .4, t);
-    A.el.style.webkitMaskImage = A.el.style.maskImage = `radial-gradient(ellipse at 50% 50%, #000 ${fe}%, transparent ${fe + 28}%)`;
-    B.el.style.transform = `scale(${2.1 - 1.1 * e})`; B.el.style.opacity = ss(0, .4, t);
+    /* the range under it stays opaque (it's covered until the summit thins out), and the summit's frame has no soft-edge mask:
+       each translucent or masked full-screen layer is an extra offscreen pass, and two of them (plus the mask) held this
+       blend near 30 fps on laptop GPUs. Both stops also hide their overlays while it runs (see summit/range .tr) */
+    B.el.style.transform = `scale(${2.1 - 1.1 * e})`; B.el.style.opacity = 1;
     if (RM) { A.el.style.transform = B.el.style.transform = A.el.style.filter = B.el.style.filter = ''; A.el.style.opacity = 1 - t; B.el.style.opacity = t; }
   }
 };

@@ -94,6 +94,11 @@ button{font:inherit;color:inherit}
 }
 @media (max-height:560px) and (min-width:701px){.card p{display:none}.card li{min-height:22px}}
 @media (prefers-reduced-motion:reduce){.toast{transition:none}}
+/* walking in from the summit: labels, tools and the register wait (live overlays on a zooming layer cost the blend its
+   frame rate), then fade in once you've arrived */
+@keyframes uin{from{opacity:0}}
+body:not(.tr) #ui,body:not(.tr) #cue,body:not(.tr) #tools,body:not(.tr) #attr{animation:uin .45s ease}
+body.tr #ui,body.tr #cue,body.tr #tools,body.tr #register,body.tr #attr,body.tr .toast{visibility:hidden}
 </style>
 </head>
 <body>
@@ -234,10 +239,11 @@ function makeSky(){
   const m=new THREE.Mesh(new THREE.PlaneGeometry(2,2),mat);m.frustumCulled=false;m.renderOrder=-100;m.userData.mat=mat;return m}
 
 /* ---------- terrain tile (flat-shaded, per-face colour palettes) + strata skirt ---------- */
-function buildTerrain(o){
+function* buildTerrain(o){   /* a generator too (yield* from the scene build): the full grid with three palettes was one 0.3 s block */
   const nx=o.nx,nz=o.nz,W=o.W,D=o.D,dx=W/nx,dz=D/nz,x0=-W/2,z0=-D/2,st=nx+1;
-  const hv=new Float32Array(st*(nz+1));
-  for(let j=0;j<=nz;j++)for(let i=0;i<=nx;i++)hv[j*st+i]=o.H(x0+i*dx,z0+j*dz);
+  const hv=new Float32Array(st*(nz+1));let ts=performance.now();
+  const pause=()=>performance.now()-ts>8;
+  for(let j=0;j<=nz;j++){for(let i=0;i<=nx;i++)hv[j*st+i]=o.H(x0+i*dx,z0+j*dz);if(pause()){yield;ts=performance.now()}}
   function hAt(x,z){let fx=(x-x0)/dx,fz=(z-z0)/dz;fx=clamp(fx,0,nx-1e-6);fz=clamp(fz,0,nz-1e-6);
     const i=Math.floor(fx),j=Math.floor(fz),u=fx-i,v=fz-j,a=hv[j*st+i],b=hv[j*st+i+1],c=hv[(j+1)*st+i],d=hv[(j+1)*st+i+1];
     return(u+v<=1)?a+u*(b-a)+v*(c-a):d+(1-u)*(c-d)+(1-v)*(b-d)}
@@ -249,13 +255,16 @@ function buildTerrain(o){
     const mx=(ax+bx+cx)/3,my=(ay+by+cy)/3,mz=(az+bz+cz)/3,r=hash2(fi,7,3);
     for(let p=0;p<np;p++){const c=o.color(p,mx,mz,my,nrm,r);const a=cols[p];for(let q=0;q<3;q++){a[k*9+q*3]=c[0];a[k*9+q*3+1]=c[1];a[k*9+q*3+2]=c[2]}}
     k++};
-  for(let j=0;j<nz;j++)for(let i=0;i<nx;i++){
+  for(let j=0;j<nz;j++){for(let i=0;i<nx;i++){
     const xa=x0+i*dx,xb=xa+dx,za=z0+j*dz,zb=za+dz,h00=hv[j*st+i],h10=hv[j*st+i+1],h01=hv[(j+1)*st+i],h11=hv[(j+1)*st+i+1],fi=j*nx+i;
     tri(xa,h00,za,xa,h01,zb,xb,h10,za,fi*2);tri(xb,h10,za,xa,h01,zb,xb,h11,zb,fi*2+1)}
+    if(pause()){yield;ts=performance.now()}}
+  yield;ts=performance.now();
   const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.BufferAttribute(pos,3));
   geo.setAttribute('color',new THREE.BufferAttribute(cols[0].slice(),3));
   if(o.season)geo.setAttribute('colorB',new THREE.BufferAttribute(cols[0].slice(),3));
   geo.computeVertexNormals();
+  yield;ts=performance.now();
   const mat=lamb(0xffffff,{vertexColors:true});
   if(o.season||o.cloud)patchMat(mat,{season:!!o.season,cloud:!!o.cloud,mix:o.mix});
   const m=mesh(geo,mat);
@@ -398,6 +407,7 @@ Post.prototype.mk=function(w,h,ms){const o={minFilter:THREE.LinearFilter,magFilt
 Post.prototype.resize=function(w,h){if(w===this.w&&h===this.h)return;this.w=w;this.h=h;
   if(this.a)this.a.dispose();if(this.b)this.b.dispose();this.a=this.mk(w,h,true);this.b=this.mk(Math.max(2,w>>1),Math.max(2,h>>1),false);
   this.fin.uniforms.uRes.value.set(w,h);this.bok.uniforms.uRes.value.set(this.b.width,this.b.height);[this.bok,this.fin].forEach(m=>{m.uniforms.uAsp.value=w/h})};
+Post.prototype.warm=function(){if(!this.b)return;const r=this.r;this.quad.material=this.bok;this.bok.uniforms.tD.value=this.a.texture;r.setRenderTarget(this.b);r.render(this.qs,this.qc);r.setRenderTarget(null)};
 Post.prototype.render=function(scene,cam,F,G){const r=this.r,on=F.on&&F.amt>.02;
   r.setRenderTarget(this.a);r.render(scene,cam);
   const maxR=F.amt*.034*this.h,ang=F.tilt*Math.PI/180,foc=1-F.pos;   /* uv.y is bottom-up */
@@ -474,7 +484,7 @@ function* sceneA3(ctx){   /* a generator: yields between the big steps so the bu
       if(lc===4)c=[.7,.82,.9]}
     const sh=.965+r*.05;return[c[0]*sh,c[1]*sh,c[2]*sh]}
   const SEA={cur:0,mix:{value:1},from:0,to:0,t:1,targets:[],timer:0};
-  const T=buildTerrain({W:W,D:D,nx:G.nx,nz:G.nz,H:H,palettes:3,color:tcol,season:true,cloud:true,mix:SEA.mix,bottom:-2.6,bandH:.36,
+  const T=yield* buildTerrain({W:W,D:D,nx:G.nx,nz:G.nz,H:H,palettes:3,color:tcol,season:true,cloud:true,mix:SEA.mix,bottom:-2.6,bandH:.36,
     strata:[[.47,.33,.2],[.62,.5,.34],[.38,.28,.2],[.55,.44,.3],[.34,.27,.22],[.7,.58,.4]],skirtTop:[.24,.18,.12]});
   scene.add(T.group);T.mesh.geometry.attributes.colorB.array.set(T.cols[0]);
   SEA.targets.push({a:T.geo.attributes.color,b:T.geo.attributes.colorB,arr:T.cols});
@@ -751,7 +761,7 @@ if(renderer){
   renderer.debug.checkShaderErrors=false;/* no sync error query after each compile: lets the browser compile shaders in parallel */renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.shadowMap.autoUpdate=false;renderer.setClearColor(0x9ec3e6);renderer.setPixelRatio(ctx.pr);
   post=new Post(renderer);
 }else{$('#nogl').hidden=false;$('#tools').hidden=true}
-function resize(){if(!renderer)return;W=stage.clientWidth||1;H=stage.clientHeight||1;renderer.setPixelRatio(ctx.pr);renderer.setSize(W,H,false);post.resize(Math.max(2,Math.floor(W*ctx.pr)),Math.max(2,Math.floor(H*ctx.pr)));dirty=3}
+function resize(){if(!renderer)return;W=stage.clientWidth||1;H=stage.clientHeight||1;renderer.setPixelRatio(ctx.pr);renderer.setSize(W,H,false);drawn=false;post.resize(Math.max(2,Math.floor(W*ctx.pr)),Math.max(2,Math.floor(H*ctx.pr)));dirty=3}
 if(window.ResizeObserver)new ResizeObserver(resize).observe(stage);else addEventListener('resize',resize);
 
 /* ---------- camera: progress sets the base view, the visitor's drag / zoom ride on top ---------- */
@@ -866,8 +876,14 @@ function declutter(){
     if(o){e.style.display='none';return}placed.push(a)});
 }
 let last=performance.now();
+/* pulling back from the summit, the summit's shrinking frame covers this diorama until 60% of the way (the shell hides it
+   there). Two live 3D scenes at once was the slowest moment of the climb, so until then the diorama holds the frame it
+   already drew while preloading (a still photo zooming in under the summit), and comes alive as the summit fades out */
+let hold=false,drawn=false;
+Climb.onTransition(({t,fx})=>{hold=fx==='pullback'&&t>0&&t<.6;document.body.classList.toggle('tr',t>0&&t<1)});
 function frame(now){if(!running)return;raf=requestAnimationFrame(frame);
   if(!renderer||!S)return;
+  if(hold&&drawn&&!FC.on&&!drag)return;
   const rdt=Math.min(.3,Math.max(0,(now-last)/1000));last=now;
   const dt=reduced?0:Math.min(rdt,.05);
   if(reduced&&dirty<=0&&!FC.on&&!S.busy())return;
@@ -879,7 +895,7 @@ function frame(now){if(!running)return;raf=requestAnimationFrame(frame);
   /* the 4096 shadow map is the priciest pass, and almost nothing that casts a shadow moves (the sun never does):
      redraw it every 4th frame for the train, smoke and hikers, every frame while seasons or flags change */
   if(S.busy()||shadowN++%4===0)renderer.shadowMap.needsUpdate=true;
-  post.render(S.scene,cam,F,S.grade);
+  post.render(S.scene,cam,F,S.grade);drawn=true;
   if(dirty>0)dirty--;if(moving)dirty=Math.max(dirty,1);
 }
 function start(){if(running||!S)return;running=true;last=performance.now();dirty=3;raf=requestAnimationFrame(frame)}
@@ -899,8 +915,23 @@ function finish(){
   if(Q.get('jump'))S.jump(+Q.get('jump'));
   if(Q.get('act'))setTimeout(()=>Q.get('act').split(',').forEach((a,i)=>setTimeout(()=>S&&S.pick(a),i*60)),400);
   if(Q.get('blur')==='off')F.on=false;
-  window.__dio={pick:n=>S&&S.pick(n),F:F,U:U,S:()=>S};
-  if(Climb.visible!==false)start();else setTimeout(()=>{if(!running&&S){renderer.shadowMap.needsUpdate=true;post.render(S.scene,cam,F,S.grade)}},0)}
+  window.__dio={pick:n=>S&&S.pick(n),F:F,U:U,S:()=>S,r:renderer};
+  if(Climb.visible!==false){start();setTimeout(()=>{if(!S)return;try{renderer.compile(S.scene,cam);post.warm()}catch(e){}},400)}else prewarm()}
+/* preloaded while you're on the summit: the first full frame (every shader, every buffer, the 4096 shadow map) was one 0.4 s
+   freeze there. So: ask for every shader at once (incl. objects hidden at this progress and the tilt-shift blur that only
+   turns on past p=.04), let the GPU compile them while we wait, upload each object in its own short task, then draw the
+   one real frame the walk-in shows */
+function prewarm(){if(!S)return;camUpdate(0);
+  try{renderer.compile(S.scene,cam)}catch(e){}
+  const objs=[];S.scene.traverse(o=>{if(o.isMesh||o.isPoints||o.isLine||o.isSprite)objs.push(o)});
+  const vis=objs.map(o=>o.visible),restore=()=>objs.forEach((o,k)=>o.visible=vis[k]);let i=0;
+  const step=()=>{if(running||!S){restore();return}
+    if(i<objs.length){const t0=performance.now(),sm=renderer.shadowMap.enabled;renderer.shadowMap.enabled=false;renderer.setRenderTarget(post.a);
+      try{while(i<objs.length&&performance.now()-t0<8){if(vis[i]){objs.forEach((o,k)=>o.visible=k===i);renderer.render(S.scene,cam)}i++}}catch(e){i=objs.length}
+      restore();renderer.shadowMap.enabled=sm;renderer.setRenderTarget(null);setTimeout(step,16);return}
+    camUpdate(0);renderer.shadowMap.needsUpdate=true;post.render(S.scene,cam,F,S.grade);drawn=true;
+    setTimeout(()=>{if(!running&&S)try{post.warm()}catch(e){}},16)};
+  setTimeout(step,150)}
 Climb.onVisible(v=>{if(v){if(!S)build();else start()}else stop()});
 /* defer the heavy build a tick so a shell that preloads us hidden can say so first */
 setTimeout(build,30);

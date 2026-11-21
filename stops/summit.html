@@ -60,6 +60,8 @@ body.grabbing canvas.gl{cursor:grabbing}
 .sketch i{font-style:normal;font-size:14px}
 .sketch[aria-pressed=true]{background:#f4ecdc;color:#2b2620;text-shadow:none;border-color:#2b2620}
 body.sk canvas.sky{filter:saturate(.7)}
+/* pulling back to the range: the overlays go, so the shrinking frame is just the two canvases and the shell can fade it in one pass */
+body.out .ui,body.out .tags,body.out .fog,body.out #toast{visibility:hidden}
 .face b{display:block;font:800 21px/1.05 Archivo,sans-serif;letter-spacing:-.01em;color:var(--accent)}
 #toast{position:fixed;left:50%;bottom:22px;transform:translate(-50%,16px);z-index:30;background:rgba(10,12,18,.9);color:#fff;border:1px solid var(--accent);border-radius:12px;padding:10px 16px;font:500 13px/1.4 Archivo,sans-serif;opacity:0;pointer-events:none;transition:opacity .35s,transform .35s;max-width:min(520px,92vw);text-align:center}
 #toast.on{opacity:1;transform:translate(-50%,0)}
@@ -289,7 +291,7 @@ let PROG=Climb.progress||0,off=0,offVel=0,offAnim=null,pitch=-6,dragging=false,f
 const yawNow=()=>baseYaw(PROG)+off;
 function turnTo(b){const y=yawNow(),target=off+wrap180(b-y);offVel=0;if(RM){off=target;offAnim=null}else offAnim={from:off,to:target,t:0,dur:clamp(Math.abs(target-off)/220+.35,.35,1.1)};dirty=true}
 Climb.onProgress((p,dp)=>{PROG=p;if(dp){off*=Math.exp(-Math.abs(dp)*9);offAnim=null}dirty=true});
-Climb.onTransition(({dir,t})=>{if(dir==='in'){fogIn=1-t;outT=0}else if(dir==='out'){outT=t;fogIn=0}dirty=true});
+Climb.onTransition(({dir,t})=>{if(dir==='in'){fogIn=1-t;outT=0}else if(dir==='out'){outT=t;fogIn=0}document.body.classList.toggle('out',dir==='out'&&t>0&&t<1);dirty=true});
 Climb.onVisible(v=>{visible=v;if(v){dirty=true;kick()}});
 {const glc=$('canvas.gl');let px=0,py=0,pt=0;
   glc.addEventListener('pointerdown',e=>{if(e.button>0)return;dragging=true;px=e.clientX;py=e.clientY;pt=e.timeStamp;offVel=0;offAnim=null;document.body.classList.add('grabbing');try{glc.setPointerCapture(e.pointerId)}catch(_){}});
