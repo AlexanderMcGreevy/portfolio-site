@@ -98,6 +98,7 @@ button{font:inherit;color:inherit}
    frame rate), then fade in once you've arrived */
 @keyframes uin{from{opacity:0}}
 body:not(.tr) #ui,body:not(.tr) #cue,body:not(.tr) #tools,body:not(.tr) #attr{animation:uin .45s ease}
+@media (prefers-reduced-motion:reduce){#ui,#cue,#tools,#attr{animation:none!important}}
 body.tr #ui,body.tr #cue,body.tr #tools,body.tr #register,body.tr #attr,body.tr .toast{visibility:hidden}
 </style>
 </head>

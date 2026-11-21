@@ -19,7 +19,7 @@ body.grabbing canvas.gl{cursor:grabbing}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .ui{position:absolute;inset:0;pointer-events:none;transition:opacity .2s}
 .ui>*{pointer-events:auto}
-.fog{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at 50% 45%,#f4f2ee,#e3e2df 70%,#d6d6d4);opacity:0;z-index:20}
+.fog{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at 50% 45%,#f4f2ee,#e3e2df 70%,#d6d6d4);opacity:0;z-index:20;will-change:opacity}   /* own layer: fading it never repaints the page */
 .title{position:absolute;left:clamp(16px,3vw,44px);top:clamp(14px,3.4vh,36px);max-width:min(780px,58%);pointer-events:none;z-index:5}
 .eyebrow{font:400 10.5px 'Space Mono',monospace;letter-spacing:.22em;margin:0 0 8px;opacity:.9;text-transform:uppercase}
 .title h1{font:800 clamp(30px,4.6vw,66px)/.92 Archivo,sans-serif;margin:0;letter-spacing:-.035em;text-shadow:0 2px 28px rgba(0,0,0,.45)}
@@ -60,8 +60,11 @@ body.grabbing canvas.gl{cursor:grabbing}
 .sketch i{font-style:normal;font-size:14px}
 .sketch[aria-pressed=true]{background:#f4ecdc;color:#2b2620;text-shadow:none;border-color:#2b2620}
 body.sk canvas.sky{filter:saturate(.7)}
-/* pulling back to the range: the overlays go, so the shrinking frame is just the two canvases and the shell can fade it in one pass */
-body.out .ui,body.out .tags,body.out .fog,body.out #toast{visibility:hidden}
+/* blending to or from a neighbour stop: the overlays wait (fading them over a live 3D layer cost ~10 fps), then fade in once
+   you've arrived. Pulling back to the range the fog goes too, so the shrinking frame is just the two canvases */
+body.in .ui,body.in .tags,body.out .ui,body.out .tags,body.out .fog,body.out #toast{visibility:hidden}
+@keyframes uin{from{opacity:0}}
+body:not(.in):not(.out) .ui,body:not(.in):not(.out) .tags{animation:uin .45s ease}
 .face b{display:block;font:800 21px/1.05 Archivo,sans-serif;letter-spacing:-.01em;color:var(--accent)}
 #toast{position:fixed;left:50%;bottom:22px;transform:translate(-50%,16px);z-index:30;background:rgba(10,12,18,.9);color:#fff;border:1px solid var(--accent);border-radius:12px;padding:10px 16px;font:500 13px/1.4 Archivo,sans-serif;opacity:0;pointer-events:none;transition:opacity .35s,transform .35s;max-width:min(520px,92vw);text-align:center}
 #toast.on{opacity:1;transform:translate(-50%,0)}
@@ -107,6 +110,7 @@ body.out .ui,body.out .tags,body.out .fog,body.out #toast{visibility:hidden}
 @media (prefers-reduced-motion:reduce){
   .bear *{animation:none!important;transition:none!important}
   .card,#toast,.ui{transition:none}
+  .ui,.tags{animation:none!important}
 }
 </style>
 </head>
@@ -291,7 +295,7 @@ let PROG=Climb.progress||0,off=0,offVel=0,offAnim=null,pitch=-6,dragging=false,f
 const yawNow=()=>baseYaw(PROG)+off;
 function turnTo(b){const y=yawNow(),target=off+wrap180(b-y);offVel=0;if(RM){off=target;offAnim=null}else offAnim={from:off,to:target,t:0,dur:clamp(Math.abs(target-off)/220+.35,.35,1.1)};dirty=true}
 Climb.onProgress((p,dp)=>{PROG=p;if(dp){off*=Math.exp(-Math.abs(dp)*9);offAnim=null}dirty=true});
-Climb.onTransition(({dir,t})=>{if(dir==='in'){fogIn=1-t;outT=0}else if(dir==='out'){outT=t;fogIn=0}document.body.classList.toggle('out',dir==='out'&&t>0&&t<1);dirty=true});
+Climb.onTransition(({dir,t})=>{if(dir==='in'){fogIn=1-t;outT=0}else if(dir==='out'){outT=t;fogIn=0}document.body.classList.toggle('out',dir==='out'&&t>0&&t<1);document.body.classList.toggle('in',dir==='in'&&t>0&&t<1);dirty=true});
 Climb.onVisible(v=>{visible=v;if(v){dirty=true;kick()}});
 {const glc=$('canvas.gl');let px=0,py=0,pt=0;
   glc.addEventListener('pointerdown',e=>{if(e.button>0)return;dragging=true;px=e.clientX;py=e.clientY;pt=e.timeStamp;offVel=0;offAnim=null;document.body.classList.add('grabbing');try{glc.setPointerCapture(e.pointerId)}catch(_){}});
