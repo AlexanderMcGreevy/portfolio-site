@@ -780,8 +780,11 @@ function makeGLQ() {
   tex(0, 0, 0, 0, null);
   gl.uniform1i(gl.getUniformLocation(pr, 'src'), 0); gl.uniform1i(gl.getUniformLocation(pr, 'lut'), 1); gl.uniform1i(gl.getUniformLocation(pr, 'bay'), 2); gl.uniform1f(gl.getUniformLocation(pr, 'H'), H0);
   gl.viewport(0, 0, W, H0);
-  cv.after(c); cv.style.visibility = 'hidden';
-  let lost = false; c.addEventListener('webglcontextlost', e => { e.preventDefault(); lost = true; GLQ = null; c.remove(); cv.style.visibility = ''; });
+  /* the GL canvas only shows the picture: clicks and hover pass through it to #cv, which keeps all the picking. #cv goes
+     transparent, not visibility:hidden (a hidden element gets no pointer events, which made the room unclickable) */
+  c.style.pointerEvents = 'none';
+  cv.after(c); cv.style.opacity = '0';
+  let lost = false; c.addEventListener('webglcontextlost', e => { e.preventDefault(); lost = true; GLQ = null; c.remove(); cv.style.opacity = ''; });
   return src => { if (lost) return; gl.activeTexture(gl.TEXTURE0); gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, src); gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false); gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4); };
 }
 const btns = {}, items = {};
