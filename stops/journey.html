@@ -676,7 +676,13 @@ chart.addEventListener('keydown',keys); hiker.addEventListener('keydown',keys);
 /* ---------- scroll + visibility + loop ---------- */
 Climb.onProgress((p,dp)=>{ prog=p; if(dp!==0&&!mode){ sUser=null; glide=null; pin=-1; } dirty=true; });
 if(N) Climb.anchors(Object.fromEntries(J.map((e,i)=>[e.id,+((dwell[i][0]+dwell[i][1])/2).toFixed(4)])));
-Climb.onVisible(v=>{ visible=v; if(v){ last=performance.now(); if(!raf) raf=requestAnimationFrame(loop); } else if(raf){ cancelAnimationFrame(raf); raf=0; } });
+/* preloaded behind the home page, the shell keeps us frozen until the flip turns us round. Anything that throws the map cache
+   away meanwhile (the fonts arriving, a resize) would rebuild it on that first visible frame, mid-flip: ~90 ms of script plus
+   the canvas raster. So while hidden, run one frame in the background whenever that happens */
+let warmT=0;
+function warmHidden(){ if(visible||warmT) return; warmT=setTimeout(()=>{ warmT=0; if(!visible) loop(performance.now()); },60); }
+addEventListener('resize',warmHidden);
+Climb.onVisible(v=>{ visible=v; if(v){ last=performance.now(); if(!raf) raf=requestAnimationFrame(loop); } else { if(raf){ cancelAnimationFrame(raf); raf=0; } warmHidden(); } });
 function loop(now){ raf=0; const dt=Math.min(.05,Math.max(0,(now-last)/1000)); last=now;
   if(!built||Math.abs(mapEl.clientWidth-S.W)>1||Math.abs(mapEl.clientHeight-S.H)>1) layout();
   if(built){
@@ -691,7 +697,7 @@ function loop(now){ raf=0; const dt=Math.min(.05,Math.max(0,(now-last)/1000)); l
     if(dirty){ dirty=false; render(); }
   }
   if(visible) raf=requestAnimationFrame(loop); }
-try{ document.fonts.ready.then(()=>{ dirty=true; mapKey=''; layoutChart(); }); }catch(_){}
+try{ document.fonts.ready.then(()=>{ dirty=true; mapKey=''; layoutChart(); warmHidden(); }); }catch(_){}
 last=performance.now(); raf=requestAnimationFrame(loop);
 /* for headless checks */
 window.__journey={get prog(){ return prog; }, get s(){ return sDisp; }, get cam(){ return cam; }, get open(){ return openIdx; }, get scheme(){ return scheme.name; }, tAt:S.tAt, dwell};
