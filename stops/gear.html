@@ -164,6 +164,7 @@ html.uv .uvonly{opacity:1}
 /* ---- phone: one column, progress pans it ---- */
 @media (max-width:760px){
   #scroller{grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto auto;padding:12px 12px 18px;row-gap:14px}
+  .climb-embedded #scroller{padding-top:calc(12px + var(--nav-h,0px))}   /* keep the heading clear of the shell's nav pill */
   .ahead h1{font-size:52px}
   .legend{margin-left:0}
   .grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:none;gap:16px 8px;padding:22px 12px 18px}

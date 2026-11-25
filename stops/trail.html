@@ -399,6 +399,7 @@ html,body{width:100%;height:100%;margin:0;overflow:hidden;background:#1d2619}
 .p-card.has-shot .dev.browser{max-width:210px;height:154px}
 .dev .screen.pic{padding:0;background:#0b0d0f}
 .dev .screen.pic::after{display:none}
+@media(max-width:760px){.climb-embedded #panel{padding-top:calc(10px + var(--nav-h,0px))}}   /* phones: keep the panel's close button clear of the shell's nav pill */
 .dev .screen.pic img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center;display:block}
 .p-card.has-shot .p-dev{flex-direction:column;gap:12px}
 .p-frame{display:flex;justify-content:center;width:100%}
