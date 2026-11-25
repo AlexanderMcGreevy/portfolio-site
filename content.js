@@ -117,6 +117,11 @@ window.CONTENT = {
       what: 'Accessible 3D modeling: head and facial gestures tracked in real time drive a Godot sculpting tool over a WebSocket, with one-click export to a marketplace.',
       stack: ['Python', 'OpenCV', 'MediaPipe', 'Godot', 'WebSockets'], role: 'Hackathon team',
       links: [['GitHub', 'https://github.com/Vegito2367/LookSmith'], ['Devpost', 'https://devpost.com/software/looksmith']], public: true },
+    { id: 'blescanner', branch: 'projects', title: 'BLE Scanner', award: '', when: 'Nov 2026', dist: '3.5 mi',
+      one: 'A personal iPhone app that works out what the Bluetooth devices around the house are saying.',
+      what: 'Scans nearby BLE devices, saves a profile for each, and decodes what they broadcast and expose, highlighting the bytes that change. It follows devices that rotate their address, finds one with beeps and a compass sweep, and is read-only by default, with writes behind a gated experiment mode. Everything stays on the phone.',
+      stack: ['Swift', 'SwiftUI', 'CoreBluetooth', 'SwiftData', 'Swift Charts', 'MapKit'], role: 'Solo · 100+ tests',
+      links: [], public: true },                                   /* TODO: add ['GitHub', ...] if the BLEScanner repo is made public */
     { id: 'hilabels', branch: 'projects', title: 'AI SEO Content Platform', award: '', when: 'May – Jul 2026', dist: '3.7 mi',
       one: 'An AI pipeline that writes, schedules and tunes SEO blog posts for HiLabels.',
       what: 'Topics and keywords go into a Google Sheet; the service writes each post with Gemini, schedules it on WordPress, and reads Search Console data to pick the next round of keywords.',
@@ -132,7 +137,13 @@ window.CONTENT = {
     { id: 'petaid', branch: 'projects', title: 'PetAid', award: '', dist: 'side trail', small: true,
       one: 'An AI vet assistant and vet finder for busy pet owners.', stack: ['Swift', 'Python', 'Gemini', 'Google Places'], links: [['GitHub', 'https://github.com/AlexanderMcGreevy/PetAid'], ['Devpost', 'https://devpost.com/software/petvitals']], public: true },
     { id: 'cardinal', branch: 'projects', title: 'CARDinal', award: '', dist: 'side trail', small: true,
-      one: 'Tap phones to swap business cards and resumes.', stack: ['SwiftUI', 'Multipeer'], links: [['GitHub', 'https://github.com/AlexanderMcGreevy/CARDinal']], public: true }
+      one: 'Tap phones to swap business cards and resumes.', stack: ['SwiftUI', 'Multipeer'], links: [['GitHub', 'https://github.com/AlexanderMcGreevy/CARDinal']], public: true },
+    { id: 'gofundtree', branch: 'projects', title: 'GoFundTree', award: '', dist: 'side trail', small: true,
+      one: 'Place virtual trees on your own street in AR, then fund real planting. Built at HackPSU Fall 2024; I built the backend.', stack: ['Python', 'Flask', 'Google Cloud', 'Firebase', 'model-viewer'], links: [['GitHub', 'https://github.com/matt2jog/GoFundTree'], ['Devpost', 'https://devpost.com/software/gofundtree']], public: true },
+    { id: 'outfitmatcher', branch: 'projects', title: 'Colorblind Outfit Matcher', award: '', dist: 'side trail', small: true,
+      one: 'Finds a garment\'s dominant color and suggests matching outfits for people who are colorblind.', stack: ['Python', 'OpenCV', 'rembg'], links: [['GitHub', 'https://github.com/AlexanderMcGreevy/Projects/tree/main/Colorblind%20Clothes%20Matcher']], public: true },
+    { id: 'hilabelsship', branch: 'projects', title: 'HiLabels shipping rules', award: '', dist: 'side trail', small: true,
+      one: 'Reworked the store\'s WooCommerce shipping code: weight-based method switching and handling fees.', stack: ['PHP', 'WooCommerce'], links: [], public: true }
   ],
   branches: { wins: 'Wins', coop: 'Co-ops & Internships', projects: 'Projects' },
 
