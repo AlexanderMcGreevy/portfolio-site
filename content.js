@@ -44,7 +44,7 @@ window.CONTENT = {
     { id: 'neu', place: 'Northeastern University', role: 'B.S. Computer Science, software concentration (Khoury) · GPA 3.5', dates: 'Aug 2025 – May 2028', where: 'Boston, MA',
       line: 'Transferred in. Director of Growth for the Northeastern Claude Club (150+ members). NUHOC Lodge Committee trainee.' },      /* DRAFT */
     { id: 'wsg', place: 'Waterside Group', role: 'Software Engineering Co-op', dates: 'Jul – Dec 2026', where: 'Boston, MA',
-      line: 'Hospitality and real-estate group with a dozen brands. Shipped three public sites and two internal tools.', trail: 'coop' }  /* DRAFT */
+      line: 'Hospitality and real-estate group with a dozen brands. Shipped three public sites, a reusable CMS package that now runs two of them, and features in the internal company portal.', trail: 'coop' }  /* DRAFT */
   ],
 
   /* ③ GEAR: each gear item is a skill group. level: 3 = every day, 2 = comfortable, 1 = have used. DRAFT levels. */
@@ -83,23 +83,23 @@ window.CONTENT = {
 
     { id: 'fbm', branch: 'coop', at: 'wsg', when: 'Jul – Dec 2026', title: 'Flying Bridge Marina', award: 'Waterside co-op', dist: '1.2 mi',
       one: 'A boat dealer\'s new website and the CMS behind it, built almost entirely by me.',
-      what: 'Block-based CMS with about 50 section types and live draft preview; a boat inventory finder with side-by-side compare; "Tucker", a Claude assistant grounded in live inventory; and an AI trade-in estimator that throws out any comparable it can\'t match to a real search result.',
+      what: 'Block-based CMS with about 50 section types and live draft preview; a boat inventory finder with side-by-side compare; "Tucker", a Claude assistant grounded in live inventory; scheduled publishing, a photo library and saved-search alerts; and the trade-in valuation pop-up, built on a teammate\'s AI pricing engine.',
       stack: ['Next.js 16', 'TypeScript', 'Supabase', 'Lexical', 'Claude API', 'HubSpot', 'Vitest'], role: 'Main developer',
       links: [], public: true },                                   /* TODO: link once the new build is live */
     { id: 'southpeak', branch: 'coop', at: 'wsg', when: 'Jul – Dec 2026', title: 'South Peak Resort', award: 'Waterside co-op', dist: '1.6 mi',
-      one: 'Moved a ski resort\'s site off WordPress onto Next.js and a shared CMS.',
-      what: 'Rebuilt the site to match the live one, wrote about 20 repeatable migration scripts, built the homes and homesites listings with an interactive map, connected the "Gus" RAG chatbot, and moved pages from dynamic rendering to ISR.',
-      stack: ['Next.js 16', 'Payload CMS 3', 'Neon Postgres', 'pgvector', 'Turborepo'], role: 'Lead on the migration',
+      one: 'Moved a ski resort\'s site off WordPress, then rebuilt it again on the company\'s own CMS kit.',
+      what: 'Rebuilt the site to match the live one, wrote about 20 repeatable migration scripts, built the homes and homesites listings with an interactive map, connected the "Gus" RAG chatbot, and moved pages from dynamic rendering to ISR. Now rebuilding it a second time on cms-kit and Supabase, which I lead with a teammate: I own the layout, content plumbing, CMS and infrastructure.',
+      stack: ['Next.js 16', 'Payload CMS 3', 'cms-kit', 'Supabase', 'Neon Postgres', 'pgvector', 'Turborepo'], role: 'Lead on the migration and the cms-kit rebuild',
       links: [], public: true },                                   /* TODO: link once confirmed live */
     { id: 'harborlights', branch: 'coop', at: 'wsg', when: 'Jul – Dec 2026', title: 'Harbor Lights → cms-kit', award: 'Waterside co-op', dist: '1.9 mi',
       one: 'Built one venue\'s CMS, then turned it into a package every company site can install.',
-      what: 'A Supabase CMS for an event venue, then extracted into a reusable package with its own admin, read API, safety-railed database scripts and a second example site to prove it works beyond the first.',
+      what: 'A Supabase CMS for an event venue, then extracted into a reusable package with its own admin, read API, safety-railed database scripts, a command-line tool for scaffolding and migrating sites, three versioned releases, and a second example site to prove it works beyond the first. It now runs Harbor Lights and South Peak.',
       stack: ['Next.js 16', 'React 19', 'Supabase', 'Tailwind v4', 'MapLibre'], role: 'Main developer',
       links: [], public: true },                                   /* TODO: harborlightsri.com once confirmed */
     { id: 'platform', branch: 'coop', at: 'wsg', when: 'Jul – Dec 2026', title: 'Document Archive & Editor', award: 'Waterside co-op · internal', dist: '2.3 mi',
       one: 'The company\'s document library and a Word-grade editor, searchable by AI.',
-      what: 'A versioned archive for 1,000+ files with access rules per business enforced in the database, a collaborative editor with tracked changes and review rounds, Word and PDF import that keeps the formatting, and RAG indexing so the company assistant can answer from every document.',
-      stack: ['Next.js', 'Supabase (RLS)', 'TipTap', 'Claude', 'Voyage + pgvector'], role: 'Main author',
+      what: 'A versioned archive for 1,000+ files with access rules per business enforced in the database, a collaborative editor with tracked changes and review rounds, Word and PDF import that keeps the formatting, and RAG indexing so the company assistant can answer from every document. Also built the flipbook studio that turns PDFs into page-flip books for the brand sites, and "Sign in with Waterside", which lets staff log in to each site\'s CMS with their portal account.',
+      stack: ['Next.js', 'Supabase (RLS)', 'TipTap', 'Claude', 'Voyage + pgvector'], role: 'One of four core contributors',
       links: [], public: false },
     { id: 'clearinghouse', branch: 'coop', at: 'tch', when: 'Jun – Aug 2025', title: 'CHIPS Simulation', award: 'The Clearing House internship · internal', dist: '2.6 mi',
       one: 'Rebuilt the frontend of a payments data simulation platform in React.',
