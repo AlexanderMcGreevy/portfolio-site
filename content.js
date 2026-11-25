@@ -22,7 +22,8 @@ window.CONTENT = {
     /* TODO: the one thing a recruiter should remember that isn\'t a job or a project */
     why: '',
     based: 'Boston, MA & Doylestown, PA',
-    workAuth: 'Authorized to work in the USA, UK and Brazil'
+    workAuth: 'Authorized to work in the USA, UK and Brazil',
+    hackathons: '11 attended · 3 wins'
   },
 
   links: {
@@ -69,9 +70,9 @@ window.CONTENT = {
 
   /* ④ TRAIL: the only place builds are described. branch: wins | coop | projects
      public:false = describe only, no screenshots or links. link:'' = add once confirmed live.
-     shots: [{ src, kind: 'phone' | 'browser' | 'logo', alt }, ...] = images in a device frame, first one shown first (files in img/projects/). A single `shot` also works. */
+     date: 'YYYY-MM' of the most recent work (classic page: newest first; trail: oldest first up the hill). type: work | hackathon | side. shots: [{ src, kind: 'phone' | 'browser' | 'logo', alt }, ...] = images in a device frame, first one shown first (files in img/projects/). A single `shot` also works. */
   projects: [
-    { id: 'obscurafy', branch: 'wins', title: 'Obscurafy', award: 'Winner · HackUMass 2025', when: 'Nov 2025', dist: '0.4 mi',
+    { id: 'obscurafy', type: 'hackathon', date: '2025-11', branch: 'wins', title: 'Obscurafy', award: 'Winner · HackUMass 2025', when: 'Nov 2025', dist: '0.9 mi',
       one: 'Finds IDs, cards and documents hiding in your photo library before you share them.',
       what: 'An iOS app that scans your whole photo library on-device, flags sensitive photos, and lets you swipe to keep, redact or delete them. Optional Gemini explains why each one was flagged.',
       stack: ['Swift', 'SwiftUI', 'Core ML (YOLO)', 'Vision OCR', 'Gemini', 'Background Tasks'], role: 'Hackathon team',
@@ -82,7 +83,7 @@ window.CONTENT = {
         { src: 'img/projects/obscurafy-queue.jpg', kind: 'phone', alt: 'Swipe review with a credit card photo flagged and one photo queued for deletion' },
         { src: 'img/projects/obscurafy-stats.jpg', kind: 'phone', alt: 'Statistics: photos scanned, deleted and kept' },
         { src: 'img/projects/obscurafy-logo.jpg', kind: 'logo', alt: 'Obscurafy app icon' } ] },
-    { id: 'ecoprompt', branch: 'wins', title: 'EcoPrompt', award: '3rd · HackMIT 2025 (Infosys Carbon-Conscious AI)', when: 'Sep – Oct 2025', dist: '0.9 mi',
+    { id: 'ecoprompt', type: 'hackathon', date: '2025-10', branch: 'wins', title: 'EcoPrompt', award: '3rd · HackMIT 2025 (Infosys Carbon-Conscious AI)', when: 'Sep – Oct 2025', dist: '0.4 mi',
       one: 'Shows the CO₂ cost of every AI prompt as you type it.',
       what: 'A browser extension that estimates the energy and CO₂ of each AI prompt in real time, turns watt-hours into everyday comparisons, and trims wasted tokens.',
       stack: ['React', 'TypeScript', 'Plasmo', 'Chrome extension'], role: 'Hackathon team',
@@ -92,7 +93,7 @@ window.CONTENT = {
         { src: 'img/projects/ecoprompt-estimate.jpg', kind: 'browser', alt: 'After sending: tokens, energy and CO2, plus what opening a web result saved' },
         { src: 'img/projects/ecoprompt-trimmed.jpg', kind: 'browser', alt: 'Trimmed prompt with the tokens and CO2 saved' } ] },
 
-    { id: 'fbm', branch: 'coop', at: 'wsg', when: 'Jul – Dec 2026', title: 'Flying Bridge Marina', award: 'Waterside co-op', dist: '1.2 mi',
+    { id: 'fbm', type: 'work', date: '2026-11', branch: 'coop', at: 'wsg', when: 'Jul – Dec 2026', title: 'Flying Bridge Marina', award: 'Waterside co-op', dist: '1.6 mi',
       one: 'A boat dealer\'s new website and the CMS behind it, built almost entirely by me.',
       what: 'Block-based CMS with about 50 section types and live draft preview; a boat inventory finder with side-by-side compare; "Tucker", a Claude assistant grounded in live inventory; scheduled publishing, a photo library and saved-search alerts; and the trade-in valuation pop-up, built on a teammate\'s AI pricing engine.',
       stack: ['Next.js 16', 'TypeScript', 'Supabase', 'Lexical', 'Claude API', 'HubSpot', 'Vitest'], role: 'Main developer',
@@ -101,28 +102,28 @@ window.CONTENT = {
         { src: 'img/projects/fbm.jpg', kind: 'browser', alt: 'Flying Bridge Marina homepage with the Ask Tucker button' },
         { src: 'img/projects/fbm-inventory.jpg', kind: 'browser', alt: 'Boat inventory with filters across 129 boats' },
         { src: 'img/projects/fbm-tucker.jpg', kind: 'browser', alt: 'Tucker, the site\'s Claude-powered assistant' } ] },
-    { id: 'southpeak', branch: 'coop', at: 'wsg', when: 'Jul – Dec 2026', title: 'South Peak Resort', award: 'Waterside co-op', dist: '1.6 mi',
+    { id: 'southpeak', type: 'work', date: '2026-11', branch: 'coop', at: 'wsg', when: 'Jul – Dec 2026', title: 'South Peak Resort', award: 'Waterside co-op', dist: '1.9 mi',
       one: 'Moved a ski resort\'s site off WordPress, then rebuilt it again on the company\'s own CMS kit.',
       what: 'Rebuilt the site to match the live one, wrote about 20 repeatable migration scripts, built the homes and homesites listings with an interactive map, connected the "Gus" RAG chatbot, and moved pages from dynamic rendering to ISR. Now rebuilding it a second time on cms-kit and Supabase, which I lead with a teammate: I own the layout, content plumbing, CMS and infrastructure.',
       stack: ['Next.js 16', 'Payload CMS 3', 'cms-kit', 'Supabase', 'Neon Postgres', 'pgvector', 'Turborepo'], role: 'Lead on the migration and the cms-kit rebuild',
-      links: [], public: true },                                   /* TODO: link once confirmed live */
-    { id: 'harborlights', branch: 'coop', at: 'wsg', when: 'Jul – Dec 2026', title: 'Harbor Lights → cms-kit', award: 'Waterside co-op', dist: '1.9 mi',
+      links: [['Live site', 'https://www.southpeakresort.com']], public: true },
+    { id: 'harborlights', type: 'work', date: '2026-11', branch: 'coop', at: 'wsg', when: 'Jul – Dec 2026', title: 'Harbor Lights → cms-kit', award: 'Waterside co-op', dist: '2.3 mi',
       one: 'Built one venue\'s CMS, then turned it into a package every company site can install.',
       what: 'A Supabase CMS for an event venue, then extracted into a reusable package with its own admin, read API, safety-railed database scripts, a command-line tool for scaffolding and migrating sites, three versioned releases, and a second example site to prove it works beyond the first. It now runs Harbor Lights and South Peak.',
       stack: ['Next.js 16', 'React 19', 'Supabase', 'Tailwind v4', 'MapLibre'], role: 'Main developer',
-      links: [], public: true },                                   /* TODO: harborlightsri.com once confirmed */
-    { id: 'platform', branch: 'coop', at: 'wsg', when: 'Jul – Dec 2026', title: 'Document Archive & Editor', award: 'Waterside co-op · internal', dist: '2.3 mi',
+      links: [['Live site', 'https://harborlightsri.com']], public: true },
+    { id: 'platform', type: 'work', date: '2026-11', branch: 'coop', at: 'wsg', when: 'Jul – Dec 2026', title: 'Document Archive & Editor', award: 'Waterside co-op · internal', dist: '2.6 mi',
       one: 'The company\'s document library and a Word-grade editor, searchable by AI.',
       what: 'A versioned archive for 1,000+ files with access rules per business enforced in the database, a collaborative editor with tracked changes and review rounds, Word and PDF import that keeps the formatting, and RAG indexing so the company assistant can answer from every document. Also built the flipbook studio that turns PDFs into page-flip books for the brand sites, and "Sign in with Waterside", which lets staff log in to each site\'s CMS with their portal account.',
       stack: ['Next.js', 'Supabase (RLS)', 'TipTap', 'Claude', 'Voyage + pgvector'], role: 'One of four core contributors',
       links: [], public: false },
-    { id: 'clearinghouse', branch: 'coop', at: 'tch', when: 'Jun – Aug 2025', title: 'CHIPS Simulation', award: 'The Clearing House internship · internal', dist: '2.6 mi',
+    { id: 'clearinghouse', type: 'work', date: '2025-08', branch: 'coop', at: 'tch', when: 'Jun – Aug 2025', title: 'CHIPS Simulation', award: 'The Clearing House internship · internal', dist: '1.2 mi',
       one: 'Rebuilt the frontend of a payments data simulation platform in React.',
       what: 'Rebuilt the CHIPS data simulation frontend in React and Material UI on AWS EC2, wired it to Amazon RDS for live queries, and added an analytics page covering 12+ months of simulation data for faster trend analysis.',
       stack: ['React', 'Material UI', 'AWS EC2', 'Amazon RDS'], role: 'Intern',
       links: [], public: false },
 
-    { id: 'clast', branch: 'projects', title: 'Clast', award: '', when: 'Aug 2025 – present', dist: '3.0 mi',
+    { id: 'clast', type: 'side', date: '2026-11', branch: 'projects', title: 'Clast', award: '', when: 'Aug 2025 – present', dist: '3.7 mi',
       one: 'Locks your distracting apps until you prove you did the work.',
       what: 'A Screen Time app with no timers and no bypass: you unlock apps by submitting text or photo proof, Gemini checks it, and progress grows a collection of planets.',
       stack: ['Swift', 'SwiftUI', 'Screen Time API', 'Gemini', 'Cloud Run'], role: 'Solo',
@@ -135,7 +136,7 @@ window.CONTENT = {
         { src: 'img/projects/clast.jpg', kind: 'phone', alt: 'Clast shield over a blocked app: Stay Focused, Build On or Give Up' },
         { src: 'img/projects/clast-collection.jpg', kind: 'phone', alt: 'Planet collection list' },
         { src: 'img/projects/clast-logo.jpg', kind: 'logo', alt: 'Clast app icon' } ] },   /* repo is private; swap in the post URL if you write a Clast post */
-    { id: 'looksmith', branch: 'projects', title: 'LookSmith', award: '', when: 'Oct 2025', dist: '3.4 mi',
+    { id: 'looksmith', type: 'hackathon', date: '2025-10', branch: 'projects', title: 'LookSmith', award: '', when: 'Oct 2025', dist: '3.0 mi',
       one: '3D modeling with your face instead of your hands.',
       what: 'Accessible 3D modeling: head and facial gestures tracked in real time drive a Godot sculpting tool over a WebSocket, with one-click export to a marketplace.',
       stack: ['Python', 'OpenCV', 'MediaPipe', 'Godot', 'WebSockets'], role: 'Hackathon team · built at HackHarvard 2025',
@@ -144,7 +145,7 @@ window.CONTENT = {
         { src: 'img/projects/looksmith.jpg', kind: 'browser', alt: 'LookSmith sculpting window in Godot with cube, sphere and prism tools' },
         { src: 'img/projects/looksmith-market.jpg', kind: 'browser', alt: 'Companion marketplace for exported 3D models' },
         { src: 'img/projects/looksmith-logo.jpg', kind: 'logo', alt: 'LookSmith logo' } ] },
-    { id: 'blescanner', branch: 'projects', title: 'BLE Scanner', award: '', when: 'Nov 2026', dist: '3.5 mi',
+    { id: 'blescanner', type: 'side', date: '2026-11', branch: 'projects', title: 'BLE Scanner', award: '', when: 'Nov 2026', dist: '4.1 mi',
       one: 'A personal iPhone app that works out what the Bluetooth devices around the house are saying.',
       what: 'Scans nearby BLE devices, saves a profile for each, and decodes what they broadcast and expose, highlighting the bytes that change. It follows devices that rotate their address, finds one with beeps and a compass sweep, and is read-only by default, with writes behind a gated experiment mode. Everything stays on the phone.',
       stack: ['Swift', 'SwiftUI', 'CoreBluetooth', 'SwiftData', 'Swift Charts', 'MapKit'], role: 'Solo · 100+ tests',
@@ -153,13 +154,13 @@ window.CONTENT = {
         { src: 'img/projects/blescanner.jpg', kind: 'phone', alt: 'BLE Scanner device page for a Bluetooth speaker with live broadcast details' },
         { src: 'img/projects/blescanner-gatt.jpg', kind: 'phone', alt: 'GATT explorer with read-only experiments' },
         { src: 'img/projects/blescanner-log.jpg', kind: 'phone', alt: 'Live log of heart-rate measurement values' } ] },
-    { id: 'hilabels', branch: 'projects', title: 'AI SEO Content Platform', award: '', when: 'May – Jul 2026', dist: '3.7 mi',
+    { id: 'hilabels', type: 'work', date: '2026-07', branch: 'projects', title: 'AI SEO Content Platform', short: 'HiLabels', award: '', when: 'May – Jul 2026', dist: '3.4 mi',
       one: 'An AI pipeline that writes, schedules and tunes SEO blog posts for HiLabels.',
       what: 'Topics and keywords go into a Google Sheet; the service writes each post with Gemini, schedules it on WordPress, and reads Search Console data to pick the next round of keywords.',
       stack: ['Python', 'Flask', 'Gemini', 'Google Cloud Run', 'Search Console', 'Google Sheets', 'WordPress'], role: 'Solo, for HiLabels',
       links: [], public: true,
       shot: { src: 'img/projects/hilabels.svg', kind: 'browser', alt: 'Diagram of the content loop: Google Sheet, Gemini, WordPress, Search Console' } },
-    { id: 'whoosh', branch: 'projects', title: 'Whoosh', award: '', when: 'Oct 2026', dist: '4.1 mi',
+    { id: 'whoosh', type: 'hackathon', date: '2026-10', branch: 'projects', title: 'Whoosh', award: '', when: 'Oct 2026', dist: '3.5 mi',
       one: 'A rear camera that spots cars closing in on a cyclist and warns them on their wrist.',
       what: 'Turns the phone a rider already owns into a rear-facing safety system. An on-device YOLO model finds approaching vehicles, an Apple Watch app taps the rider, and opt-in crash response texts emergency contacts. Rides stay on the phone, and a web map combines shared near misses with Boston crash data.',
       stack: ['Swift 6', 'SwiftUI', 'Core ML (YOLO)', 'Apple Watch', 'Supabase', 'Next.js'], role: 'Launch lead · iOS, Watch, orchestration · team of 3 · built at Hackachusetts 2026',
@@ -170,31 +171,31 @@ window.CONTENT = {
         { src: 'img/projects/whoosh-camera.jpg', kind: 'phone', alt: 'Camera setup: aim the phone at the road behind you' },
         { src: 'img/projects/whoosh-crash.jpg', kind: 'browser', alt: 'Web simulation of crash response, with the countdown on phone and Watch' },
         { src: 'img/projects/whoosh-map.jpg', kind: 'browser', alt: 'Community stats from shared rides next to Boston crash data' } ] },
-    { id: 'moovie', branch: 'projects', title: 'Moovie', award: '', dist: 'side trail', small: true,
+    { id: 'moovie', type: 'side', date: '2026-04', when: 'Feb – Apr 2026', branch: 'projects', title: 'Moovie', award: '', dist: 'side trail', small: true,
       one: 'Share and rank movies with friends.', stack: ['Swift'], links: [['GitHub', 'https://github.com/AlexanderMcGreevy/Moovie']], public: true,
       shots: [
         { src: 'img/projects/moovie.jpg', kind: 'phone', alt: 'Moovie movies tab with search, filters and a movie card' },
         { src: 'img/projects/moovie-logo.jpg', kind: 'logo', alt: 'Moovie app icon' } ] },
-    { id: 'petaid', branch: 'projects', title: 'PetAid', award: '', dist: 'side trail', small: true,
-      one: 'An AI vet assistant and vet finder for busy pet owners.', stack: ['Swift', 'Python', 'Gemini', 'Google Places'], links: [['GitHub', 'https://github.com/AlexanderMcGreevy/PetAid'], ['Devpost', 'https://devpost.com/software/petvitals']], public: true,
+    { id: 'petaid', type: 'hackathon', date: '2025-03', when: 'Mar 2025', branch: 'projects', title: 'PetAid', award: '', dist: 'side trail', small: true,
+      one: 'An AI vet assistant and vet finder for busy pet owners. Built as PetVitals at HackPSU Spring 2025.', role: 'Hackathon team · built at HackPSU Spring 2025', stack: ['Swift', 'Python', 'Gemini', 'Google Places'], links: [['GitHub', 'https://github.com/AlexanderMcGreevy/PetAid'], ['Devpost', 'https://devpost.com/software/petvitals']], public: true,
       shots: [
         { src: 'img/projects/petaid.jpg', kind: 'phone', alt: 'PetVitals AI diagnosis result for a cockatoo' },
         { src: 'img/projects/petaid-clinics.jpg', kind: 'phone', alt: 'Nearby vet clinics sorted by reviews' },
         { src: 'img/projects/petaid-profile.jpg', kind: 'phone', alt: 'A pet\'s profile' },
         { src: 'img/projects/petaid-food.jpg', kind: 'phone', alt: 'Assigning daily food servings to each pet' },
         { src: 'img/projects/petaid-logo.jpg', kind: 'logo', alt: 'PetVitals app icon' } ] },
-    { id: 'cardinal', branch: 'projects', title: 'CARDinal', award: '', dist: 'side trail', small: true,
+    { id: 'cardinal', type: 'side', date: '2025-10', when: 'Sep – Oct 2025', branch: 'projects', title: 'CARDinal', award: '', dist: 'side trail', small: true,
       one: 'Tap phones to swap business cards and resumes.', stack: ['SwiftUI', 'Multipeer'], links: [['GitHub', 'https://github.com/AlexanderMcGreevy/CARDinal']], public: true,
       shots: [
         { src: 'img/projects/cardinal.svg', kind: 'browser', alt: 'Diagram of two phones swapping a business card nearby or by QR code' },
         { src: 'img/projects/cardinal-logo.jpg', kind: 'logo', alt: 'CARDinal app icon' } ] },
-    { id: 'gofundtree', branch: 'projects', title: 'GoFundTree', award: '', dist: 'side trail', small: true,
+    { id: 'gofundtree', type: 'hackathon', date: '2024-10', when: 'Fall 2024', branch: 'projects', title: 'GoFundTree', award: '', dist: 'side trail', small: true,
       one: 'Place virtual trees on your own street in AR, then fund real planting. Built at HackPSU Fall 2024; I built the AR and frontend.', stack: ['Python', 'Flask', 'Google Cloud', 'Firebase', 'model-viewer'], links: [['GitHub', 'https://github.com/matt2jog/GoFundTree'], ['Devpost', 'https://devpost.com/software/gofundtree']], public: true,
       shot: { src: 'img/projects/gofundtree.jpg', kind: 'browser', alt: 'Three 3D tree models used in the GoFundTree AR view' } },
-    { id: 'outfitmatcher', branch: 'projects', title: 'Colorblind Outfit Matcher', award: '', dist: 'side trail', small: true,
+    { id: 'outfitmatcher', type: 'side', date: '2025-02', when: 'Feb 2025', branch: 'projects', title: 'Colorblind Outfit Matcher', award: '', dist: 'side trail', small: true,
       one: 'Finds a garment\'s dominant color and suggests matching outfits for people who are colorblind.', stack: ['Python', 'OpenCV', 'rembg'], links: [['GitHub', 'https://github.com/AlexanderMcGreevy/Projects/tree/main/Colorblind%20Clothes%20Matcher']], public: true,
       shot: { src: 'img/projects/outfitmatcher.jpg', kind: 'browser', alt: 'A blue shirt photo before and after background removal' } },
-    { id: 'hilabelsship', branch: 'projects', title: 'HiLabels shipping rules', award: '', dist: 'side trail', small: true,
+    { id: 'hilabelsship', type: 'work', date: '2026-09', when: '2026', branch: 'projects', title: 'HiLabels shipping rules', award: '', dist: 'side trail', small: true,
       one: 'Reworked the store\'s WooCommerce shipping code: weight-based method switching and handling fees.', stack: ['PHP', 'WooCommerce'], links: [], public: true }
   ],
   branches: { wins: 'Wins', coop: 'Co-ops & Internships', projects: 'Projects' },

@@ -21,8 +21,8 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#f7f5f0;--card:#fff;--ink:#1c1f1d;--mute:#5d625e;--line:#e3dfd5;--acc:#2f5d3a;--acc-ink:#fff;--acc2:#b5462f;--chip:#eef0ea;--bar:rgba(247,245,240,.86)}
-@media (prefers-color-scheme:dark){:root{--bg:#141714;--card:#1c201c;--ink:#ecebe5;--mute:#a3a8a2;--line:#2c322d;--acc:#8cc69a;--acc-ink:#0f1a12;--acc2:#e3876f;--chip:#252b26;--bar:rgba(20,23,20,.86)}}
+:root{--media:#e8ebe4;--bg:#f7f5f0;--card:#fff;--ink:#1c1f1d;--mute:#5d625e;--line:#e3dfd5;--acc:#2f5d3a;--acc-ink:#fff;--acc2:#b5462f;--chip:#eef0ea;--bar:rgba(247,245,240,.86)}
+@media (prefers-color-scheme:dark){:root{--media:#0e120f;--bg:#141714;--card:#1c201c;--ink:#ecebe5;--mute:#a3a8a2;--line:#2c322d;--acc:#8cc69a;--acc-ink:#0f1a12;--acc2:#e3876f;--chip:#252b26;--bar:rgba(20,23,20,.86)}}
 *{box-sizing:border-box}
 html{scroll-behavior:smooth;scroll-padding-top:72px}
 @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
@@ -50,7 +50,7 @@ header{padding:64px 0 34px;border-bottom:1px solid var(--line)}
 h1{font:700 clamp(40px,7.4vw,68px)/1 Oswald,sans-serif;letter-spacing:.01em;margin:0 0 12px;text-transform:uppercase}
 .tag{font:500 13px/1.4 'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--mute);margin-bottom:10px}
 .lede{font-size:19px;max-width:640px;margin:0 0 22px}
-.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px 22px;margin:0 0 26px;padding:16px 18px;background:var(--card);border:1px solid var(--line);border-radius:12px}
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(165px,1fr));gap:10px 22px;margin:0 0 26px;padding:16px 18px;background:var(--card);border:1px solid var(--line);border-radius:12px}
 .facts div{min-width:0}
 .facts dt{font:500 11px/1 'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--mute);margin-bottom:6px}
 .facts dd{margin:0;font-size:15px;font-weight:500;line-height:1.35}
@@ -73,26 +73,7 @@ h3{font:600 20px/1.25 Oswald,sans-serif;letter-spacing:.02em;margin:0}
 .work{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
 .work a{font:500 12px/1 'IBM Plex Mono',monospace;text-decoration:none;padding:6px 9px;border-radius:6px;background:var(--chip);color:var(--ink)}
 .work a:hover{background:var(--acc);color:var(--acc-ink)}
-.branch{margin:30px 0 12px;font:600 13px/1 'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--mute)}
-.branch:first-child{margin-top:0}
-.cards{display:grid;gap:12px}
 .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px 20px}
-.card .top{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
-.card .top .when{font-size:12px;white-space:nowrap}
-.card .award{display:inline-block;font:500 12px/1.3 'IBM Plex Mono',monospace;color:var(--acc2);margin:6px 0 4px}
-.card p{margin:6px 0}
-.card::after{content:"";display:block;clear:both}
-.card .shot{float:right;position:relative;display:block;padding:0;margin:2px 0 10px 18px;border-radius:10px;border:1px solid var(--line);background:#0b0d0f;overflow:hidden;cursor:zoom-in;font:inherit;color:inherit}
-.card .shot img{width:100%;height:100%;object-fit:cover;object-position:top center;display:block}
-.card .shot:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
-.card .shot .n{position:absolute;right:6px;bottom:6px;padding:3px 6px;border-radius:6px;background:rgba(0,0,0,.7);color:#fff;font:500 11px/1 'IBM Plex Mono',monospace}
-.card .shot.phone{width:96px;aspect-ratio:9/19.5}
-.card .shot.browser{width:200px;aspect-ratio:16/10}
-.card .shot.logo{width:96px;aspect-ratio:1}
-.card .shot.logo img{object-position:center}
-.small .card .shot,.small .card .shot.phone,.small .card .shot.logo{float:none;width:100%;aspect-ratio:16/10;margin:0 0 12px}
-.small .card .shot.phone img{object-position:center 55%}
-.small .card .shot.logo img{object-fit:contain}
 #gal{border:0;padding:0;background:transparent;max-width:100vw;max-height:100vh;width:100vw;height:100vh;color:#fff}
 #gal::backdrop{background:rgba(8,10,9,.95)}
 #gal .gx{position:fixed;top:14px;right:16px;width:40px;height:40px;border-radius:50%;border:1px solid rgba(255,255,255,.35);background:rgba(0,0,0,.5);color:#fff;font-size:18px;cursor:pointer;z-index:2}
@@ -101,11 +82,39 @@ h3{font:600 20px/1.25 Oswald,sans-serif;letter-spacing:.02em;margin:0}
 #gal figure{margin:0;flex:0 0 auto;scroll-snap-align:center;display:flex;flex-direction:column;align-items:center;gap:10px;max-width:88vw}
 #gal figure img{max-height:calc(100vh - 150px);max-width:88vw;border-radius:12px;background:#0b0d0f;display:block}
 #gal figcaption{font:400 13px/1.4 Inter,sans-serif;color:#cfd3cf;text-align:center;max-width:520px}
-@media (max-width:560px){.card .shot.browser{float:none;display:block;width:100%;margin:0 0 12px}.card .shot.phone{width:78px;margin-left:12px}}
-.card:target{border-color:var(--acc);box-shadow:0 0 0 3px color-mix(in srgb,var(--acc) 25%,transparent)}
+/* projects: newest first, grouped by year, image-led cards; filter chips by type */
+.pwide{width:min(1160px,calc(100vw - 40px));position:relative;left:50%;transform:translateX(-50%)}
+.pfilter{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 6px}
+.pfilter button{font:500 13px/1 'IBM Plex Mono',monospace;letter-spacing:.03em;padding:9px 13px;border-radius:999px;border:1px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer}
+.pfilter button span{color:var(--mute);margin-left:7px}
+.pfilter button:hover{border-color:var(--ink)}
+.pfilter button[aria-pressed=true]{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+.pfilter button[aria-pressed=true] span{color:inherit;opacity:.7}
+.pfilter button:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+.pyear{display:flex;align-items:baseline;gap:12px;margin:30px 0 14px;padding-bottom:8px;border-bottom:1px solid var(--line)}
+.pyear h3{font:700 34px/1 Oswald,sans-serif;letter-spacing:.02em}
+.pyear .c{font:500 12px/1 'IBM Plex Mono',monospace;color:var(--mute)}
+.pgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;align-items:start}
+.pc{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.pc:target{border-color:var(--acc);box-shadow:0 0 0 3px color-mix(in srgb,var(--acc) 25%,transparent)}
+.pc .media{display:flex;align-items:center;justify-content:center;gap:12px;width:100%;aspect-ratio:16/9;padding:16px;margin:0;border:0;border-bottom:1px solid var(--line);background:var(--media);cursor:zoom-in;position:relative;overflow:hidden;font:inherit;color:inherit}
+.pc .media:focus-visible{outline:3px solid var(--acc);outline-offset:-3px}
+.pc .media.browser{padding:0}
+.pc .media.browser img{width:100%;height:100%;object-fit:cover;object-position:top center;display:block}
+.pc .media.phones img{height:100%;width:auto;max-width:30%;aspect-ratio:9/19.5;object-fit:cover;object-position:top center;border-radius:12px;background:#0b0d0f;box-shadow:0 8px 20px rgba(0,0,0,.28);display:block}
+.pc .media.logo img{height:62%;aspect-ratio:1;width:auto;object-fit:cover;border-radius:22%;box-shadow:0 8px 20px rgba(0,0,0,.25);display:block}
+.pc .media .n{position:absolute;right:10px;bottom:10px;padding:4px 8px;border-radius:7px;background:rgba(0,0,0,.72);color:#fff;font:500 11px/1 'IBM Plex Mono',monospace}
+.pc-b{padding:16px 18px 18px}
+.pmeta{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;font:500 12px/1 'IBM Plex Mono',monospace;color:var(--mute);margin:0 0 9px}
+.ptype{padding:4px 7px;border-radius:6px;background:var(--chip);color:var(--ink);text-transform:uppercase;letter-spacing:.07em;font-size:10.5px}
+.ptype.work{background:color-mix(in srgb,var(--acc) 22%,var(--card))}
+.ptype.hackathon{background:color-mix(in srgb,var(--acc2) 22%,var(--card))}
+.pc .award{font:500 12px/1.3 'IBM Plex Mono',monospace;color:var(--acc2);margin:7px 0 2px}
+.pc .one{font-weight:600;margin:7px 0 6px;line-height:1.45}
+.pc .what{margin:0 0 8px;font-size:15px;line-height:1.55;color:color-mix(in srgb,var(--ink) 82%,var(--bg))}
+@media (max-width:760px){.pgrid{grid-template-columns:1fr}.pyear h3{font-size:28px}}
 .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
 .chips span{font:500 12px/1 'IBM Plex Mono',monospace;background:var(--chip);padding:6px 9px;border-radius:6px}
-.small{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px}
 .note{font:500 12px/1.4 'IBM Plex Mono',monospace;color:var(--mute)}
 .lk{margin-top:10px;font:500 13px/1 'IBM Plex Mono',monospace}
 .lk a{text-decoration:none}.lk a:hover{text-decoration:underline}
@@ -130,7 +139,8 @@ footer{padding:56px 0 80px;text-align:center}
 }
 @media print{
   .bar,.big,.hike,footer,.work{display:none!important}
-  body{background:#fff;color:#000;font-size:12px}section,header{padding:16px 0}.card{break-inside:avoid;border-color:#ccc}
+  body{background:#fff;color:#000;font-size:12px}section,header{padding:16px 0}.card,.pc{break-inside:avoid;border-color:#ccc}
+  .pc .media,.pfilter{display:none!important}.pwide{width:auto;left:0;transform:none}.pgrid{grid-template-columns:1fr 1fr}
 }
 </style>
 </head>
@@ -201,6 +211,7 @@ const J = C.journey, edu = J.filter(j => /University/.test(j.place)).pop(), now 
 const facts = [];
 if (now) facts.push(['Now', now.role + ', ' + now.place + ' (' + now.dates + ')']);
 if (edu) facts.push(['Education', edu.place + ' · B.S. CS, ' + edu.dates.split('–').pop().trim() + (/GPA [\d.]+/.test(edu.role) ? ' · ' + edu.role.match(/GPA [\d.]+/)[0] : '')]);
+if (P.hackathons) facts.push(['Hackathons', P.hackathons]);
 if (P.workAuth) facts.push(['Work authorization', P.workAuth.replace(/^Authorized to work in the /, '')]);
 $('facts').innerHTML = facts.map(([k, v]) => '<div><dt>' + esc(k) + '</dt><dd>' + esc(v) + '</dd></div>').join('');
 if (!facts.length) $('facts').hidden = true;
@@ -219,23 +230,42 @@ const linkRow = A => (A || []).map(([t, u]) => '<a href="' + esc(u) + '" target=
 /* screenshots: content.js `shots: [{src, kind: 'phone'|'browser'|'logo', alt}]` (or a single `shot`) */
 const shotsOf = p => (p.public === false ? [] : (p.shots || (p.shot ? [p.shot] : []))).filter(s => s && s.src);
 const kindOf = s => s.kind === 'browser' ? 'browser' : s.kind === 'logo' ? 'logo' : 'phone';
-const shot = p => {
+const TYPE = { work: 'Work', hackathon: 'Hackathon', side: 'Side project' };
+const img = (s, p) => '<img src="' + esc(s.src) + '" alt="' + esc(s.alt || p.title) + '" loading="lazy" decoding="async">';
+/* the image panel: up to three phone screens side by side, or one browser shot, or a logo; click opens the gallery */
+const media = p => {
   const L = shotsOf(p); if (!L.length) return '';
-  const s = L[0];
-  return '<button type="button" class="shot ' + kindOf(s) + '" data-gal="' + esc(p.id) + '" aria-label="View ' + (L.length > 1 ? L.length + ' images' : 'image') + ' of ' + esc(p.title) + '">' +
-    '<img src="' + esc(s.src) + '" alt="' + esc(s.alt || p.title) + '" loading="lazy" decoding="async">' +
-    (L.length > 1 ? '<span class="n" aria-hidden="true">1/' + L.length + '</span>' : '') + '</button>';
+  const k = kindOf(L[0]);
+  const inner = k === 'phone' ? L.filter(x => kindOf(x) === 'phone').slice(0, 3).map(x => img(x, p)).join('') : img(L[0], p);
+  return '<button type="button" class="media ' + (k === 'phone' ? 'phones' : k) + '" data-gal="' + esc(p.id) + '" aria-label="View ' + (L.length > 1 ? L.length + ' images' : 'image') + ' of ' + esc(p.title) + '">' + inner +
+    (L.length > 1 ? '<span class="n" aria-hidden="true">' + L.length + ' images</span>' : '') + '</button>';
 };
-const card = p => '<article class="card" id="p-' + esc(p.id) + '">' + shot(p) + '<div class="top"><h3>' + esc(p.title) + '</h3>' + (p.when ? '<span class="when">' + esc(p.when) + '</span>' : '') + '</div>' +
-  (p.award && !p.wip ? '<div class="award">' + esc(p.award) + '</div>' : '') +
-  '<p><b>' + esc(p.one) + '</b></p>' + (p.what ? '<p>' + esc(p.what) + '</p>' : '') +
-  (p.role ? '<div class="note">' + esc(p.role) + (p.public === false ? ' · internal, described only' : '') + '</div>' : '') +
-  chips(p.stack) + (p.links && p.links.length ? '<div class="lk">' + linkRow(p.links) + '</div>' : '') + '</article>';
-$('projlist').innerHTML = Object.entries(C.branches).map(([k, name]) => {
-  const Ps = C.projects.filter(p => p.branch === k), big = Ps.filter(p => !p.small), sm = Ps.filter(p => p.small);
-  return '<div class="branch">' + esc(name) + '</div><div class="cards">' + big.map(card).join('') + '</div>' +
-    (sm.length ? '<div class="branch">Smaller apps</div><div class="small">' + sm.map(card).join('') + '</div>' : '');
-}).join('');
+const card = p => '<article class="pc" id="p-' + esc(p.id) + '" data-type="' + esc(p.type || 'side') + '">' + media(p) + '<div class="pc-b">' +
+  '<div class="pmeta">' + (p.when ? '<span>' + esc(p.when) + '</span>' : '') + '<span class="ptype ' + esc(p.type || 'side') + '">' + esc(TYPE[p.type] || 'Project') + '</span>' + (p.public === false ? '<span>internal · described only</span>' : '') + '</div>' +
+  '<h3>' + esc(p.title) + '</h3>' + (p.award && !p.wip && p.type !== 'work' ? '<div class="award">★ ' + esc(p.award) + '</div>' : '') +
+  '<p class="one">' + esc(p.one) + '</p>' + (p.what ? '<p class="what">' + esc(p.what) + '</p>' : '') +
+  (p.role ? '<div class="note">' + esc(p.role) + '</div>' : '') +
+  chips(p.stack) + (p.links && p.links.length ? '<div class="lk">' + linkRow(p.links) + '</div>' : '') + '</div></article>';
+/* projects: newest first (content.js `date`, YYYY-MM), grouped by year, with type filters */
+const byDate = C.projects.slice().sort((a, b) => String(b.date || '').localeCompare(String(a.date || '')));
+const years = [...new Set(byDate.map(p => String(p.date || '').slice(0, 4)))];
+const count = { all: byDate.length }; byDate.forEach(p => { count[p.type] = (count[p.type] || 0) + 1; });
+const FILTERS = [['all', 'All'], ['work', 'Work'], ['hackathon', 'Hackathons'], ['side', 'Side projects']].filter(([k]) => count[k]);
+const plural = n => n + ' project' + (n === 1 ? '' : 's');
+$('projlist').innerHTML = '<div class="pwide"><div class="pfilter" role="group" aria-label="Filter projects">' +
+  FILTERS.map(([k, n], i) => '<button type="button" data-f="' + k + '" aria-pressed="' + (i === 0) + '">' + n + '<span>' + count[k] + '</span></button>').join('') + '</div>' +
+  years.map(y => { const ps = byDate.filter(p => String(p.date).startsWith(y));
+    return '<div class="pyr"><div class="pyear"><h3>' + esc(y) + '</h3><span class="c">' + plural(ps.length) + '</span></div><div class="pgrid">' + ps.map(card).join('') + '</div></div>'; }).join('') + '</div>';
+$('projlist').addEventListener('click', e => {
+  const b = e.target.closest('[data-f]'); if (!b) return;
+  const f = b.dataset.f;
+  $('projlist').querySelectorAll('[data-f]').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+  $('projlist').querySelectorAll('.pyr').forEach(g => {
+    let n = 0;
+    g.querySelectorAll('.pc').forEach(c => { const on = f === 'all' || c.dataset.type === f; c.hidden = !on; if (on) n++; });
+    g.hidden = !n; g.querySelector('.c').textContent = plural(n);
+  });
+});
 
 /* image gallery: click a card's screenshot to see every image for that project */
 const gal = document.createElement('dialog');
