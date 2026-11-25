@@ -200,19 +200,19 @@ window.CONTENT = {
   ],
   branches: { wins: 'Wins', coop: 'Co-ops & Internships', projects: 'Projects' },
 
-  /* ⑤ HUT: life outside code. Each entry is an object in the room. */
+  /* ⑤ HUT: life outside code. Each entry is an object in the room. `short` = the few words the classic page's list shows (blank = title only). */
   hut: [
-    { id: 'sabre', object: 'Fencing sabre & mask', title: 'Fencing',
+    { id: 'sabre', short: 'competitive club sabre', object: 'Fencing sabre & mask', title: 'Fencing',
       text: 'Competitive club sabre fencer. Taught it for four summers at Mowglis.' },
     { id: 'photo', object: 'Camp photo', title: 'Camp Mowglis',
       text: 'Summers on Newfound Lake in New Hampshire, first as a camper, then on staff.' },
-    { id: 'boot', object: 'Trail-worn boot', title: 'Hiking',
+    { id: 'boot', short: 'White Mountains, with NUHOC', object: 'Trail-worn boot', title: 'Hiking',
       text: 'White Mountains backpacker. Hiking with NUHOC, the Northeastern outing club.' },
-    { id: 'firstaid', object: 'First-aid kit', title: 'Wilderness First Aid',
+    { id: 'firstaid', short: 'WFA + CPR/AED certified', object: 'First-aid kit', title: 'Wilderness First Aid',
       text: 'WFA and CPR/AED certified, because the nearest road is usually a long way down.' },
     { id: 'guitar', object: 'Guitar by the window', title: 'Guitar', text: 'Strum it.' },
-    { id: 'mead', object: 'Mead jug', title: 'Mead', text: 'Brewing mead. It takes months. Patience is the main ingredient.' },
-    { id: 'logbook', object: 'Hut logbook', title: 'Hackathons', text: '11 attended, 3 wins. I go for the 3 a.m. part.' }
+    { id: 'mead', object: 'Mead jug', title: 'Mead brewing', text: 'Brewing mead. It takes months. Patience is the main ingredient.' },
+    { id: 'logbook', short: '11 attended, 3 wins', object: 'Hut logbook', title: 'Hackathons', text: '11 attended, 3 wins. I go for the 3 a.m. part.' }
   ],
 
   /* ⑥ SUMMIT: where I'm headed. Each is a distant peak you can look at from the summit sign. */

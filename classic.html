@@ -124,6 +124,10 @@ h3{font:600 20px/1.25 Oswald,sans-serif;letter-spacing:.02em;margin:0}
 .lvl{font:500 12px/1 'IBM Plex Mono',monospace;color:var(--mute);white-space:nowrap}
 .lvl b{color:var(--acc);letter-spacing:2px}
 .grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px}
+.olist{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:8px}
+.olist li{padding:8px 13px;border:1px solid var(--line);border-radius:999px;background:var(--card);font-size:15px}
+.olist li b{font-weight:600}
+.olist li span{color:var(--mute)}
 .contact p{font-size:18px;margin:0 0 18px}
 footer{padding:56px 0 80px;text-align:center}
 .sticker{display:inline-block;margin:0 auto;padding:12px 26px 10px;background:#fff;border:3px solid #111;border-radius:8px;box-shadow:inset 0 0 0 3px #fff,inset 0 0 0 5px #111,0 6px 18px rgba(0,0,0,.18);transform:rotate(-2deg);transition:transform .3s,box-shadow .3s;cursor:default;color:#111}
@@ -164,7 +168,7 @@ footer{padding:56px 0 80px;text-align:center}
   <section id="experience"><h2>Experience &amp; education</h2><div id="journey"></div></section>
   <section id="projects"><h2>Work &amp; projects</h2><div id="projlist"></div></section>
   <section id="skills"><h2>Skills</h2><p class="note" style="margin:-8px 0 16px">●●● every day · ●●○ comfortable · ●○○ have used</p><div class="skills" id="skilllist"></div></section>
-  <section><h2>Outside of code</h2><div class="grid2" id="hut"></div></section>
+  <section><h2>Outside of code</h2><ul class="olist" id="hut"></ul></section>
   <section><h2>What I'm looking for</h2><p id="looking" style="font-size:18px;margin:0 0 16px"></p><div class="grid2" id="peaks"></div></section>
   <section id="contact" class="contact"><h2>Contact</h2><p id="cline"></p><div class="big" id="clinks"></div></section>
   <footer>
@@ -287,7 +291,8 @@ $('skilllist').innerHTML = C.skills.map(g => '<div class="card"><h3>' + esc(g.gr
   g.items.map(([n, l]) => '<li><span>' + esc(n) + '</span><span class="lvl" title="' + ['', 'have used', 'comfortable', 'every day'][l] + '">' + dots(l) + '</span></li>').join('') + '</ul></div>').join('') +
   (C.softSkills && C.softSkills.length ? '<div class="card"><h3>Also</h3><ul>' + C.softSkills.map(s => '<li>' + esc(s) + '</li>').join('') + '</ul></div>' : '');
 
-$('hut').innerHTML = C.hut.map(h => '<div class="card"><h3>' + esc(h.title) + '</h3><p>' + esc(h.text) + '</p></div>').join('');
+/* outside of code: a plain list; `short` adds a few words only where they're needed (the hike's Hut has the full stories) */
+$('hut').innerHTML = C.hut.map(h => '<li><b>' + esc(h.title) + '</b>' + (h.short ? '<span> · ' + esc(h.short) + '</span>' : '') + '</li>').join('');
 $('looking').textContent = C.summit.lookingFor;
 $('peaks').innerHTML = C.summit.peaks.map(p => '<div class="card"><h3>' + esc(p.title) + '</h3><p>' + esc(p.text) + '</p></div>').join('');
 $('cline').textContent = C.contact.line;
