@@ -139,7 +139,7 @@ window.CONTENT = {
     { id: 'cardinal', branch: 'projects', title: 'CARDinal', award: '', dist: 'side trail', small: true,
       one: 'Tap phones to swap business cards and resumes.', stack: ['SwiftUI', 'Multipeer'], links: [['GitHub', 'https://github.com/AlexanderMcGreevy/CARDinal']], public: true },
     { id: 'gofundtree', branch: 'projects', title: 'GoFundTree', award: '', dist: 'side trail', small: true,
-      one: 'Place virtual trees on your own street in AR, then fund real planting. Built at HackPSU Fall 2024; I built the backend.', stack: ['Python', 'Flask', 'Google Cloud', 'Firebase', 'model-viewer'], links: [['GitHub', 'https://github.com/matt2jog/GoFundTree'], ['Devpost', 'https://devpost.com/software/gofundtree']], public: true },
+      one: 'Place virtual trees on your own street in AR, then fund real planting. Built at HackPSU Fall 2024; I built the AR and frontend.', stack: ['Python', 'Flask', 'Google Cloud', 'Firebase', 'model-viewer'], links: [['GitHub', 'https://github.com/matt2jog/GoFundTree'], ['Devpost', 'https://devpost.com/software/gofundtree']], public: true },
     { id: 'outfitmatcher', branch: 'projects', title: 'Colorblind Outfit Matcher', award: '', dist: 'side trail', small: true,
       one: 'Finds a garment\'s dominant color and suggests matching outfits for people who are colorblind.', stack: ['Python', 'OpenCV', 'rembg'], links: [['GitHub', 'https://github.com/AlexanderMcGreevy/Projects/tree/main/Colorblind%20Clothes%20Matcher']], public: true },
     { id: 'hilabelsship', branch: 'projects', title: 'HiLabels shipping rules', award: '', dist: 'side trail', small: true,
