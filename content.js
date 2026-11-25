@@ -85,7 +85,7 @@ window.CONTENT = {
       one: 'A boat dealer\'s new website and the CMS behind it, built almost entirely by me.',
       what: 'Block-based CMS with about 50 section types and live draft preview; a boat inventory finder with side-by-side compare; "Tucker", a Claude assistant grounded in live inventory; scheduled publishing, a photo library and saved-search alerts; and the trade-in valuation pop-up, built on a teammate\'s AI pricing engine.',
       stack: ['Next.js 16', 'TypeScript', 'Supabase', 'Lexical', 'Claude API', 'HubSpot', 'Vitest'], role: 'Main developer',
-      links: [], public: true },                                   /* TODO: link once the new build is live */
+      links: [['Live site', 'https://flyingbridgemarina.com']], public: true },
     { id: 'southpeak', branch: 'coop', at: 'wsg', when: 'Jul – Dec 2026', title: 'South Peak Resort', award: 'Waterside co-op', dist: '1.6 mi',
       one: 'Moved a ski resort\'s site off WordPress, then rebuilt it again on the company\'s own CMS kit.',
       what: 'Rebuilt the site to match the live one, wrote about 20 repeatable migration scripts, built the homes and homesites listings with an interactive map, connected the "Gus" RAG chatbot, and moved pages from dynamic rendering to ISR. Now rebuilding it a second time on cms-kit and Supabase, which I lead with a teammate: I own the layout, content plumbing, CMS and infrastructure.',
