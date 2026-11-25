@@ -9,7 +9,7 @@
      hut ................. ⑤ Hut      (life outside code)
      summit .............. ⑥ Summit   (where I'm headed)
      contact ............. ⑦ Range
-   Everything marked DRAFT is Claude's wording for Alexander to edit. TODO = needs a real value.
+   TODO = needs a real value.
    ===================================================================== */
 window.CONTENT = {
   person: {
@@ -17,7 +17,7 @@ window.CONTENT = {
     short: 'Alex',
     tagline: 'Software Engineer',
     place: 'White Mountains · N.H.',
-    /* DRAFT: one line, shown on the Home poster */
+    /* one line, shown on the Home poster */
     oneLiner: 'I build apps and websites people actually use: iOS, full-stack, and AI that checks its own work.',
     /* TODO: the one thing a recruiter should remember that isn\'t a job or a project */
     why: '',
@@ -36,18 +36,18 @@ window.CONTENT = {
      hike:false = classic page only (not a waypoint on the Journey map). */
   journey: [
     { id: 'mowglis', hike: false, place: 'Mowglis: School of the Open', role: 'Lead Fencing Instructor & Senior Counselor', dates: 'Summers 2021 – 2024', where: 'Hebron, NH',
-      line: 'Ran the fencing program and led a cabin of campers.' },                                       /* DRAFT */
+      line: 'Ran the fencing program and led a cabin of campers.' },
     { id: 'psu', place: 'Penn State', role: 'Computer science · IT Consultant (Altoona, Aug 2024 – May 2025)', dates: 'Aug 2023 – May 2025', where: 'State College, PA',
-      line: 'Where I started computer science, and my first tech job, on the IT help desk.' },            /* DRAFT */
+      line: 'Where I started computer science, and my first tech job, on the IT help desk.' },
     { id: 'tch', place: 'The Clearing House', role: 'Software Engineering Intern', dates: 'Jun – Aug 2025', where: 'New York, NY',
-      line: 'First real engineering team, first production codebase.', trail: 'clearinghouse' },        /* DRAFT */
+      line: 'First real engineering team, first production codebase.', trail: 'clearinghouse' },
     { id: 'neu', place: 'Northeastern University', role: 'B.S. Computer Science, software concentration (Khoury) · GPA 3.5', dates: 'Aug 2025 – May 2028', where: 'Boston, MA',
-      line: 'Transferred in. Director of Growth for the Northeastern Claude Club (150+ members). NUHOC Lodge Committee trainee.' },      /* DRAFT */
+      line: 'Transferred in. Director of Growth for the Northeastern Claude Club (150+ members). NUHOC Lodge Committee trainee.' },
     { id: 'wsg', place: 'Waterside Group', role: 'Software Engineering Co-op', dates: 'Jul – Dec 2026', where: 'Boston, MA',
-      line: 'Hospitality and real-estate group with a dozen brands. Shipped three public sites, a reusable CMS package that now runs two of them, and features in the internal company portal.', trail: 'coop' }  /* DRAFT */
+      line: 'Hospitality and real-estate group with a dozen brands. Shipped three public sites, a reusable CMS package that now runs two of them, and features in the internal company portal.', trail: 'coop' }
   ],
 
-  /* ③ GEAR: each gear item is a skill group. level: 3 = every day, 2 = comfortable, 1 = have used. DRAFT levels. */
+  /* ③ GEAR: each gear item is a skill group. level: 3 = every day, 2 = comfortable, 1 = have used. */
   skills: [
     { id: 'map', gear: 'Trail map', group: 'Frontend', items: [
       ['TypeScript', 3], ['React', 3], ['Next.js', 3], ['Tailwind', 2], ['HTML / CSS', 3], ['JavaScript', 3], ['Material UI', 2] ], used: ['fbm', 'southpeak', 'harborlights'] },
@@ -65,7 +65,7 @@ window.CONTENT = {
       ['Vitest', 2], ['GitHub Actions', 2], ['Git', 3], ['pnpm / Turborepo', 2], ['Claude Code', 3] ], used: ['fbm'] }
   ],
   /* sewn onto the pack */
-  softSkills: ['Teaching', 'Explaining tech to non-engineers', 'Shipping fast', 'Owning a codebase end to end'], /* DRAFT */
+  softSkills: ['Teaching', 'Explaining tech to non-engineers', 'Shipping fast', 'Owning a codebase end to end'],
 
   /* ④ TRAIL: the only place builds are described. branch: wins | coop | projects
      public:false = describe only, no screenshots or links. link:'' = add once confirmed live.
@@ -199,7 +199,7 @@ window.CONTENT = {
   ],
   branches: { wins: 'Wins', coop: 'Co-ops & Internships', projects: 'Projects' },
 
-  /* ⑤ HUT: life outside code. Each entry is an object in the room. All DRAFT copy. */
+  /* ⑤ HUT: life outside code. Each entry is an object in the room. */
   hut: [
     { id: 'sabre', object: 'Fencing sabre & mask', title: 'Fencing',
       text: 'Competitive club sabre fencer. Taught it for four summers at Mowglis.' },
@@ -214,7 +214,7 @@ window.CONTENT = {
     { id: 'logbook', object: 'Hut logbook', title: 'Hackathons', text: '11 attended, 3 wins. I go for the 3 a.m. part.' }
   ],
 
-  /* ⑥ SUMMIT: where I'm headed. Each is a distant peak you can look at from the summit sign. DRAFT. */
+  /* ⑥ SUMMIT: where I'm headed. Each is a distant peak you can look at from the summit sign. */
   summit: {
     headline: 'The view from the top',
     sub: 'Where I\'m headed next',
@@ -230,6 +230,6 @@ window.CONTENT = {
   /* ⑦ RANGE: contact */
   contact: {
     headline: 'Say hi',
-    line: 'Hiring for a co-op, internship or new-grad role? I\'d love to hear about it.'  /* DRAFT */
+    line: 'Hiring for a co-op, internship or new-grad role? I\'d love to hear about it.'
   }
 };
