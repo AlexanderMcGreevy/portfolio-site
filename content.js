@@ -111,7 +111,7 @@ window.CONTENT = {
       one: 'Locks your distracting apps until you prove you did the work.',
       what: 'A Screen Time app with no timers and no bypass: you unlock apps by submitting text or photo proof, Gemini checks it, and progress grows a collection of planets.',
       stack: ['Swift', 'SwiftUI', 'Screen Time API', 'Gemini', 'Cloud Run'], role: 'Solo',
-      links: [], public: true },                                   /* TODO: the Clast repo is private; add ['GitHub', ...] once it is public */
+      links: [['LinkedIn', 'https://www.linkedin.com/in/alexander-mcgreevy/details/projects/']], public: true },   /* repo is private; swap in the post URL if you write a Clast post */
     { id: 'looksmith', branch: 'projects', title: 'LookSmith', award: 'HackHarvard 2025', dist: '3.4 mi',
       one: '3D modeling with your face instead of your hands.',
       what: 'Accessible 3D modeling: head and facial gestures tracked in real time drive a Godot sculpting tool over a WebSocket, with one-click export to a marketplace.',
