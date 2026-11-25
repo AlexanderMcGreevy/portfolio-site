@@ -159,7 +159,7 @@ window.CONTENT = {
       text: 'WFA and CPR/AED certified, because the nearest road is usually a long way down.' },
     { id: 'guitar', object: 'Guitar by the window', title: 'Guitar', text: 'Strum it.' },
     { id: 'mead', object: 'Mead jug', title: 'Mead', text: 'Brewing mead. It takes months. Patience is the main ingredient.' },
-    { id: 'logbook', object: 'Hut logbook', title: 'Hackathons', text: '8 attended. I go for the 3 a.m. part.' }
+    { id: 'logbook', object: 'Hut logbook', title: 'Hackathons', text: '11 attended, 3 wins. I go for the 3 a.m. part.' }
   ],
 
   /* ⑥ SUMMIT: where I'm headed. Each is a distant peak you can look at from the summit sign. DRAFT. */
