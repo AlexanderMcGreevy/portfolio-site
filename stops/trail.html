@@ -393,6 +393,14 @@ html,body{width:100%;height:100%;margin:0;overflow:hidden;background:#1d2619}
 .wmcard.on{opacity:var(--ui,1)}
 .p-card{grid-template-columns:1fr;width:min(640px,100%);gap:0}
 .p-card .p-body{padding-right:0}
+/* project screenshot in a phone or browser frame (content.js `shot`) */
+.p-card.has-shot{grid-template-columns:210px 1fr;gap:28px;width:min(860px,100%);align-items:start}
+.p-card.has-shot .p-dev{position:sticky;top:0}
+.p-card.has-shot .dev.browser{max-width:210px;height:154px}
+.dev .screen.pic{padding:0;background:#0b0d0f}
+.dev .screen.pic::after{display:none}
+.dev .screen.pic img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center;display:block}
+@media(max-width:760px){.p-card.has-shot{grid-template-columns:1fr;gap:16px}.p-card.has-shot .p-dev{position:static;order:-1}.p-card.has-shot .dev.phone{width:126px;height:256px;border-radius:24px;padding:7px}.p-card.has-shot .dev.phone .screen{border-radius:18px}.p-card.has-shot .dev.phone .notch{top:11px;width:44px;height:13px;margin-left:-22px}.p-card.has-shot .dev.browser{max-width:280px;height:196px}}
 .p-one{margin:0;font:700 19px/1.4 var(--pfont);color:var(--pfg)}
 .p-note{margin:0;font:600 12.5px var(--pfont);letter-spacing:.06em;text-transform:uppercase;color:var(--pmut)}
 .p-links a.lk{color:var(--pfg);text-decoration:none;border-style:solid;font-weight:700}
@@ -450,7 +458,9 @@ function panelHTML(p){
   const br=BR[p.br]||{n:'',c:'#888'},chips=(p.stack||[]).map(s=>'<span class="chip">'+esc(s)+'</span>').join('');
   const award=p.wip?'<div class="p-award wip">'+esc(p.award||'⚠ Trail work ahead')+'</div>':p.award?'<div class="p-award"><span class="ros">★</span><span>'+esc(p.award)+'</span></div>':'';
   const links=p.public===false?'<p class="p-note">internal · described only</p>':(p.links&&p.links.length?'<div class="p-links">'+p.links.map(l=>'<a class="lk" href="'+esc(l[1])+'" target="_blank" rel="noopener">↗ '+esc(l[0])+'</a>').join('')+'</div>':'');
-  return '<button class="p-x" type="button" aria-label="Close">✕</button><div class="p-body">'
+  const s=hasShot(p)?p.shot:null,img=s?'<div class="screen pic"><img src="../'+esc(s.src)+'" alt="'+esc(s.alt||p.title)+'" loading="lazy" decoding="async"></div>':'';
+  const shot=s?'<div class="p-dev">'+(s.kind==='browser'?'<div class="dev browser"><div class="bar"><i></i><i></i><i></i></div>'+img+'</div>':'<div class="dev phone"><span class="notch"></span>'+img+'</div>')+'</div>':'';
+  return '<button class="p-x" type="button" aria-label="Close">✕</button>'+shot+'<div class="p-body">'
    +'<div class="p-kick"><i style="background:'+br.c+'"></i>'+esc(br.n)+(p.small?' · side trail':'')+(p.dist&&!p.small?' · '+esc(p.dist):'')+'</div>'
    +'<h3 id="pTitle">'+esc(p.title)+'</h3>'+award
    +(p.one?'<p class="p-one">'+esc(p.one)+'</p>':'')
@@ -459,8 +469,9 @@ function panelHTML(p){
    +(p.role?'<p class="p-meta">'+esc(p.role)+'</p>':'')
    +links+'</div>';
 }
+function hasShot(p){return !!(p&&p.shot&&p.shot.src&&p.public!==false);}
 function openPanel(p,opener){
-  const card=$('#pCard');card.innerHTML=panelHTML(p);$('#panel').classList.add('open');panelOpen=true;panelOpener=opener||document.activeElement;Climb.ownWheel=true;
+  const card=$('#pCard');card.innerHTML=panelHTML(p);card.classList.toggle('has-shot',hasShot(p));$('#panel').classList.add('open');panelOpen=true;panelOpener=opener||document.activeElement;Climb.ownWheel=true;
   try{cur.el.inert=true;}catch(_){}card.scrollTop=0;$('.p-x',card).focus();
 }
 function closePanel(){if(!panelOpen)return;$('#panel').classList.remove('open');panelOpen=false;Climb.ownWheel=false;try{cur.el.inert=false;}catch(_){}

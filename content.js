@@ -68,24 +68,28 @@ window.CONTENT = {
   softSkills: ['Teaching', 'Explaining tech to non-engineers', 'Shipping fast', 'Owning a codebase end to end'], /* DRAFT */
 
   /* ④ TRAIL: the only place builds are described. branch: wins | coop | projects
-     public:false = describe only, no screenshots or links. link:'' = add once confirmed live. */
+     public:false = describe only, no screenshots or links. link:'' = add once confirmed live.
+     shot: { src, kind: 'phone' | 'browser', alt } = a screenshot shown in a device frame (files in img/projects/). */
   projects: [
     { id: 'obscurafy', branch: 'wins', title: 'Obscurafy', award: 'Winner · HackUMass 2025', when: 'Nov 2025', dist: '0.4 mi',
       one: 'Finds IDs, cards and documents hiding in your photo library before you share them.',
       what: 'An iOS app that scans your whole photo library on-device, flags sensitive photos, and lets you swipe to keep, redact or delete them. Optional Gemini explains why each one was flagged.',
       stack: ['Swift', 'SwiftUI', 'Core ML (YOLO)', 'Vision OCR', 'Gemini', 'Background Tasks'], role: 'Hackathon team',
-      links: [['GitHub', 'https://github.com/AlexanderMcGreevy/Obscurafy'], ['Devpost', 'https://devpost.com/software/vaulteye']], public: true },
+      links: [['GitHub', 'https://github.com/AlexanderMcGreevy/Obscurafy'], ['Devpost', 'https://devpost.com/software/vaulteye']], public: true,
+      shot: { src: 'img/projects/obscurafy.jpg', kind: 'phone', alt: 'Obscurafy review screen flagging a photo of an ID as high risk' } },
     { id: 'ecoprompt', branch: 'wins', title: 'EcoPrompt', award: '3rd · HackMIT 2025 (Infosys Carbon-Conscious AI)', when: 'Sep – Oct 2025', dist: '0.9 mi',
       one: 'Shows the CO₂ cost of every AI prompt as you type it.',
       what: 'A browser extension that estimates the energy and CO₂ of each AI prompt in real time, turns watt-hours into everyday comparisons, and trims wasted tokens.',
       stack: ['React', 'TypeScript', 'Plasmo', 'Chrome extension'], role: 'Hackathon team',
-      links: [['GitHub', 'https://github.com/AlexanderMcGreevy/EcoPrompt-Extension'], ['Full hackathon build', 'https://github.com/davidaponce/EcoPrompt']], public: true },
+      links: [['GitHub', 'https://github.com/AlexanderMcGreevy/EcoPrompt-Extension'], ['Full hackathon build', 'https://github.com/davidaponce/EcoPrompt']], public: true,
+      shot: { src: 'img/projects/ecoprompt.jpg', kind: 'browser', alt: 'EcoPrompt panel showing tokens, energy and CO2 on the ChatGPT home screen' } },
 
     { id: 'fbm', branch: 'coop', at: 'wsg', when: 'Jul – Dec 2026', title: 'Flying Bridge Marina', award: 'Waterside co-op', dist: '1.2 mi',
       one: 'A boat dealer\'s new website and the CMS behind it, built almost entirely by me.',
       what: 'Block-based CMS with about 50 section types and live draft preview; a boat inventory finder with side-by-side compare; "Tucker", a Claude assistant grounded in live inventory; scheduled publishing, a photo library and saved-search alerts; and the trade-in valuation pop-up, built on a teammate\'s AI pricing engine.',
       stack: ['Next.js 16', 'TypeScript', 'Supabase', 'Lexical', 'Claude API', 'HubSpot', 'Vitest'], role: 'Main developer',
-      links: [['Live site', 'https://flyingbridgemarina.com']], public: true },
+      links: [['Live site', 'https://flyingbridgemarina.com']], public: true,
+      shot: { src: 'img/projects/fbm.jpg', kind: 'browser', alt: 'Flying Bridge Marina homepage with the Ask Tucker button' } },
     { id: 'southpeak', branch: 'coop', at: 'wsg', when: 'Jul – Dec 2026', title: 'South Peak Resort', award: 'Waterside co-op', dist: '1.6 mi',
       one: 'Moved a ski resort\'s site off WordPress, then rebuilt it again on the company\'s own CMS kit.',
       what: 'Rebuilt the site to match the live one, wrote about 20 repeatable migration scripts, built the homes and homesites listings with an interactive map, connected the "Gus" RAG chatbot, and moved pages from dynamic rendering to ISR. Now rebuilding it a second time on cms-kit and Supabase, which I lead with a teammate: I own the layout, content plumbing, CMS and infrastructure.',
@@ -111,7 +115,8 @@ window.CONTENT = {
       one: 'Locks your distracting apps until you prove you did the work.',
       what: 'A Screen Time app with no timers and no bypass: you unlock apps by submitting text or photo proof, Gemini checks it, and progress grows a collection of planets.',
       stack: ['Swift', 'SwiftUI', 'Screen Time API', 'Gemini', 'Cloud Run'], role: 'Solo',
-      links: [['LinkedIn', 'https://www.linkedin.com/in/alexander-mcgreevy/details/projects/']], public: true },   /* repo is private; swap in the post URL if you write a Clast post */
+      links: [['LinkedIn', 'https://www.linkedin.com/in/alexander-mcgreevy/details/projects/']], public: true,
+      shot: { src: 'img/projects/clast.jpg', kind: 'phone', alt: 'Clast shield over a blocked app: Stay Focused, Build On or Give Up' } },   /* repo is private; swap in the post URL if you write a Clast post */
     { id: 'looksmith', branch: 'projects', title: 'LookSmith', award: '', when: 'Oct 2025', dist: '3.4 mi',
       one: '3D modeling with your face instead of your hands.',
       what: 'Accessible 3D modeling: head and facial gestures tracked in real time drive a Godot sculpting tool over a WebSocket, with one-click export to a marketplace.',
@@ -131,11 +136,13 @@ window.CONTENT = {
       one: 'A rear camera that spots cars closing in on a cyclist and warns them on their wrist.',
       what: 'Turns the phone a rider already owns into a rear-facing safety system. An on-device YOLO model finds approaching vehicles, an Apple Watch app taps the rider, and opt-in crash response texts emergency contacts. Rides stay on the phone, and a web map combines shared near misses with Boston crash data.',
       stack: ['Swift 6', 'SwiftUI', 'Core ML (YOLO)', 'Apple Watch', 'Supabase', 'Next.js'], role: 'Launch lead · iOS, Watch, orchestration · team of 3',
-      links: [['GitHub', 'https://github.com/matte-realize/whoosh'], ['Demo video', 'https://youtu.be/DGP6ZZY3hws'], ['Sundai page', 'https://www.sundai.club/projects/881aa141-d256-495e-a522-e1316032842a']], public: true },
+      links: [['GitHub', 'https://github.com/matte-realize/whoosh'], ['Demo video', 'https://youtu.be/DGP6ZZY3hws'], ['Sundai page', 'https://www.sundai.club/projects/881aa141-d256-495e-a522-e1316032842a']], public: true,
+      shot: { src: 'img/projects/whoosh.jpg', kind: 'phone', alt: 'Whoosh ride screen with the rear camera boxing two approaching cars' } },
     { id: 'moovie', branch: 'projects', title: 'Moovie', award: '', dist: 'side trail', small: true,
       one: 'Share and rank movies with friends.', stack: ['Swift'], links: [['GitHub', 'https://github.com/AlexanderMcGreevy/Moovie']], public: true },
     { id: 'petaid', branch: 'projects', title: 'PetAid', award: '', dist: 'side trail', small: true,
-      one: 'An AI vet assistant and vet finder for busy pet owners.', stack: ['Swift', 'Python', 'Gemini', 'Google Places'], links: [['GitHub', 'https://github.com/AlexanderMcGreevy/PetAid'], ['Devpost', 'https://devpost.com/software/petvitals']], public: true },
+      one: 'An AI vet assistant and vet finder for busy pet owners.', stack: ['Swift', 'Python', 'Gemini', 'Google Places'], links: [['GitHub', 'https://github.com/AlexanderMcGreevy/PetAid'], ['Devpost', 'https://devpost.com/software/petvitals']], public: true,
+      shot: { src: 'img/projects/petaid.jpg', kind: 'phone', alt: 'PetVitals AI diagnosis result for a cockatoo' } },
     { id: 'cardinal', branch: 'projects', title: 'CARDinal', award: '', dist: 'side trail', small: true,
       one: 'Tap phones to swap business cards and resumes.', stack: ['SwiftUI', 'Multipeer'], links: [['GitHub', 'https://github.com/AlexanderMcGreevy/CARDinal']], public: true },
     { id: 'gofundtree', branch: 'projects', title: 'GoFundTree', award: '', dist: 'side trail', small: true,
