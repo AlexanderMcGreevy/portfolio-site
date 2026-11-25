@@ -29,7 +29,7 @@ window.CONTENT = {
     github: 'https://github.com/AlexanderMcGreevy',
     linkedin: 'https://www.linkedin.com/in/alexander-mcgreevy',
     resume: 'resume.pdf',          /* the PDF next to index.html (blank hides every Resume link) */
-    email: ''                      /* TODO: the address you want public */
+    email: 'mcgreevy.a@northeastern.edu'
   },
 
   /* ② JOURNEY: places, in order. No builds here: `trail` points at the trail branch instead.
