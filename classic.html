@@ -103,6 +103,12 @@ h3{font:600 20px/1.25 Oswald,sans-serif;letter-spacing:.02em;margin:0}
 .pc .media.browser img{width:100%;height:100%;object-fit:cover;object-position:top center;display:block}
 .pc .media.phones img{height:100%;width:auto;max-width:30%;aspect-ratio:9/19.5;object-fit:cover;object-position:top center;border-radius:12px;background:#0b0d0f;box-shadow:0 8px 20px rgba(0,0,0,.28);display:block}
 .pc .media.logo img{height:62%;aspect-ratio:1;width:auto;object-fit:cover;border-radius:22%;box-shadow:0 8px 20px rgba(0,0,0,.25);display:block}
+.pc .media .lg{display:block;height:44%;aspect-ratio:1;flex:none}
+.pc .media .lg img,.pc .media.phones .lg img{width:100%;height:100%;max-width:none;aspect-ratio:1;object-fit:cover;border-radius:22%;box-shadow:0 8px 20px rgba(0,0,0,.25);display:block}
+.pc .media.logo .lg{height:62%}
+.pc .media.mixed .lg{height:40%}
+.pc .media.mixed .br{display:block;height:78%;max-width:62%;flex:none}
+.pc .media.mixed .br img{height:100%;width:auto;max-width:100%;object-fit:cover;object-position:top left;border-radius:10px;box-shadow:0 8px 20px rgba(0,0,0,.25);display:block}
 .pc .media .n{position:absolute;right:10px;bottom:10px;padding:4px 8px;border-radius:7px;background:rgba(0,0,0,.72);color:#fff;font:500 11px/1 'IBM Plex Mono',monospace}
 .pc-b{padding:16px 18px 18px}
 .pmeta{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;font:500 12px/1 'IBM Plex Mono',monospace;color:var(--mute);margin:0 0 9px}
@@ -239,9 +245,15 @@ const img = (s, p) => '<img src="' + esc(s.src) + '" alt="' + esc(s.alt || p.tit
 /* the image panel: up to three phone screens side by side, or one browser shot, or a logo; click opens the gallery */
 const media = p => {
   const L = shotsOf(p); if (!L.length) return '';
-  const k = kindOf(L[0]);
-  const inner = k === 'phone' ? L.filter(x => kindOf(x) === 'phone').slice(0, 3).map(x => img(x, p)).join('') : img(L[0], p);
-  return '<button type="button" class="media ' + (k === 'phone' ? 'phones' : k) + '" data-gal="' + esc(p.id) + '" aria-label="View ' + (L.length > 1 ? L.length + ' images' : 'image') + ' of ' + esc(p.title) + '">' + inner +
+  const k = kindOf(L[0]), rest = L.slice(1);
+  let cls = k === 'phone' ? 'phones' : k, inner;
+  if (k === 'phone') inner = L.filter(x => kindOf(x) === 'phone').slice(0, 3).map(x => img(x, p)).join('');
+  else if (k === 'logo') {   /* logo first, then a couple of screens beside it when there are any */
+    const ph = rest.filter(x => kindOf(x) === 'phone').slice(0, 2), br = rest.find(x => kindOf(x) === 'browser');
+    inner = '<span class="lg">' + img(L[0], p) + '</span>' + (ph.length ? ph.map(x => img(x, p)).join('') : br ? '<span class="br">' + img(br, p) + '</span>' : '');
+    cls = ph.length ? 'phones withlogo' : br ? 'mixed' : 'logo';
+  } else inner = img(L[0], p);
+  return '<button type="button" class="media ' + cls + '" data-gal="' + esc(p.id) + '" aria-label="View ' + (L.length > 1 ? L.length + ' images' : 'image') + ' of ' + esc(p.title) + '">' + inner +
     (L.length > 1 ? '<span class="n" aria-hidden="true">' + L.length + ' images</span>' : '') + '</button>';
 };
 const card = p => '<article class="pc" id="p-' + esc(p.id) + '" data-type="' + esc(p.type || 'side') + '">' + media(p) + '<div class="pc-b">' +
