@@ -74,14 +74,6 @@ h3{font:600 20px/1.25 Oswald,sans-serif;letter-spacing:.02em;margin:0}
 .work a{font:500 12px/1 'IBM Plex Mono',monospace;text-decoration:none;padding:6px 9px;border-radius:6px;background:var(--chip);color:var(--ink)}
 .work a:hover{background:var(--acc);color:var(--acc-ink)}
 .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px 20px}
-#gal{border:0;padding:0;background:transparent;max-width:100vw;max-height:100vh;width:100vw;height:100vh;color:#fff}
-#gal::backdrop{background:rgba(8,10,9,.95)}
-#gal .gx{position:fixed;top:14px;right:16px;width:40px;height:40px;border-radius:50%;border:1px solid rgba(255,255,255,.35);background:rgba(0,0,0,.5);color:#fff;font-size:18px;cursor:pointer;z-index:2}
-#gal .gt{position:fixed;top:22px;left:20px;font:600 15px/1 'IBM Plex Mono',monospace;letter-spacing:.06em;text-transform:uppercase}
-#gal .strip{display:flex;gap:22px;align-items:center;height:100%;overflow-x:auto;scroll-snap-type:x mandatory;padding:64px 6vw 40px;box-sizing:border-box}
-#gal figure{margin:0;flex:0 0 auto;scroll-snap-align:center;display:flex;flex-direction:column;align-items:center;gap:10px;max-width:88vw}
-#gal figure img{max-height:calc(100vh - 150px);max-width:88vw;border-radius:12px;background:#0b0d0f;display:block}
-#gal figcaption{font:400 13px/1.4 Inter,sans-serif;color:#cfd3cf;text-align:center;max-width:520px}
 /* projects: newest first, grouped by year, image-led cards; filter chips by type */
 .pwide{width:min(1160px,calc(100vw - 40px));position:relative;left:50%;transform:translateX(-50%)}
 .pfilter{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 6px}
@@ -184,6 +176,7 @@ footer{padding:56px 0 80px;text-align:center}
   </footer>
 </div>
 <script src="content.js"></script>
+<script src="lightbox.js"></script>
 <script>
 const C = window.CONTENT, $ = id => document.getElementById(id);
 const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -283,19 +276,13 @@ $('projlist').addEventListener('click', e => {
   });
 });
 
-/* image gallery: click a card's screenshot to see every image for that project */
-const gal = document.createElement('dialog');
-gal.id = 'gal'; gal.setAttribute('aria-label', 'Project images');
-gal.innerHTML = '<span class="gt"></span><button type="button" class="gx" aria-label="Close">✕</button><div class="strip"></div>';
-document.body.appendChild(gal);
-gal.querySelector('.gx').addEventListener('click', () => gal.close());
-gal.addEventListener('click', e => { if (e.target === gal || e.target.classList.contains('strip')) gal.close(); });
+/* image viewer (lightbox.js): click a card's picture to flip through every image for that project, starting on the one clicked */
 document.addEventListener('click', e => {
   const b = e.target.closest('[data-gal]'); if (!b) return;
   const p = C.projects.find(q => q.id === b.dataset.gal); if (!p) return;
-  gal.querySelector('.gt').textContent = p.title;
-  gal.querySelector('.strip').innerHTML = shotsOf(p).map(s => '<figure><img src="' + esc(s.src) + '" alt="' + esc(s.alt || p.title) + '"><figcaption>' + esc(s.alt || '') + '</figcaption></figure>').join('');
-  gal.showModal(); gal.querySelector('.strip').scrollLeft = 0;
+  const L = shotsOf(p), hit = e.target.closest('img');
+  const i = hit ? Math.max(0, L.findIndex(s => s.src === hit.getAttribute('src'))) : 0;
+  Lightbox.open(L, i, { title: p.title, opener: b });
 });
 
 const dots = n => '<b>' + '●'.repeat(n) + '</b>' + '○'.repeat(3 - n);

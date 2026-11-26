@@ -403,8 +403,10 @@ html,body{width:100%;height:100%;margin:0;overflow:hidden;background:#1d2619}
 .dev .screen.pic img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center;display:block}
 .p-card.has-shot .p-dev{flex-direction:column;gap:12px}
 .p-frame{display:flex;justify-content:center;width:100%}
-.p-frame[data-next]{cursor:pointer}
-.p-frame[data-next]:focus-visible{outline:3px solid var(--pacc);outline-offset:4px;border-radius:12px}
+.p-frame[data-zoom]{cursor:zoom-in;position:relative}
+.p-frame[data-zoom]:focus-visible{outline:3px solid var(--pacc);outline-offset:4px;border-radius:12px}
+.p-zoom{position:absolute;right:10px;bottom:10px;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-size:15px;line-height:1;color:#fff;background:rgba(16,19,22,.82);border:1px solid rgba(255,255,255,.28);box-shadow:0 4px 12px rgba(0,0,0,.3);pointer-events:none;opacity:.85;transition:opacity .15s,transform .15s;z-index:3}
+.p-frame[data-zoom]:hover .p-zoom{opacity:1;transform:scale(1.08)}
 .dev.logo{width:168px;height:168px;border-radius:38px;overflow:hidden;background:#0b0d0f;padding:0}
 .dev.logo img{width:100%;height:100%;object-fit:cover;display:block}
 .p-thumbs{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;max-width:210px}
@@ -436,6 +438,7 @@ html,body{width:100%;height:100%;margin:0;overflow:hidden;background:#1d2619}
 <div id="toast" role="status" aria-live="polite"></div>
 <script src="../content.js"></script>
 <script src="../bridge.js"></script>
+<script src="../lightbox.js"></script>
 <script>
 'use strict';
 /* =====================================================================
@@ -474,7 +477,7 @@ function panelHTML(p){
   const links=p.public===false?'<p class="p-note">internal · described only</p>':(p.links&&p.links.length?'<div class="p-links">'+p.links.map(l=>'<a class="lk" href="'+esc(l[1])+'" target="_blank" rel="noopener">↗ '+esc(l[0])+'</a>').join('')+'</div>':'');
   const L=shotsOf(p);
   const thumbs=L.length>1?'<div class="p-thumbs" role="group" aria-label="Screenshots">'+L.map((s,i)=>'<button type="button" class="p-th'+(s.kind==='logo'?' lg':'')+'" data-shot="'+i+'" aria-pressed="'+(i===0)+'" aria-label="Show image '+(i+1)+' of '+L.length+': '+esc(s.alt||p.title)+'"><img src="../'+esc(s.src)+'" alt="" loading="lazy" decoding="async"></button>').join('')+'</div>':'';
-  const shot=L.length?'<div class="p-dev"><div class="p-frame"'+(L.length>1?' role="button" tabindex="0" title="Next image" data-next':'')+'>'+devHTML(L[0],p)+'</div>'+thumbs+'</div>':'';
+  const shot=L.length?'<div class="p-dev"><div class="p-frame" role="button" tabindex="0" title="View full size" aria-label="View '+(L.length>1?'all '+L.length+' images':'image')+' full size" data-zoom>'+zoomable(L[0],p)+'</div>'+thumbs+'</div>':'';
   return '<button class="p-x" type="button" aria-label="Close">✕</button>'+shot+'<div class="p-body">'
    +'<div class="p-kick"><i style="background:'+br.c+'"></i>'+esc(br.n)+(p.small?' · side trail':'')+(p.dist&&!p.small?' · '+esc(p.dist):'')+'</div>'
    +'<h3 id="pTitle">'+esc(p.title)+'</h3>'+award
@@ -493,13 +496,16 @@ function devHTML(s,p){
   if(s.kind==='browser')return '<div class="dev browser"><div class="bar"><i></i><i></i><i></i></div><div class="screen pic">'+img+'</div></div>';
   return '<div class="dev phone"><span class="notch"></span><div class="screen pic">'+img+'</div></div>';
 }
+function zoomable(s,p){return devHTML(s,p).replace(/<\/div>$/,'<span class="p-zoom" aria-hidden="true">⤢</span></div>');}
 function showShot(card,i){
   const L=card._shots||[];if(!L.length)return;i=(i+L.length)%L.length;card._shotI=i;
-  $('.p-frame',card).innerHTML=devHTML(L[i],card._p);
+  $('.p-frame',card).innerHTML=zoomable(L[i],card._p);
   $$('.p-th',card).forEach((b,j)=>b.setAttribute('aria-pressed',String(j===i)));
 }
-$('#pCard').addEventListener('click',e=>{const c=$('#pCard'),t=e.target.closest('[data-shot]');if(t){showShot(c,+t.dataset.shot);return;}if(e.target.closest('[data-next]'))showShot(c,(c._shotI||0)+1);});
-$('#pCard').addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.matches('[data-next]')){e.preventDefault();const c=$('#pCard');showShot(c,(c._shotI||0)+1);}});
+$('#pCard').addEventListener('click',e=>{const c=$('#pCard'),t=e.target.closest('[data-shot]');if(t){showShot(c,+t.dataset.shot);return;}if(e.target.closest('[data-zoom]'))zoomShot(c);});
+$('#pCard').addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.matches('[data-zoom]')){e.preventDefault();zoomShot($('#pCard'));}});
+/* full-size viewer (lightbox.js), opening on the image the panel is showing */
+function zoomShot(c){const L=c._shots||[];if(!L.length)return;Lightbox.open(L.map(s=>Object.assign({},s,{src:'../'+s.src})),c._shotI||0,{title:c._p&&c._p.title,opener:$('.p-frame',c)});}
 function openPanel(p,opener){
   const card=$('#pCard');card.innerHTML=panelHTML(p);card._p=p;card._shots=shotsOf(p);card._shotI=0;card.classList.toggle('has-shot',hasShot(p));
   card._shots.forEach(s=>{const im=new Image();im.src='../'+s.src;});$('#panel').classList.add('open');panelOpen=true;panelOpener=opener||document.activeElement;Climb.ownWheel=true;
