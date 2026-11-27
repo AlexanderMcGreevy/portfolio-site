@@ -80,8 +80,8 @@ window.CONTENT = {
       shots: [
         { src: 'img/projects/obscurafy-logo.jpg', kind: 'logo', alt: 'Obscurafy app icon' },
         { src: 'img/projects/obscurafy.jpg', kind: 'phone', alt: 'Obscurafy review screen flagging a photo of an ID as high risk' },
-        { src: 'img/projects/obscurafy-scan.jpg', kind: 'phone', alt: 'Background scan working through the photo library' },
         { src: 'img/projects/obscurafy-queue.jpg', kind: 'phone', alt: 'Swipe review with a credit card photo flagged and one photo queued for deletion' },
+        { src: 'img/projects/obscurafy-scan.jpg', kind: 'phone', alt: 'Background scan working through the photo library' },
         { src: 'img/projects/obscurafy-stats.jpg', kind: 'phone', alt: 'Statistics: photos scanned, deleted and kept' } ] },
     { id: 'ecoprompt', type: 'hackathon', date: '2025-10', branch: 'wins', title: 'EcoPrompt', award: '3rd · HackMIT 2025 (Infosys Carbon-Conscious AI)', when: 'Sep – Oct 2025', dist: '0.4 mi',
       one: 'Shows the CO₂ cost of every AI prompt as you type it.',
@@ -89,9 +89,10 @@ window.CONTENT = {
       stack: ['React', 'TypeScript', 'Plasmo', 'Chrome extension'], role: 'Hackathon team',
       links: [['GitHub', 'https://github.com/AlexanderMcGreevy/EcoPrompt-Extension'], ['Full hackathon build', 'https://github.com/davidaponce/EcoPrompt']], public: true,
       shots: [
-        { src: 'img/projects/ecoprompt.jpg', kind: 'browser', alt: 'EcoPrompt panel showing tokens, energy and CO2 on the ChatGPT home screen' },
+        { src: 'img/projects/ecoprompt-logo.jpg', kind: 'logo', alt: 'EcoPrompt icon' },
         { src: 'img/projects/ecoprompt-estimate.jpg', kind: 'browser', alt: 'After sending: tokens, energy and CO2, plus what opening a web result saved' },
-        { src: 'img/projects/ecoprompt-trimmed.jpg', kind: 'browser', alt: 'Trimmed prompt with the tokens and CO2 saved' } ] },
+        { src: 'img/projects/ecoprompt-trimmed.jpg', kind: 'browser', alt: 'Trimmed prompt with the tokens and CO2 saved' },
+        { src: 'img/projects/ecoprompt-page.jpg', kind: 'browser', alt: 'The EcoPrompt panel sitting on the ChatGPT page, ready before you type' } ] },
 
     { id: 'fbm', type: 'work', date: '2026-11', branch: 'coop', at: 'wsg', when: 'Jul – Dec 2026', title: 'Flying Bridge Marina', award: 'Waterside co-op', dist: '1.6 mi',
       one: 'A boat dealer\'s new website and the CMS behind it, built almost entirely by me.',
@@ -132,9 +133,9 @@ window.CONTENT = {
         { src: 'img/projects/clast-logo.jpg', kind: 'logo', alt: 'Clast app icon' },
         { src: 'img/projects/clast-planets.jpg', kind: 'phone', alt: 'Solar system of planets earned from focus sessions' },
         { src: 'img/projects/clast-planet.jpg', kind: 'phone', alt: 'A collected planet with its traits and rarity' },
+        { src: 'img/projects/clast.jpg', kind: 'phone', alt: 'Clast shield over a blocked app: Stay Focused, Build On or Give Up' },
         { src: 'img/projects/clast-proof.jpg', kind: 'phone', alt: 'Prove Your Progress: the AI scored the work 75%' },
         { src: 'img/projects/clast-break.jpg', kind: 'phone', alt: 'Break unlocked after verified progress' },
-        { src: 'img/projects/clast.jpg', kind: 'phone', alt: 'Clast shield over a blocked app: Stay Focused, Build On or Give Up' },
         { src: 'img/projects/clast-collection.jpg', kind: 'phone', alt: 'Planet collection list' } ] },   /* repo is private; swap in the post URL if you write a Clast post */
     { id: 'looksmith', type: 'hackathon', date: '2025-10', branch: 'projects', title: 'LookSmith', award: '', when: 'Oct 2025', dist: '3.0 mi',
       one: '3D modeling with your face instead of your hands.',
@@ -166,10 +167,12 @@ window.CONTENT = {
       stack: ['Swift 6', 'SwiftUI', 'Core ML (YOLO)', 'Apple Watch', 'Supabase', 'Next.js'], role: 'Launch lead · iOS, Watch, orchestration · team of 3 · built at Hackachusetts 2026',
       links: [['GitHub', 'https://github.com/matte-realize/whoosh'], ['Demo video', 'https://youtu.be/DGP6ZZY3hws'], ['Sundai page', 'https://www.sundai.club/projects/881aa141-d256-495e-a522-e1316032842a']], public: true,
       shots: [
+        { src: 'img/projects/whoosh-logo.jpg', kind: 'logo', alt: 'Whoosh app icon' },
         { src: 'img/projects/whoosh.jpg', kind: 'phone', alt: 'Whoosh ride screen with the rear camera boxing two approaching cars' },
-        { src: 'img/projects/whoosh-home.jpg', kind: 'phone', alt: 'Home screen with weekly distance and recent rides' },
-        { src: 'img/projects/whoosh-camera.jpg', kind: 'phone', alt: 'Camera setup: aim the phone at the road behind you' },
+        { src: 'img/projects/whoosh-nearmiss.jpg', kind: 'browser', alt: 'Web simulation of a near miss: the rear camera flags a car closing in and the rider can mark the close call' },
         { src: 'img/projects/whoosh-crash.jpg', kind: 'browser', alt: 'Web simulation of crash response, with the countdown on phone and Watch' },
+        { src: 'img/projects/whoosh-camera.jpg', kind: 'phone', alt: 'Camera setup: aim the phone at the road behind you' },
+        { src: 'img/projects/whoosh-home.jpg', kind: 'phone', alt: 'Home screen with weekly distance and recent rides' },
         { src: 'img/projects/whoosh-map.jpg', kind: 'browser', alt: 'Community stats from shared rides next to Boston crash data' } ] },
     { id: 'moovie', type: 'side', date: '2026-04', when: 'Feb – Apr 2026', branch: 'projects', title: 'Moovie', award: '', dist: 'side trail', small: true,
       one: 'Share and rank movies with friends.', stack: ['Swift'], links: [['GitHub', 'https://github.com/AlexanderMcGreevy/Moovie']], public: true,
