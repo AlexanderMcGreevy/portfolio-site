@@ -145,6 +145,7 @@ window.CONTENT = {
       shots: [
         { src: 'img/projects/looksmith-logo.jpg', kind: 'logo', alt: 'LookSmith logo' },
         { src: 'img/projects/looksmith.jpg', kind: 'browser', alt: 'LookSmith sculpting window in Godot with cube, sphere and prism tools' },
+        { src: 'img/projects/looksmith-tracking.jpg', kind: 'browser', alt: 'Head tracking: the webcam reads head yaw and pitch to steer the cursor' },
         { src: 'img/projects/looksmith-market.jpg', kind: 'browser', alt: 'Companion marketplace for exported 3D models' } ] },
     { id: 'blescanner', type: 'side', date: '2026-11', branch: 'projects', title: 'BLE Scanner', award: '', when: 'Nov 2026', dist: '4.1 mi',
       one: 'A personal iPhone app that works out what the Bluetooth devices around the house are saying.',
