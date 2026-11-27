@@ -178,6 +178,10 @@ window.CONTENT = {
       one: 'Share and rank movies with friends.', stack: ['Swift'], links: [['GitHub', 'https://github.com/AlexanderMcGreevy/Moovie']], public: true,
       shots: [
         { src: 'img/projects/moovie-logo.jpg', kind: 'logo', alt: 'Moovie app icon' },
+        { src: 'img/projects/moovie-rankings.jpg', kind: 'phone', alt: 'My Rankings: a numbered list with posters and per-aspect scores' },
+        { src: 'img/projects/moovie-versus.jpg', kind: 'phone', alt: 'Ranking a new movie head to head: did you enjoy Dune: Part Two more than Mad Max: Fury Road?' },
+        { src: 'img/projects/moovie-compare.jpg', kind: 'phone', alt: 'Comparing scores for Interstellar with a friend, aspect by aspect' },
+        { src: 'img/projects/moovie-detail.jpg', kind: 'phone', alt: 'Movie detail with rating, overview and cast' },
         { src: 'img/projects/moovie.jpg', kind: 'phone', alt: 'Moovie movies tab with search, filters and a movie card' } ] },
     { id: 'petaid', type: 'hackathon', date: '2025-03', when: 'Mar 2025', branch: 'projects', title: 'PetAid', award: '', dist: 'side trail', small: true,
       one: 'An AI vet assistant and vet finder for busy pet owners. Built as PetVitals at HackPSU Spring 2025.', role: 'Hackathon team · built at HackPSU Spring 2025', stack: ['Swift', 'Python', 'Gemini', 'Google Places'], links: [['GitHub', 'https://github.com/AlexanderMcGreevy/PetAid'], ['Devpost', 'https://devpost.com/software/petvitals']], public: true,
@@ -191,6 +195,10 @@ window.CONTENT = {
       one: 'Tap phones to swap business cards and resumes.', stack: ['SwiftUI', 'Multipeer'], links: [['GitHub', 'https://github.com/AlexanderMcGreevy/CARDinal']], public: true,
       shots: [
         { src: 'img/projects/cardinal-logo.jpg', kind: 'logo', alt: 'CARDinal app icon' },
+        { src: 'img/projects/cardinal-card.jpg', kind: 'phone', alt: 'Your own card, with contact links and a button to show its QR code' },
+        { src: 'img/projects/cardinal-qr.jpg', kind: 'phone', alt: 'QR code sheet: point any camera at it and the card is added' },
+        { src: 'img/projects/cardinal-received.jpg', kind: 'phone', alt: 'Received cards in different styles, with search' },
+        { src: 'img/projects/cardinal-edit.jpg', kind: 'phone', alt: 'Editing a card: identity, contact, social links and card material' },
         { src: 'img/projects/cardinal.svg', kind: 'browser', alt: 'Diagram of two phones swapping a business card nearby or by QR code' } ] },
     { id: 'gofundtree', type: 'hackathon', date: '2024-10', when: 'Fall 2024', branch: 'projects', title: 'GoFundTree', award: '', dist: 'side trail', small: true,
       one: 'Place virtual trees on your own street in AR, then fund real planting. Built at HackPSU Fall 2024; I built the AR and frontend.', stack: ['Python', 'Flask', 'Google Cloud', 'Firebase', 'model-viewer'], links: [['GitHub', 'https://github.com/matt2jog/GoFundTree'], ['Devpost', 'https://devpost.com/software/gofundtree']], public: true,
